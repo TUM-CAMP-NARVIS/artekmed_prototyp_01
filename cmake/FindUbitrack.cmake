@@ -49,7 +49,7 @@ macro( FIND_UBITRACK_HEADER MYHEADER MYHEADERNAME )
 endmacro()
 
 unset( UBITRACK_INCLUDE_DIR )
-FIND_UBITRACK_HEADER( UBITRACK_INCLUDE_DIR utFacade/SimpleFacade.h )
+FIND_UBITRACK_HEADER( UBITRACK_INCLUDE_DIR utFacade/BasicFacade.h )
 
 
 
@@ -113,7 +113,8 @@ macro( FIND_UBITRACK_LIBRARY MYLIBRARY)
 endmacro()
 
 unset( UBITRACK_LIBRARIES )
-FIND_UBITRACK_LIBRARY( UBITRACK_LIBRARY utcore utdataflow utvision utfacade )
+FIND_UBITRACK_LIBRARY( UBITRACK_LIBRARY utfacade )
+#FIND_UBITRACK_LIBRARY( UBITRACK_LIBRARY utcore utdataflow utvision utfacade )
 #message( STATUS "Ubitrack Libraries: ${UBITRACK_LIBRARIES}" )
 
 # handle the QUIETLY and REQUIRED arguments and set FMOD_FOUND to TRUE if all listed variables are TRUE

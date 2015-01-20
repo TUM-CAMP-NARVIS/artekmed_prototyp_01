@@ -1,8 +1,16 @@
 cmake_minimum_required(VERSION 2.8)
 
-SET(PROJECT_NAME "advanced_facade_example")
+SET(PROJECT_NAME "basic_facade_example")
 
 PROJECT(${PROJECT_NAME})
+
+# compile with C++11
+add_definitions("-DCOMPILER_USE_CXX11")
+SET(ENABLE_CXX11 "-std=c++11")
+#if(CMAKE_COMPILER_IS_GNUCXX)
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ENABLE_CXX11}")
+#endif()
+
 
 # Add a cache variable PREFER_STATIC_LIBRARIES to have the choice of generating a project
 # linking against static libraries if they exist. Default is NO since most people will not use this.
@@ -84,86 +92,6 @@ ENDIF(WIN32)
 
 
 # settings for 3rdparty libraries
-ADD_DEFINITIONS(-DTIXML_USE_STL)
-ADD_DEFINITIONS(-DHAVE_TINYXML)
-
-
-
-# Find Boost library. Required to compile.
-IF(WIN32 AND DEFINED EXTERNAL_LIBRARIES_DIR)
-	set(BOOST_ROOT_DIR "${EXTERNAL_LIBRARIES_DIR}/boost")
-	INCLUDE_DIRECTORIES( ${Boost_INCLUDE_DIR} )
-ENDIF(WIN32 AND DEFINED EXTERNAL_LIBRARIES_DIR)
-
-
-#Boost bindings
-IF(CMAKE_COMPILER_IS_GNUCXX)
-  add_definitions("-DBOOST_UBLAS_BOUNDED_ARRAY_ALIGN= __attribute__ ((aligned (16)))")
-ENDIF(CMAKE_COMPILER_IS_GNUCXX)
-ADD_DEFINITIONS(-DBOOST_SPIRIT_USE_OLD_NAMESPACE)
-
-IF(MSVC)
-  # force dynamic linking of boost libs on windows ..
-  ADD_DEFINITIONS(-DBOOST_ALL_DYN_LINK)
-ENDIF(MSVC)
-
-SET(HAVE_BOOST 0)
-set(Boost_USE_STATIC_LIBS   OFF)
-set(Boost_USE_MULTITHREADED ON)
-set(Boost_USE_STATIC_RUNTIME OFF)
-FIND_PACKAGE( Boost 1.49 COMPONENTS thread date_time system filesystem regex chrono locale serialization program_options REQUIRED)
-IF(Boost_FOUND)
-  ADD_DEFINITIONS("-DBOOST_FILESYSTEM_VERSION=3")
-  ADD_DEFINITIONS(-DHAVE_BOOST)
-  SET(HAVE_BOOST 1)
-    INCLUDE_DIRECTORIES( ${Boost_INCLUDE_DIR} )
-    SET(requiredLibs ${requiredLibs} ${Boost_LIBRARIES} )
-ENDIF(Boost_FOUND)
-
-# Find Lapack library. Required to compile.
-IF(WIN32 AND DEFINED EXTERNAL_LIBRARIES_DIR)
-  SET(LAPACK_ROOT_DIR "${EXTERNAL_LIBRARIES_DIR}/lapack")
-ENDIF(WIN32 AND DEFINED EXTERNAL_LIBRARIES_DIR)
-
-SET(HAVE_LAPACK 0)
-IF(WIN32)
-  FIND_PACKAGE(LAPACK)
-  IF(NOT LAPACK_FOUND AND DEFINED EXTERNAL_LIBRARIES_DIR)
-    SET(LAPACK_LIB_DIR "${EXTERNAL_LIBRARIES_DIR}/lapack/lib")
-    # for now just manually define the libraries ..
-    SET(LAPACK_LIBRARIES "${LAPACK_LIB_DIR}/atlas.lib" 
-	"${LAPACK_LIB_DIR}/cblas.lib" 
-	"${LAPACK_LIB_DIR}/f77blas.lib"
-	"${LAPACK_LIB_DIR}/g2c.lib"
-	"${LAPACK_LIB_DIR}/gcc.lib"
-	"${LAPACK_LIB_DIR}/lapack.lib"
-	)
-    SET(LAPACK_FOUND 1)
-  ENDIF(NOT LAPACK_FOUND AND DEFINED EXTERNAL_LIBRARIES_DIR)
-ELSE()
-  FIND_PACKAGE(LAPACK REQUIRED)
-ENDIF(WIN32)
-IF(LAPACK_FOUND)
-  ADD_DEFINITIONS(-DHAVE_LAPACK)
-  SET(HAVE_LAPACK 1)
-  INCLUDE_DIRECTORIES( ${LAPACK_INCLUDE_DIR} )
-  SET(requiredLibs ${requiredLibs} ${LAPACK_LIBRARIES} )
-ENDIF(LAPACK_FOUND)
-
-#OpenCV 
-IF(WIN32 AND DEFINED EXTERNAL_LIBRARIES_DIR)
-  SET(OPENCV_ROOT_DIR "${EXTERNAL_LIBRARIES_DIR}/opencv")
-ENDIF(WIN32 AND DEFINED EXTERNAL_LIBRARIES_DIR)
-
-SET(HAVE_OPENCV 0)
-FIND_PACKAGE(OpenCV)
-IF(OPENCV_FOUND)
-  MESSAGE(STATUS "Found: opencv, includes: ${OPENCV_INCLUDE_DIR}, libraries: ${OPENCV_LIBRARIES}")
-  ADD_DEFINITIONS(-DHAVE_OPENCV)
-  SET(HAVE_OPENCV 1)
-  INCLUDE_DIRECTORIES( ${OPENCV_INCLUDE_DIR} )
-  SET(requiredLibs ${requiredLibs} ${OPENCV_LIBRARIES} )
-ENDIF(OPENCV_FOUND)
 
 # TBB
 # setup defaults for windows binary distributions
@@ -200,7 +128,7 @@ IF(TBB_FOUND)
   SET(requiredLibs ${requiredLibs} ${TBB_LIBRARIES} )
 ENDIF(TBB_FOUND)
 
-
+INCLUDE_DIRECTORIES( "${${PROJECT_NAME}_SOURCE_DIR}/include/${PROJECT_NAME}" )
 
 # autogenerate ${PROJECT_NAME}.h depending on the libraries available.
 #CONFIGURE_FILE( ${${PROJECT_NAME}_SOURCE_DIR}/../include/${PROJECT_NAME}/${PROJECT_NAME}.cmake ${${PROJECT_NAME}_SOURCE_DIR}/../include/${PROJECT_NAME}/${PROJECT_NAME}.h )

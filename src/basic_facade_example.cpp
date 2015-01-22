@@ -30,13 +30,22 @@ void ctrlC ( int i )
         bStop = true;
 }
 
+void print_vector(std::vector<double>& v) {
+	std::cout << "[";
+	for (auto c : v)
+		std::cout << c << ", ";
+	std::cout << "]";
+}
 
 class FacadeHandler {
 public:
 
-	void receivePose(const Facade::BasicPoseMeasurement& pose) {
-	std::cout << "Example: received pushed pose: tbd"  << std::endl;
-//	std::cout << "Example: received pushed pose: " << pose << std::endl;
+	void receivePose(Facade::BasicPoseMeasurement& pose) {
+		std::vector<double> v(7);
+		pose.get(v);
+		std::cout << "Example: received pushed pose: " << pose.time() << " ";
+		print_vector(v);
+		std::cout << std::endl;
 
 	}
 
@@ -109,9 +118,9 @@ int main(int ac, const char* av[]) {
 
 		std::string pushsink_name("PushSinkPose");
 		auto pushsink = utFacade.getPushSink<Facade::BasicPoseMeasurement>(pushsink_name);
-		if (pushsink == NULL) {
+		if (!pushsink) {
 			std::cout << "Error getting PushSinkPose." << std::endl;
-			std::cout << utFacade.getLastError() << std::endl;
+			std::cout << (utFacade.getLastError() == NULL ? "Unkown Error" : utFacade.getLastError()) << std::endl;
 			exit( 1 );
 		} else {
 			pushsink->registerCallback(std::bind(&FacadeHandler::receivePose, handler, std::placeholders::_1));
@@ -119,17 +128,17 @@ int main(int ac, const char* av[]) {
 
 		std::string pullsink_name("PullSinkPose");
 		auto pullsink = utFacade.getPullSink<Facade::BasicPoseMeasurement>(pullsink_name);
-		if (pullsink == NULL) {
+		if (!pullsink) {
 			std::cout << "Error getting PullSinkPose." << std::endl;
-			std::cout << utFacade.getLastError() << std::endl;
+			std::cout << (utFacade.getLastError() == NULL ? "Unkown Error" : utFacade.getLastError()) << std::endl;
 			exit( 1 );
 		}
 
 		std::string pushsource_name("PushSourcePose");
 		auto pushsource = utFacade.getPushSource<Facade::BasicPoseMeasurement>(pushsource_name);
-		if (pushsource == NULL) {
+		if (!pushsource) {
 			std::cout << "Error getting PushSourcePose." << std::endl;
-			std::cout << utFacade.getLastError() << std::endl;
+			std::cout << (utFacade.getLastError() == NULL ? "Unkown Error" : utFacade.getLastError()) << std::endl;
 			exit( 1 );
 		}
 
@@ -137,7 +146,9 @@ int main(int ac, const char* av[]) {
 
         std::cout << "Starting dataflow" << std::endl;
         utFacade.startDataflow();
-      	
+
+		std::chrono::milliseconds dura( 1 );
+
 		while( !bStop )
         {
 			unsigned long long timestamp = utFacade.now();
@@ -145,19 +156,28 @@ int main(int ac, const char* av[]) {
 			// push a pose to ubitrack
 			std::vector<double> push_pose {0., 0., 0., 0., 0., 0., 1.};
 			Facade::BasicPoseMeasurement bm(timestamp, push_pose);
-			std::cout << "Example: send pose to ubitrack: tbd " << std::endl;
+//			std::cout << "Example: send pose to ubitrack: ";
+//			print_vector(push_pose);
+//			std::cout << std::endl;
+
 			pushsource->send(bm);
+
+			std::this_thread::sleep_for(dura);
 
 			// pull a pose from ubitrack
 			auto pull_bm = pullsink->get(timestamp);
-			if (pull_bm->is_valid()) {
+			if ((pull_bm) && (pull_bm->isValid())) {
 				std::vector<double> pull_pose_vec(pull_bm->size());
 				pull_bm->get(pull_pose_vec);
-				std::cout << "Example: sucessfully pulled pose: tbd" << std::endl;
+//				std::cout << "Example: sucessfully pulled pose: ";
+//				print_vector(pull_pose_vec);
+//				std::cout << std::endl;
+				// cleanup
 			}
 
-			std::chrono::milliseconds dura( 100 );
+
 			std::this_thread::sleep_for(dura);
+
             #ifdef _WIN32
             if(kbhit())
             {

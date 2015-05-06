@@ -8,7 +8,6 @@
 #include <signal.h>
 #include <iostream>
 #include <functional>
-
 #include <vector>
 
 #ifdef _WIN32
@@ -16,9 +15,16 @@
  #pragma warning (disable : 4231)
 #endif
 
-#include <SFML/System.hpp>
-#include <SFML/Graphics.hpp>
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
 
+// platform independent Sleep
+#ifdef _WINDOWS
+#include <windows.h>
+#else
+#include <unistd.h>
+#define Sleep(x) usleep((x)*1000)
+#endif
 
 #include <utFacade/BasicFacadeTypes.h>
 #include <utFacade/BasicFacade.h>
@@ -26,14 +32,39 @@
 #include "simple_ar_demo/optionparser.h"
 using namespace Ubitrack;
 
-
-bool bStop = false;
-
-
-void ctrlC ( int i )
+/*
+ * Commandline arguments handling
+ */
+struct Arg: public option::Arg
 {
-        bStop = true;
+  static option::ArgStatus Required(const option::Option& option, bool)
+  {
+    return option.arg == 0 ? option::ARG_ILLEGAL : option::ARG_OK;
+  }
+};
+
+
+ enum  optionIndex { UNKNOWN, HELP, UTQL, COMPONENTSPATH };
+ const option::Descriptor usage[] =
+ {
+  {UNKNOWN,           0,"" , ""                 ,Arg::None,     "USAGE: simple_ar_demo [options]\n\n"
+                                                                "Options:" },
+  {HELP,              0,"" , "help"             ,Arg::None,     "  --help  \tPrint usage and exit." },
+  {UTQL,              0,"u", "utql"             ,Arg::Required, "  --utql, -u  \tUTQL File to load." },
+  {COMPONENTSPATH,    0,"c", "components_path"  ,Arg::Required, "  --components_path, -c  \tThe Ubitrack Components Path." },
+  {0,0,0,0,0,0}
+ };
+
+/*
+ * GLFW debugging
+ */
+static void glfw_error_callback(int error, const char* description) {
+	fputs(description, stderr);
 }
+
+/*
+ * Ubitrack Callbacks for Push Sinks
+ */
 
 void print_vector(std::vector<double>& v) {
 	std::cout << "[";
@@ -57,32 +88,9 @@ public:
 
 };
 
-struct Arg: public option::Arg
-{
-  static option::ArgStatus Required(const option::Option& option, bool)
-  {
-    return option.arg == 0 ? option::ARG_ILLEGAL : option::ARG_OK;
-  }
-};
-
-
- enum  optionIndex { UNKNOWN, HELP, UTQL, COMPONENTSPATH };
- const option::Descriptor usage[] =
- {
-  {UNKNOWN,           0,"" , ""                 ,Arg::None,     "USAGE: simple_ar_demo [options]\n\n"
-                                                                "Options:" },
-  {HELP,              0,"" , "help"             ,Arg::None,     "  --help  \tPrint usage and exit." },
-  {UTQL,              0,"u", "utql"             ,Arg::Required, "  --utql, -u  \tUTQL File to load." },
-  {COMPONENTSPATH,    0,"c", "components_path"  ,Arg::Required, "  --components_path, -c  \tThe Ubitrack Components Path." },
-  {0,0,0,0,0,0}
- };
-
-
 
 int main(int argc, const char* argv[]) {
 	
-	signal ( SIGINT, &ctrlC );
-
 	// program options
 	std::string sUtqlFile;
 	std::string sComponentsPath;
@@ -112,7 +120,7 @@ int main(int argc, const char* argv[]) {
 		sComponentsPath = options[COMPONENTSPATH].arg;
 
 
-        // configure ubitrack
+		// configure ubitrack
         std::cout << "Loading components..." << std::endl << std::flush;
         Facade::BasicFacade utFacade( sComponentsPath.c_str() );
 		FacadeHandler handler;
@@ -149,52 +157,63 @@ int main(int argc, const char* argv[]) {
 			exit( 1 );
 		}
 
-
-
         std::cout << "Starting dataflow" << std::endl;
         utFacade.startDataflow();
 
-		sf::Time dura = sf::milliseconds(100);
 
-		while( !bStop )
-        {
+		// initialize GLFW
+		std::cout << "Initialize GLFW" << std::endl;
+		glfwSetErrorCallback(glfw_error_callback);
+		glfwInit();
+
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+		glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+		glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
+
+		GLFWwindow* window = glfwCreateWindow(800, 600, "Simple AR Demo", nullptr, nullptr); // Windowed
+		glfwMakeContextCurrent(window);
+
+		// initialize GLEW
+		std::cout << "Initialize GLEW" << std::endl;
+		glewExperimental = GL_TRUE;
+		glewInit();
+
+
+		GLuint vertexBuffer;
+		glGenBuffers(1, &vertexBuffer);
+
+		while(!glfwWindowShouldClose(window))
+		{
+			glClearColor(0, 0, 0, 0);
+			glClear(GL_COLOR_BUFFER_BIT);
+
 			unsigned long long timestamp = utFacade.now();
-			
-			// push a pose to ubitrack
-			std::vector<double> push_pose(7, 0.);
-			push_pose.at(6) = 1.;
-			Facade::BasicPoseMeasurement bm(timestamp, push_pose);
-			std::cout << "Example: send pose to ubitrack: ";
-			print_vector(push_pose);
-			std::cout << std::endl;
 
-			pushsource->send(bm);
-
-			sf::sleep(dura);
-
-			// pull a pose from ubitrack
-			std::shared_ptr<Facade::BasicPoseMeasurement> pull_bm = pullsink->get(timestamp);
-			if ((pull_bm) && (pull_bm->isValid())) {
-				std::vector<double> pull_pose_vec(pull_bm->size());
-				pull_bm->get(pull_pose_vec);
-				std::cout << "Example: sucessfully pulled pose: ";
-				print_vector(pull_pose_vec);
-				std::cout << std::endl;
-				// cleanup
-			}
+//			// push a pose to ubitrack
+//			std::vector<double> push_pose(7, 0.);
+//			push_pose.at(6) = 1.;
+//			Facade::BasicPoseMeasurement bm(timestamp, push_pose);
+//
+//			pushsource->send(bm);
+//
+//
+//			// pull a pose from ubitrack
+//			std::shared_ptr<Facade::BasicPoseMeasurement> pull_bm = pullsink->get(timestamp);
+//			if ((pull_bm) && (pull_bm->isValid())) {
+//				std::vector<double> pull_pose_vec(pull_bm->size());
+//				pull_bm->get(pull_pose_vec);
+//			}
 
 
-			sf::sleep(dura);
+			glfwSwapBuffers(window);
+			glfwPollEvents();
 
-            #ifdef _WIN32
-            if(kbhit())
-            {
-                    char c = getch();               
-                    if(c == 'q') bStop = true;
-            }
-            #endif
-        }
-
+			if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+				glfwSetWindowShouldClose(window, GL_TRUE);
+		}
+		
         std::cout << "Stopping dataflow..." << std::endl << std::flush;
         utFacade.stopDataflow();
 
@@ -208,10 +227,14 @@ int main(int argc, const char* argv[]) {
 	        std::cout << "exception occurred" << std::endl << std::flush;
 	        std::cerr << e.what() << std::endl;
 	}
+	catch(...) {
+		std::cout << "unkown error occured" << std::endl;
+	}
 
-	std::cout << "basic_facade_example terminated." << std::endl << std::flush;
+	std::cout << "simple_ar_demo terminated." << std::endl << std::flush;
 
-	
+	glfwTerminate();
+
 	
 	
 }

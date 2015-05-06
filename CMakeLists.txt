@@ -95,9 +95,16 @@ find_package(OpenGL REQUIRED)
 set(requiredLibs ${requiredLibs} ${OPENGL_LIBRARIES})
 include_directories( ${OPENGL_INCLUDE_DIRS} )
 
-find_package(SFML COMPONENTS graphics window system REQUIRED)
-set(requiredLibs ${requiredLibs} ${SFML_LIBRARIES})
-include_directories( ${SFML_INCLUDE_DIR} )
+find_package(GLFW REQUIRED)
+set(requiredLibs ${requiredLibs} ${GLFW_LIBRARY})
+include_directories( ${GLFW_INCLUDE_DIR} )
+
+find_package(GLEW REQUIRED)
+set(requiredLibs ${requiredLibs} ${GLEW_LIBRARIES})
+include_directories( ${GLEW_INCLUDE_DIR} )
+
+find_package(GLM REQUIRED)
+include_directories( ${GLM_INCLUDE_DIRS} )
 
 
 INCLUDE_DIRECTORIES( "${${PROJECT_NAME}_SOURCE_DIR}/include" )

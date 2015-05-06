@@ -4,6 +4,18 @@ SET(PROJECT_NAME "simple_ar_demo")
 
 PROJECT(${PROJECT_NAME})
 
+SET(ENABLE_CXX11 "-std=c++11")
+if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
+    execute_process(
+        COMMAND ${CMAKE_CXX_COMPILER} -dumpversion OUTPUT_VARIABLE GCC_VERSION)
+    if (GCC_VERSION VERSION_GREATER 4.7 OR GCC_VERSION VERSION_EQUAL 4.7)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ENABLE_CXX11}")
+    endif ()
+elseif ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ENABLE_CXX11} -stdlib=libc++")
+endif ()
+
+
 # Add a cache variable PREFER_STATIC_LIBRARIES to have the choice of generating a project
 # linking against static libraries if they exist. Default is NO since most people will not use this.
 IF( NOT DEFINED PREFER_STATIC_LIBRARIES )

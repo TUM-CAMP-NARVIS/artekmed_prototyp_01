@@ -154,7 +154,7 @@ int main(int argc, const char* argv[]) {
         std::cout << "Starting dataflow" << std::endl;
         utFacade.startDataflow();
 
-		sf::Time dura = sf::milliseconds(1);
+		sf::Time dura = sf::milliseconds(100);
 
 		while( !bStop )
         {
@@ -173,13 +173,13 @@ int main(int argc, const char* argv[]) {
 			sf::sleep(dura);
 
 			// pull a pose from ubitrack
-			auto pull_bm = pullsink->get(timestamp);
+			std::shared_ptr<Facade::BasicPoseMeasurement> pull_bm = pullsink->get(timestamp);
 			if ((pull_bm) && (pull_bm->isValid())) {
 				std::vector<double> pull_pose_vec(pull_bm->size());
 				pull_bm->get(pull_pose_vec);
-//				std::cout << "Example: sucessfully pulled pose: ";
-//				print_vector(pull_pose_vec);
-//				std::cout << std::endl;
+				std::cout << "Example: sucessfully pulled pose: ";
+				print_vector(pull_pose_vec);
+				std::cout << std::endl;
 				// cleanup
 			}
 

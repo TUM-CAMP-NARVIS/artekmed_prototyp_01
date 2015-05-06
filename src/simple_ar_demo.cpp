@@ -8,17 +8,22 @@
 #include <signal.h>
 #include <iostream>
 #include <functional>
-#include <thread>
+
 #include <vector>
 
 #ifdef _WIN32
-#include <conio.h>
+ #include <conio.h>
+ #pragma warning (disable : 4231)
 #endif
+
+#include <SFML/System.hpp>
+#include <SFML/Graphics.hpp>
+
 
 #include <utFacade/BasicFacadeTypes.h>
 #include <utFacade/BasicFacade.h>
 
-#include "argparser.hpp"
+#include "simple_ar_demo/optionparser.h"
 using namespace Ubitrack;
 
 
@@ -32,8 +37,9 @@ void ctrlC ( int i )
 
 void print_vector(std::vector<double>& v) {
 	std::cout << "[";
-	for (auto c : v)
-		std::cout << c << ", ";
+	for (unsigned int i=0; i < v.size(); ++i) {
+		std::cout << v.at(i) << ", ";
+	}
 	std::cout << "]";
 }
 
@@ -41,7 +47,7 @@ class FacadeHandler {
 public:
 
 	void receivePose(Facade::BasicPoseMeasurement& pose) {
-		std::vector<double> v(7);
+		std::vector<double> v(7, 0.);
 		pose.get(v);
 		std::cout << "Example: received pushed pose: " << pose.time() << " ";
 		print_vector(v);
@@ -51,74 +57,75 @@ public:
 
 };
 
+struct Arg: public option::Arg
+{
+  static option::ArgStatus Required(const option::Option& option, bool)
+  {
+    return option.arg == 0 ? option::ARG_ILLEGAL : option::ARG_OK;
+  }
+};
 
 
-int main(int ac, const char* av[]) {
+ enum  optionIndex { UNKNOWN, HELP, UTQL, COMPONENTSPATH };
+ const option::Descriptor usage[] =
+ {
+  {UNKNOWN,           0,"" , ""                 ,Arg::None,     "USAGE: simple_ar_demo [options]\n\n"
+                                                                "Options:" },
+  {HELP,              0,"" , "help"             ,Arg::None,     "  --help  \tPrint usage and exit." },
+  {UTQL,              0,"u", "utql"             ,Arg::Required, "  --utql, -u  \tUTQL File to load." },
+  {COMPONENTSPATH,    0,"c", "components_path"  ,Arg::Required, "  --components_path, -c  \tThe Ubitrack Components Path." },
+  {0,0,0,0,0,0}
+ };
+
+
+
+int main(int argc, const char* argv[]) {
 	
 	signal ( SIGINT, &ctrlC );
+
+	// program options
+	std::string sUtqlFile;
+	std::string sComponentsPath;
+	std::string sLogConfig("log4cpp.conf");
 
     try
     {
 	    // initialize logging
-		Facade::initUbitrackLogging("log4cpp.conf");
-//	    Util::initLogging();
+		Facade::initUbitrackLogging(sLogConfig.c_str());
 
-	    // program options
-	    std::string sUtqlFile;
-	    std::string sComponentsPath;
-	    bool bNoExit;
+		argc-=(argc>0); argv+=(argc>0); // skip program name argv[0] if present
+		option::Stats  stats(usage, argc, argv);
+		option::Option* options = new option::Option[stats.options_max];
+		option::Option* buffer  = new option::Option[stats.buffer_max];
+		option::Parser parse(usage, argc, argv, options, buffer);
 
+	   if (parse.error())
+	     return 1;
 
-		argparser::parser parser( "basic_facade_example", "Demonstrates the usage of the new BasicFacade." );
-		const auto& arg_show_help = parser.add< bool >( "help", "show this information", 'h' );
-		const auto& arg_components_path = parser.add< std::string >( "components_path", "The Ubitrack Components Path.", 'c', argparser::Optional, "" );
-		const auto& arg_utql = parser.add< std::string >( "utql", "The UTQL File.", 'u', argparser::Optional, "" );
-		const auto& arg_noexit = parser.add< bool >( "noexit", "do not exit on return", 'n' );
+	   if (options[HELP] || argc == 0) {
+	     option::printUsage(std::cout, usage);
+	     return 0;
+	   }
 
-	    try
-	    {
-			// Example command line:
-			parser.parse( ac, av );
+		// use cmdline arguments
+		sUtqlFile = options[UTQL].arg;
+		sComponentsPath = options[COMPONENTSPATH].arg;
 
-
-	        bNoExit = arg_noexit.value();
-			sUtqlFile = arg_utql.value();
-			sComponentsPath = arg_components_path.value();
-
-			if (sUtqlFile.empty()) {
-				parser.each_unlabeled_argument([&]( const std::string& arg ) {
-					if (sUtqlFile.empty()) {
-						sUtqlFile = arg;
-					}
-				});
-			}
-
-	        // print help message if nothing specified
-	        if ( arg_show_help.value() || sUtqlFile.empty() )
-	        {
-	            std::cout << "Syntax: basic_facade_example [options] [--utql] <UTQL file>" << std::endl << std::endl;
-				parser.show_usage( std::cout );
-	            return 1;
-	        }
-		}
-		catch( std::exception& e )
-		{
-	        std::cerr << "Error parsing command line parameters : " << e.what() << std::endl;
-			parser.show_usage( std::cerr );
-	        exit( 1 );
-		}
 
         // configure ubitrack
         std::cout << "Loading components..." << std::endl << std::flush;
-        Facade::BasicFacade utFacade( sComponentsPath );
+        Facade::BasicFacade utFacade( sComponentsPath.c_str() );
 		FacadeHandler handler;
 
         std::cout << "Instantiating dataflow network from " << sUtqlFile << "..." << std::endl << std::flush;
-        utFacade.loadDataflow( sUtqlFile );
+		if (!utFacade.loadDataflow( sUtqlFile.c_str() )) {
+			std::cout << "Unable to load dataflow." << std::endl;
+			return 1;
+		};
 
 		std::string pushsink_name("PushSinkPose");
-		auto pushsink = utFacade.getPushSink<Facade::BasicPoseMeasurement>(pushsink_name);
-		if (!pushsink) {
+		Ubitrack::Facade::BasicPushSink< Facade::BasicPoseMeasurement >* pushsink = utFacade.getPushSink<Facade::BasicPoseMeasurement>(pushsink_name.c_str());
+		if (pushsink == NULL) {
 			std::cout << "Error getting PushSinkPose." << std::endl;
 			std::cout << (utFacade.getLastError() == NULL ? "Unkown Error" : utFacade.getLastError()) << std::endl;
 			exit( 1 );
@@ -127,16 +134,16 @@ int main(int ac, const char* av[]) {
 		}
 
 		std::string pullsink_name("PullSinkPose");
-		auto pullsink = utFacade.getPullSink<Facade::BasicPoseMeasurement>(pullsink_name);
-		if (!pullsink) {
+		Ubitrack::Facade::BasicPullSink< Facade::BasicPoseMeasurement >* pullsink = utFacade.getPullSink<Facade::BasicPoseMeasurement>(pullsink_name.c_str());
+		if (pullsink == NULL) {
 			std::cout << "Error getting PullSinkPose." << std::endl;
 			std::cout << (utFacade.getLastError() == NULL ? "Unkown Error" : utFacade.getLastError()) << std::endl;
 			exit( 1 );
 		}
 
 		std::string pushsource_name("PushSourcePose");
-		auto pushsource = utFacade.getPushSource<Facade::BasicPoseMeasurement>(pushsource_name);
-		if (!pushsource) {
+		Ubitrack::Facade::BasicPushSource< Facade::BasicPoseMeasurement >* pushsource = utFacade.getPushSource<Facade::BasicPoseMeasurement>(pushsource_name.c_str());
+		if (pushsource == NULL) {
 			std::cout << "Error getting PushSourcePose." << std::endl;
 			std::cout << (utFacade.getLastError() == NULL ? "Unkown Error" : utFacade.getLastError()) << std::endl;
 			exit( 1 );
@@ -147,22 +154,23 @@ int main(int ac, const char* av[]) {
         std::cout << "Starting dataflow" << std::endl;
         utFacade.startDataflow();
 
-		std::chrono::milliseconds dura( 1 );
+		sf::Time dura = sf::milliseconds(1);
 
 		while( !bStop )
         {
 			unsigned long long timestamp = utFacade.now();
 			
 			// push a pose to ubitrack
-			std::vector<double> push_pose {0., 0., 0., 0., 0., 0., 1.};
+			std::vector<double> push_pose(7, 0.);
+			push_pose.at(6) = 1.;
 			Facade::BasicPoseMeasurement bm(timestamp, push_pose);
-//			std::cout << "Example: send pose to ubitrack: ";
-//			print_vector(push_pose);
-//			std::cout << std::endl;
+			std::cout << "Example: send pose to ubitrack: ";
+			print_vector(push_pose);
+			std::cout << std::endl;
 
 			pushsource->send(bm);
 
-			std::this_thread::sleep_for(dura);
+			sf::sleep(dura);
 
 			// pull a pose from ubitrack
 			auto pull_bm = pullsink->get(timestamp);
@@ -176,7 +184,7 @@ int main(int ac, const char* av[]) {
 			}
 
 
-			std::this_thread::sleep_for(dura);
+			sf::sleep(dura);
 
             #ifdef _WIN32
             if(kbhit())

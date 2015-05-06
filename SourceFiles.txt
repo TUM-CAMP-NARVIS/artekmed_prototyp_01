@@ -1,7 +1,7 @@
 SET( PROJECT_HEADERS 
-#	"${PROJECT_SOURCE_DIR}/src/basic_facade_example.h"
+	"${PROJECT_SOURCE_DIR}/include/simple_ar_demo/optionparser.h"
 )
 
 SET( PROJECT_SRCS 
-	"${PROJECT_SOURCE_DIR}/src/basic_facade_example.cpp"
+	"${PROJECT_SOURCE_DIR}/src/simple_ar_demo.cpp"
 )

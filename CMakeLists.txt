@@ -1,16 +1,8 @@
 cmake_minimum_required(VERSION 2.8)
 
-SET(PROJECT_NAME "basic_facade_example")
+SET(PROJECT_NAME "simple_ar_demo")
 
 PROJECT(${PROJECT_NAME})
-
-# compile with C++11
-add_definitions("-DCOMPILER_USE_CXX11")
-SET(ENABLE_CXX11 "-std=c++11")
-#if(CMAKE_COMPILER_IS_GNUCXX)
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ENABLE_CXX11}")
-#endif()
-
 
 # Add a cache variable PREFER_STATIC_LIBRARIES to have the choice of generating a project
 # linking against static libraries if they exist. Default is NO since most people will not use this.
@@ -75,14 +67,9 @@ ENDIF(X86_64)
 
 # UbiTrack  
 FIND_PACKAGE(Ubitrack REQUIRED)
-
-IF(UBITRACK_FOUND)
-  SET(HAVE_UBITRACK 1)
-  INCLUDE_DIRECTORIES( ${UBITRACK_INCLUDE_DIR} )
-  # currently needed because of relative include :(
-  INCLUDE_DIRECTORIES( "${UBITRACK_INCLUDE_DIR}/utFacade" )
-  SET(requiredLibs ${requiredLibs} ${UBITRACK_LIBRARIES} )
-ENDIF(UBITRACK_FOUND)
+SET(HAVE_UBITRACK 1)
+INCLUDE_DIRECTORIES( ${UBITRACK_INCLUDE_DIR} )
+SET(requiredLibs ${requiredLibs} ${UBITRACK_LIBRARIES} )
 
 IF(WIN32)
   set(${PROJECT_NAME}_COMPILE_FLAGS "${${PROJECT_NAME}_COMPILE_FLAGS} /EHsc /c /W3 /GR /wd4355 /wd4996 /wd4251 /wd4275 /wd4819 /wd4290")
@@ -92,43 +79,16 @@ ENDIF(WIN32)
 
 
 # settings for 3rdparty libraries
+find_package(OpenGL REQUIRED)
+set(requiredLibs ${requiredLibs} ${OPENGL_LIBRARIES})
+include_directories( ${OPENGL_INCLUDE_DIRS} )
 
-# TBB
-# setup defaults for windows binary distributions
-IF(WIN32)
-  IF(MSVC71)
-    SET(TBB_COMPILER "vc7.1")
-  ENDIF(MSVC71)
-  IF(MSVC80)
-    SET(TBB_COMPILER "vc8")
-  ENDIF(MSVC80)
-  IF(MSVC90)
-    SET(TBB_COMPILER "vc9")
-  ENDIF(MSVC90)
-  IF(MSVC10)
-    sET(TBB_COMPILER "vc10")
-  ENDIF(MSVC10)
-  IF(X86_64)
-    SET(TBB_ARCHITECTURE "intel64")
-  ELSE()
-    SET(TBB_ARCHITECTURE "ia32")
-  ENDIF(X86_64)
-ENDIF(WIN32)
+find_package(SFML COMPONENTS graphics window system REQUIRED)
+set(requiredLibs ${requiredLibs} ${SFML_LIBRARIES})
+include_directories( ${SFML_INCLUDE_DIR} )
 
-IF(WIN32 AND DEFINED EXTERNAL_LIBRARIES_DIR)
-  SET(TBB_INSTALL_DIR "${EXTERNAL_LIBRARIES_DIR}/tbb")
-ENDIF(WIN32 AND DEFINED EXTERNAL_LIBRARIES_DIR)
 
-SET(HAVE_TBB 0)
-FIND_PACKAGE(TBB)
-IF(TBB_FOUND)
-  ADD_DEFINITIONS(-DHAVE_TBB)
-  SET(HAVE_TBB 1)
-  INCLUDE_DIRECTORIES( ${TBB_INCLUDE_DIR} )
-  SET(requiredLibs ${requiredLibs} ${TBB_LIBRARIES} )
-ENDIF(TBB_FOUND)
-
-INCLUDE_DIRECTORIES( "${${PROJECT_NAME}_SOURCE_DIR}/include/${PROJECT_NAME}" )
+INCLUDE_DIRECTORIES( "${${PROJECT_NAME}_SOURCE_DIR}/include" )
 
 # autogenerate ${PROJECT_NAME}.h depending on the libraries available.
 #CONFIGURE_FILE( ${${PROJECT_NAME}_SOURCE_DIR}/../include/${PROJECT_NAME}/${PROJECT_NAME}.cmake ${${PROJECT_NAME}_SOURCE_DIR}/../include/${PROJECT_NAME}/${PROJECT_NAME}.h )

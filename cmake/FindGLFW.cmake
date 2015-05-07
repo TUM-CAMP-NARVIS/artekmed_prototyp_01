@@ -8,6 +8,7 @@ find_path(GLFW_INCLUDE_DIR GLFW/glfw3.h
     $ENV{GLFW_HOME}/include
     $ENV{PROGRAMFILES}/GLFW/include
     ${OPENGL_INCLUDE_DIR}
+    "${EXTERNAL_LIBRARIES_DIR}/GLFW/include"
     /usr/include
     /usr/local/include
     /usr/include/GL
@@ -36,6 +37,7 @@ find_library(GLFW_LIBRARY
     $ENV{GLFW_HOME}/build/src
     $ENV{GLFW_HOME}/build-debug/src
     $ENV{GLFW_HOME}/build-release/src
+    "${EXTERNAL_LIBRARIES_DIR}/GLFW/lib"
     /usr/lib64
     /usr/local/lib64
     /sw/lib64

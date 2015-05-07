@@ -16,6 +16,30 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
 endif ()
 
 
+
+# auto configuration when ubitrack externals are installed
+macro(getenv_path VAR)
+   set(ENV_${VAR} $ENV{${VAR}})
+   # replace won't work if var is blank
+   if (ENV_${VAR})
+     string( REGEX REPLACE "\\\\" "/" ENV_${VAR} ${ENV_${VAR}} )
+   endif ()
+endmacro(getenv_path)
+
+IF(X86_64)
+  getenv_path(UBITRACKLIB_EXTERNAL64)
+  IF(ENV_UBITRACKLIB_EXTERNAL64)
+    SET(EXTERNAL_LIBRARIES_DIR "${ENV_UBITRACKLIB_EXTERNAL64}")
+  ENDIF(ENV_UBITRACKLIB_EXTERNAL64)
+ELSE()
+  getenv_path(UBITRACKLIB_EXTERNAL32)
+  IF(ENV_UBITRACKLIB_EXTERNAL32)
+    SET(EXTERNAL_LIBRARIES_DIR "${ENV_UBITRACKLIB_EXTERNAL32}")
+  ENDIF(ENV_UBITRACKLIB_EXTERNAL32)
+ENDIF(X86_64)
+
+
+
 # Add a cache variable PREFER_STATIC_LIBRARIES to have the choice of generating a project
 # linking against static libraries if they exist. Default is NO since most people will not use this.
 IF( NOT DEFINED PREFER_STATIC_LIBRARIES )
@@ -105,6 +129,47 @@ include_directories( ${GLEW_INCLUDE_DIR} )
 
 find_package(GLM REQUIRED)
 include_directories( ${GLM_INCLUDE_DIRS} )
+
+# TBB
+# setup defaults for windows binary distributions
+if (WIN32)
+    if (MSVC71)
+        set (TBB_COMPILER "vc7.1")
+    endif(MSVC71)
+    if (MSVC80)
+        set(TBB_COMPILER "vc8")
+    endif(MSVC80)
+    if (MSVC90)
+        set(TBB_COMPILER "vc9")
+    endif(MSVC90)
+    if(MSVC10)
+        set(TBB_COMPILER "vc10")
+    endif(MSVC10)
+    if(MSVC11)
+        set(TBB_COMPILER "vc11")
+    endif(MSVC11)
+    if(MSVC12)
+        set(TBB_COMPILER "vc12")
+    endif(MSVC12)
+  IF(X86_64)
+    set(TBB_ARCHITECTURE "intel64")
+  ELSE()
+    set(TBB_ARCHITECTURE "ia32")
+  ENDIF(X86_64)
+endif (WIN32)
+
+IF(WIN32 AND DEFINED EXTERNAL_LIBRARIES_DIR)
+  set(TBB_INSTALL_DIR "${EXTERNAL_LIBRARIES_DIR}/tbb")
+ENDIF(WIN32 AND DEFINED EXTERNAL_LIBRARIES_DIR)
+
+SET(HAVE_TBB 0)
+find_package(TBB)
+IF(TBB_FOUND)
+  add_definitions(-DHAVE_TBB)
+  include_directories( ${TBB_INCLUDE_DIRS})
+  set(requiredLibs ${requiredLibs} ${TBB_LIBRARIES})
+  SET(HAVE_TBB 1)
+ENDIF(TBB_FOUND)
 
 
 INCLUDE_DIRECTORIES( "${${PROJECT_NAME}_SOURCE_DIR}/include" )

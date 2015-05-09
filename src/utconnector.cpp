@@ -1,5 +1,7 @@
 #include "simple_ar_demo/utconnector.h"
 
+// implementation of UTBaseConnector
+
 UTBaseConnector::UTBaseConnector(const std::string& _components_path)
 	: m_utFacade( _components_path.c_str() )
 	, m_haveNewFrame( false )
@@ -79,3 +81,50 @@ unsigned long long int UTBaseConnector::wait_for_frame() {
 	}
 	return ts;
 }
+
+// implementation of UTSimpleARConnector
+
+UTSimpleARConnector::UTSimpleARConnector(const std::string& _components_path)
+	: UTBaseConnector(_components_path)
+	// initialize all sinks and local variables here
+{}
+
+UTSimpleARConnector::~UTSimpleARConnector()
+{}
+
+bool UTSimpleARConnector::camera_left_get_intrinsics(const TimestampT ts, glm::mat3& intrinsics, glm::ivec2& resolution) 
+{
+	return true;
+}
+
+bool UTSimpleARConnector::camera_left_update_texture(const TimestampT ts, GLuint textureid) 
+{
+	return true;
+}
+
+bool UTSimpleARConnector::camera_left_get_pose(const TimestampT ts, glm::mat4& pose) 
+{
+	return true;
+}
+
+bool UTSimpleARConnector::target1_get_pose(const TimestampT ts, glm::mat4& pose) 
+{
+	return true;
+}
+
+bool UTSimpleARConnector::initialize(const std::string& _utql_filename) 
+{
+	bool ret = UTBaseConnector::initialize(_utql_filename);
+	return ret;
+}
+
+bool UTSimpleARConnector::teardown() 
+{
+	bool ret = UTBaseConnector::teardown();
+	return ret;
+}
+
+void UTSimpleARConnector::receive_camera_left_image(Facade::BasicImageMeasurement& pose) 
+{
+}
+

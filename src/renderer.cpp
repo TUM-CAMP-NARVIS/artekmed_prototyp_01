@@ -1,7 +1,5 @@
 #include "simple_ar_demo/renderer.h"
 
-
-
 /*
  * on_window_close callback is called before window closes
  */

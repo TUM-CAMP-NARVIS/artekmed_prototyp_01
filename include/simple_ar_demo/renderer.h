@@ -4,10 +4,6 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
-#include <utFacade/BasicFacadeTypes.h>
-#include <utFacade/BasicFacade.h>
-
-
 /*
  * The following things need to be considered:
  * - Stereo (side-by-side) rendering
@@ -19,8 +15,6 @@ class Renderer {
 
 	Renderer();
 	~Renderer();
-
-	unsigned long long int wait_for_image();
 
 	// glfw window events
 	void on_window_close(GLFWwindow* window);

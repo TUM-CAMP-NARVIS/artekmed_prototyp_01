@@ -6,6 +6,7 @@
 
 // platform independent Sleep
 #ifdef _WINDOWS
+#pragma warning (disable : 4231)
 #include <windows.h>
 #else
 #include <unistd.h>

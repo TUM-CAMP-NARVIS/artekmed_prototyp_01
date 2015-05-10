@@ -1,11 +1,14 @@
 SET( PROJECT_HEADERS 
 	"${PROJECT_SOURCE_DIR}/include/simple_ar_demo/optionparser.h"
+	"${PROJECT_SOURCE_DIR}/include/simple_ar_demo/easylogging++.h"
+	"${PROJECT_SOURCE_DIR}/include/simple_ar_demo/glfwwindow.h"
 	"${PROJECT_SOURCE_DIR}/include/simple_ar_demo/renderer.h"
 	"${PROJECT_SOURCE_DIR}/include/simple_ar_demo/utconnector.h"
 )
 
 SET( PROJECT_SRCS 
-	"${PROJECT_SOURCE_DIR}/src/renderer.cpp"
 	"${PROJECT_SOURCE_DIR}/src/utconnector.cpp"
+	"${PROJECT_SOURCE_DIR}/src/glfwwindow.cpp"
+	"${PROJECT_SOURCE_DIR}/src/renderer.cpp"
 	"${PROJECT_SOURCE_DIR}/src/simple_ar_demo.cpp"
 )

@@ -7,6 +7,12 @@
 
 
 #include <string>
+#include <stdlib.h>
+#include <signal.h>
+#include <iostream>
+#include <functional>
+#include <vector>
+
 
 // include TBB
 #include <tbb/mutex.h>
@@ -68,7 +74,7 @@ protected:
 
 private:
 	tbb::mutex m_waitMutex;
-	std::condition_variable m_waitCondition;
+	tbb::interface5::condition_variable m_waitCondition;
 };
 
 /*
@@ -94,7 +100,7 @@ public:
 	bool camera_left_get_pose(const TimestampT ts, glm::mat4& pose);
 
 	// some tracking data
-	bool target1_get_pose(const TimestampT ts, glm::mat4& pose);
+//	bool target1_get_pose(const TimestampT ts, glm::mat4& pose);
 
 
 	// private api (still needs to be public unless we declare friend classes, which is considered to be bad practice.)
@@ -103,16 +109,18 @@ public:
 	virtual bool teardown();
 
 	// handlers for push sinks
-	void receive_camera_left_image(Facade::BasicImageMeasurement& pose);
+	void receive_camera_left_image(std::shared_ptr<Facade::BasicImageMeasurement>& pose);
 
 private:
 	Ubitrack::Facade::BasicPushSink< Facade::BasicImageMeasurement >*            m_pushsink_camera_image_left;
-	Ubitrack::Facade::BasicPullSink< Facade::BasicCameraIntrinsicsMeasurement >* m_pullsink_camera_intrinsics_left;
+	//Ubitrack::Facade::BasicPullSink< Facade::BasicCameraIntrinsicsMeasurement >* m_pullsink_camera_intrinsics_left;
+	Ubitrack::Facade::BasicPullSink< Facade::BasicMatrixMeasurement< 3, 3 > >*   m_pullsink_camera_intrinsics_left;
+	Ubitrack::Facade::BasicPullSink< Facade::BasicVectorMeasurement< 2 > >*      m_pullsink_camera_resolution_left;
 	Ubitrack::Facade::BasicPullSink< Facade::BasicPoseMeasurement >*             m_pullsink_camera_pose_left;
 
-	Ubitrack::Facade::BasicPullSink< Facade::BasicPoseMeasurement >*             m_pullsink_target1_pose;
+//	Ubitrack::Facade::BasicPullSink< Facade::BasicPoseMeasurement >*             m_pullsink_target1_pose;
 
-	//Facade::BasicImageMeasurement* m_current_camera_left_image;
+	std::shared_ptr<Facade::BasicImageMeasurement > m_current_camera_left_image;
 };
 
 

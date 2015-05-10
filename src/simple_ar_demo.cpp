@@ -33,6 +33,14 @@
 #include <utFacade/BasicFacade.h>
 
 #include "simple_ar_demo/optionparser.h"
+#include "simple_ar_demo/utconnector.h"
+#include "simple_ar_demo/glfwwindow.h"
+#include "simple_ar_demo/renderer.h"
+
+#include  "simple_ar_demo/easylogging++.h"
+// only once in main!!
+_INITIALIZE_EASYLOGGINGPP
+
 using namespace Ubitrack;
 
 /*
@@ -59,14 +67,7 @@ struct Arg: public option::Arg
  };
 
 /*
- * GLFW debugging
- */
-static void glfw_error_callback(int error, const char* description) {
-	fputs(description, stderr);
-}
-
-/*
- * Ubitrack Callbacks for Push Sinks
+ * Utils
  */
 
 void print_vector(std::vector<double>& v) {
@@ -77,23 +78,10 @@ void print_vector(std::vector<double>& v) {
 	std::cout << "]";
 }
 
-class FacadeHandler {
-public:
-
-	void receivePose(Facade::BasicPoseMeasurement& pose) {
-		std::vector<double> v(7, 0.);
-		pose.get(v);
-		std::cout << "Example: received pushed pose: " << pose.time() << " ";
-		print_vector(v);
-		std::cout << std::endl;
-
-	}
-
-};
-
-
 int main(int argc, const char* argv[]) {
-	
+	_START_EASYLOGGINGPP(argc, argv);
+
+	LINFO << "Starting SimpleAR demo";
 	// program options
 	std::string sUtqlFile;
 	std::string sComponentsPath;
@@ -102,7 +90,7 @@ int main(int argc, const char* argv[]) {
     try
     {
 	    // initialize logging
-//		Facade::initUbitrackLogging(sLogConfig.c_str());
+		Facade::initUbitrackLogging(sLogConfig.c_str());
 
 		argc-=(argc>0); argv+=(argc>0); // skip program name argv[0] if present
 		option::Stats  stats(usage, argc, argv);
@@ -124,115 +112,85 @@ int main(int argc, const char* argv[]) {
 
 
 		// configure ubitrack
-        std::cout << "Loading components..." << std::endl << std::flush;
-        Facade::BasicFacade utFacade( sComponentsPath.c_str() );
-		FacadeHandler handler;
+        LINFO << "Initialize Connector.";
+		UTSimpleARConnector connector( sComponentsPath.c_str() );
 
-        std::cout << "Instantiating dataflow network from " << sUtqlFile << "..." << std::endl << std::flush;
-		if (!utFacade.loadDataflow( sUtqlFile.c_str() )) {
-			std::cout << "Unable to load dataflow." << std::endl;
+		LINFO << "Instantiating dataflow network from " << sUtqlFile << "...";
+		if (!connector.initialize( sUtqlFile.c_str() )) {
+			LERROR << "Unable to load dataflow.";
 			return 1;
 		};
 
-		std::string pushsink_name("PushSinkPose");
-		Ubitrack::Facade::BasicPushSink< Facade::BasicPoseMeasurement >* pushsink = utFacade.getPushSink<Facade::BasicPoseMeasurement>(pushsink_name.c_str());
-		if (pushsink == NULL) {
-			std::cout << "Error getting PushSinkPose." << std::endl;
-			std::cout << (utFacade.getLastError() == NULL ? "Unkown Error" : utFacade.getLastError()) << std::endl;
-			exit( 1 );
-		} else {
-			pushsink->registerCallback(std::bind(&FacadeHandler::receivePose, handler, std::placeholders::_1));
-		}
-
-		std::string pullsink_name("PullSinkPose");
-		Ubitrack::Facade::BasicPullSink< Facade::BasicPoseMeasurement >* pullsink = utFacade.getPullSink<Facade::BasicPoseMeasurement>(pullsink_name.c_str());
-		if (pullsink == NULL) {
-			std::cout << "Error getting PullSinkPose." << std::endl;
-			std::cout << (utFacade.getLastError() == NULL ? "Unkown Error" : utFacade.getLastError()) << std::endl;
-			exit( 1 );
-		}
-
-		std::string pushsource_name("PushSourcePose");
-		Ubitrack::Facade::BasicPushSource< Facade::BasicPoseMeasurement >* pushsource = utFacade.getPushSource<Facade::BasicPoseMeasurement>(pushsource_name.c_str());
-		if (pushsource == NULL) {
-			std::cout << "Error getting PushSourcePose." << std::endl;
-			std::cout << (utFacade.getLastError() == NULL ? "Unkown Error" : utFacade.getLastError()) << std::endl;
-			exit( 1 );
-		}
-
-        std::cout << "Starting dataflow" << std::endl;
-        utFacade.startDataflow();
-
-
 		// initialize GLFW
-		std::cout << "Initialize GLFW" << std::endl;
-		glfwSetErrorCallback(glfw_error_callback);
+		LINFO << "Initialize GLFW";
 		glfwInit();
 
-		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
-		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-		glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-		glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
-
-		GLFWwindow* window = glfwCreateWindow(800, 600, "Simple AR Demo", nullptr, nullptr); // Windowed
-		glfwMakeContextCurrent(window);
+		LINFO << "Create OpenGL Window.";
+		Window* window = new Window(800, 600, "Simple AR Demo");
 
 		// initialize GLEW
-		std::cout << "Initialize GLEW" << std::endl;
+		LINFO << "Initialize GLEW";
 		glewExperimental = GL_TRUE;
 		glewInit();
 
-
 		// create renderer class
+		Renderer* renderer = new Renderer();
 
-		GLuint vertexBuffer;
-		glGenBuffers(1, &vertexBuffer);
 
-		while(!glfwWindowShouldClose(window))
+		Sleep(100);
+
+		LINFO << "Starting dataflow";
+		connector.start();
+
+
+		while(!window->windowShouldClose())
 		{
 
-			unsigned long long timestamp = utFacade.now();
+			LDEBUG << "Wait for frame.";
+			unsigned long long timestamp = connector.wait_for_frame();
+			LDEBUG << "Got frame: " << timestamp;
 
-//			// push a pose to ubitrack
-//			std::vector<double> push_pose(7, 0.);
-//			push_pose.at(6) = 1.;
-//			Facade::BasicPoseMeasurement bm(timestamp, push_pose);
-//
-//			pushsource->send(bm);
-//
-//
-//			// pull a pose from ubitrack
-//			std::shared_ptr<Facade::BasicPoseMeasurement> pull_bm = pullsink->get(timestamp);
-//			if ((pull_bm) && (pull_bm->isValid())) {
-//				std::vector<double> pull_pose_vec(pull_bm->size());
-//				pull_bm->get(pull_pose_vec);
-//			}
+			// receive tracking data
 
+// XXX currently segfaults...
+//			glm::mat4 camera_pose;
+//			connector.camera_left_get_pose(timestamp, camera_pose);
 
+			// update model based on tracking data
 
-			if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-				glfwSetWindowShouldClose(window, GL_TRUE);
+			// think about stereo-rendering here ..
+
+			// initialize rendering
+			renderer->pre_render(window);
+
+			// all processing per frame goes here.
+			renderer->render(window, timestamp);
+
+			// finalize rendering
+			renderer->post_render(window);
+
+			// trigger event processing
+			glfwPollEvents();
+
 		}
 		
-        std::cout << "Stopping dataflow..." << std::endl << std::flush;
-        utFacade.stopDataflow();
+        LINFO << "Stopping dataflow...";
+        connector.stop();
 
-		// disconnecting a pushsinkcallback
-		pushsink->unregisterCallback();
 
-        std::cout << "Finished, cleaning up..." << std::endl << std::flush;
+		// this should be executed also if execptions happen above .. restructure try/catch block
+        LINFO << "Finished, cleaning up...";
+		connector.teardown();
 	}
 	catch( std::exception& e )
 	{
-	        std::cout << "exception occurred" << std::endl << std::flush;
-	        std::cerr << e.what() << std::endl;
+	        LERROR << "exception occurred: " << e.what();
 	}
 	catch(...) {
-		std::cout << "unkown error occured" << std::endl;
+		LERROR << "unkown error occured";
 	}
 
-	std::cout << "simple_ar_demo terminated." << std::endl << std::flush;
+	LINFO << "simple_ar_demo terminating.";
 
 	glfwTerminate();
 

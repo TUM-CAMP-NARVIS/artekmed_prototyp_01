@@ -4,6 +4,7 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
+#include "simple_ar_demo/glfwwindow.h"
 /*
  * The following things need to be considered:
  * - Stereo (side-by-side) rendering
@@ -12,18 +13,15 @@
  */
 
 class Renderer {
-
+public:
+	// probably need some parameters here ..
 	Renderer();
 	~Renderer();
 
-	// glfw window events
-	void on_window_close(GLFWwindow* window);
-	void on_window_size(GLFWwindow* window, int width, int height);
-
-
-	void pre_render(GLFWwindow* window);
-	void render(GLFWwindow* window, unsigned long long int ts);
-	void post_render(GLFWwindow* window);
+	// think about stereo-rendering before further extension !!
+	virtual void pre_render(Window* window);
+	virtual void render(Window* window, unsigned long long int ts);
+	virtual void post_render(Window* window);
 
 };
 

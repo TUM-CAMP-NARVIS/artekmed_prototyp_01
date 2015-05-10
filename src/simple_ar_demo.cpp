@@ -4,26 +4,29 @@
  *
  */
 
+// platform independent Sleep
+#ifdef _WINDOWS
+#pragma warning (disable : 4231)
+#include <windows.h>
+#else
+#include <unistd.h>
+#define Sleep(x) usleep((x)*1000)
+#endif
+
 #include <stdlib.h>
 #include <signal.h>
 #include <iostream>
 #include <functional>
 #include <vector>
 
-#ifdef _WIN32
- #include <conio.h>
- #pragma warning (disable : 4231)
-#endif
-
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
-// platform independent Sleep
-#ifdef _WINDOWS
-#include <windows.h>
-#else
-#include <unistd.h>
-#define Sleep(x) usleep((x)*1000)
+
+
+#ifdef _WIN32
+ #include <conio.h>
+ #pragma warning (disable : 4231)
 #endif
 
 #include <utFacade/BasicFacadeTypes.h>
@@ -99,7 +102,7 @@ int main(int argc, const char* argv[]) {
     try
     {
 	    // initialize logging
-		Facade::initUbitrackLogging(sLogConfig.c_str());
+//		Facade::initUbitrackLogging(sLogConfig.c_str());
 
 		argc-=(argc>0); argv+=(argc>0); // skip program name argv[0] if present
 		option::Stats  stats(usage, argc, argv);
@@ -188,8 +191,6 @@ int main(int argc, const char* argv[]) {
 
 		while(!glfwWindowShouldClose(window))
 		{
-			glClearColor(0, 0, 0, 0);
-			glClear(GL_COLOR_BUFFER_BIT);
 
 			unsigned long long timestamp = utFacade.now();
 
@@ -209,8 +210,6 @@ int main(int argc, const char* argv[]) {
 //			}
 
 
-			glfwSwapBuffers(window);
-			glfwPollEvents();
 
 			if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 				glfwSetWindowShouldClose(window, GL_TRUE);

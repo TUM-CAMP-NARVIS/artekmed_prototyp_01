@@ -181,6 +181,8 @@ int main(int argc, const char* argv[]) {
 		glewInit();
 
 
+		// create renderer class
+
 		GLuint vertexBuffer;
 		glGenBuffers(1, &vertexBuffer);
 

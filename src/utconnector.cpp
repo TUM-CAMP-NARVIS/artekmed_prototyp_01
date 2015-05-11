@@ -181,11 +181,19 @@ bool UTSimpleARConnector::camera_left_get_intrinsics(const TimestampT ts, glm::m
 	try {
 		std::vector<float> v_intr(9);
 		std::shared_ptr<Facade::BasicMatrixMeasurement< 3, 3 > > m_intr = m_pullsink_camera_intrinsics_left->get(ts);
+		if (!m_intr) {
+			LERROR << "no measurement for camera intrinsics";
+			return false;
+		}
 		m_intr->get(v_intr);
 		intrinsics = glm::make_mat3(&v_intr[0]);
 
 		std::vector<float> v_res(2);
 		std::shared_ptr<Facade::BasicVectorMeasurement< 2 > > m_res = m_pullsink_camera_resolution_left->get(ts);
+		if (!m_res) {
+			LERROR << "no measurement for camera resolution";
+			return false;
+		}
 		m_res->get(v_res);
 		resolution = glm::ivec2( (int)(v_res.at(0)), (int)(v_res.at(1)) );
 	} catch( std::exception &e) {
@@ -210,6 +218,10 @@ bool UTSimpleARConnector::camera_left_get_pose(const TimestampT ts, glm::mat4& p
 	try {
 		std::vector<float> v_pose(7);
 		std::shared_ptr<Facade::BasicPoseMeasurement > m_pose = m_pullsink_camera_pose_left->get(ts);
+		if (!m_pose) {
+			LERROR << "no measurement for camera pose";
+			return false;
+		}
 		m_pose->get(v_pose);
 
 		glm::vec3 position = glm::make_vec3(&v_pose[0]);
@@ -241,6 +253,10 @@ bool UTSimpleARConnector::camera_left_get_pose(const TimestampT ts, glm::mat4& p
 //	try {
 //		std::vector<float> v_pose(7);
 //		std::shared_ptr<Facade::BasicPoseMeasurement > m_pose = m_pullsink_target1_pose->get(ts);
+//		if (!m_pose) {
+//			LERROR << "no measurement for target pose";
+//			return false;
+//		}
 //		m_pose->get(v_pose);
 //
 //		glm::vec3 position = glm::make_vec3(&v_pose[0]);

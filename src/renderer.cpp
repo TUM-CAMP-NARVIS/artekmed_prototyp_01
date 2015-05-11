@@ -10,13 +10,13 @@ Renderer::~Renderer() {
 }
 
 void Renderer::pre_render(Window* window) {
-	LDEBUG << "Renderer::pre_render";
+	//LDEBUG << "Renderer::pre_render";
 	glClearColor(0, 0, 0, 0);
 	glClear(GL_COLOR_BUFFER_BIT);
 }
 
 void Renderer::post_render(Window* window) {
-	LDEBUG << "Renderer::post_render";
+	//LDEBUG << "Renderer::post_render";
 	window->swap();
 }
 

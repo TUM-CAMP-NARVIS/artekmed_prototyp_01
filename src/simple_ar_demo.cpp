@@ -29,14 +29,14 @@
  #pragma warning (disable : 4231)
 #endif
 
-#include <utFacade/BasicFacadeTypes.h>
 #include <utFacade/BasicFacade.h>
 
-#include "simple_ar_demo/optionparser.h"
 #include "simple_ar_demo/utconnector.h"
 #include "simple_ar_demo/glfwwindow.h"
 #include "simple_ar_demo/renderer.h"
 
+// can be replaced with boost::*
+#include "simple_ar_demo/optionparser.h"
 #include  "simple_ar_demo/easylogging++.h"
 // only once in main!!
 _INITIALIZE_EASYLOGGINGPP
@@ -89,9 +89,6 @@ int main(int argc, const char* argv[]) {
 
     try
     {
-	    // initialize logging
-		Facade::initUbitrackLogging(sLogConfig.c_str());
-
 		argc-=(argc>0); argv+=(argc>0); // skip program name argv[0] if present
 		option::Stats  stats(usage, argc, argv);
 		option::Option* options = new option::Option[stats.options_max];
@@ -110,6 +107,9 @@ int main(int argc, const char* argv[]) {
 		sUtqlFile = options[UTQL].arg;
 		sComponentsPath = options[COMPONENTSPATH].arg;
 
+
+	    // initialize Ubitrack logging
+		Facade::initUbitrackLogging(sLogConfig.c_str());
 
 		// configure ubitrack
         LINFO << "Initialize Connector.";
@@ -142,6 +142,8 @@ int main(int argc, const char* argv[]) {
 		LINFO << "Starting dataflow";
 		connector.start();
 
+		// load ipsi scene here
+
 
 		while(!window->windowShouldClose())
 		{
@@ -152,13 +154,14 @@ int main(int argc, const char* argv[]) {
 
 			// receive tracking data
 
-// XXX currently segfaults...
-//			glm::mat4 camera_pose;
-//			connector.camera_left_get_pose(timestamp, camera_pose);
+			glm::mat4 camera_pose;
+			connector.camera_left_get_pose(timestamp, camera_pose);
 
 			// update model based on tracking data
 
 			// think about stereo-rendering here ..
+
+			//integrate IPSI
 
 			// initialize rendering
 			renderer->pre_render(window);

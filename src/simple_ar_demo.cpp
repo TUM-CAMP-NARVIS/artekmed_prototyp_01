@@ -136,7 +136,6 @@ int main(int argc, const char* argv[]) {
 		// create renderer class
 		Renderer* renderer = new Renderer();
 
-
 		Sleep(100);
 
 		LINFO << "Starting dataflow";
@@ -145,17 +144,76 @@ int main(int argc, const char* argv[]) {
 		// load ipsi scene here
 
 
+		// load initial renderer (static) configuration
+		TimestampT ts = connector.now();
+
+		// retrieve camera left intrinsics information
+		glm::mat3 intrinsics_left;
+		glm::ivec2 resolution_left;
+		connector.camera_left_get_intrinsics(ts, intrinsics_left, resolution_left);
+
+		// store camera left intrinsics information
+		renderer->set_intrinsics_left(intrinsics_left, resolution_left);
+
+
+		// some "global" variables to use during the rendering loop
+		std::shared_ptr<Facade::BasicImageMeasurement > cam_img_left;
+
+
+
+		// OpenGL setup
+		// GL: enable and set colors
+		glEnable( GL_COLOR_MATERIAL );
+		glClearColor( 0.0, 0.0, 0.0, 1.0 ); // TODO: make this configurable (but black is best for optical see-through ar!)
+
+		// GL: enable and set depth parameters
+		glEnable( GL_DEPTH_TEST );
+		glClearDepth( 1.0 );
+
+		// GL: disable backface culling
+		glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+		glDisable( GL_CULL_FACE );
+
+		// GL: light parameters
+		GLfloat light_pos[] = { 1.0f, 1.0f, 1.0f, 0.0f };
+		GLfloat light_amb[] = { 0.2f, 0.2f, 0.2f, 1.0f };
+		GLfloat light_dif[] = { 0.9f, 0.9f, 0.9f, 1.0f };
+
+		// GL: enable lighting
+		glLightfv( GL_LIGHT0, GL_POSITION, light_pos );
+		glLightfv( GL_LIGHT0, GL_AMBIENT,  light_amb );
+		glLightfv( GL_LIGHT0, GL_DIFFUSE,  light_dif );
+		glEnable( GL_LIGHTING );
+		glEnable( GL_LIGHT0 );
+
+		// GL: bitmap handling
+		glPixelStorei( GL_PACK_ALIGNMENT,   1 );
+		glPixelStorei( GL_UNPACK_ALIGNMENT, 1 );
+
+		// GL: alpha blending
+		glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+		glEnable( GL_BLEND );
+
+		// GL: misc stuff
+		glShadeModel( GL_SMOOTH );
+		glEnable( GL_NORMALIZE );
+
+
 		while(!window->windowShouldClose())
 		{
 
-			LDEBUG << "Wait for frame.";
-			unsigned long long timestamp = connector.wait_for_frame();
-			LDEBUG << "Got frame: " << timestamp;
+			//LDEBUG << "Wait for frame.";
+			ts = connector.wait_for_frame();
+			//LDEBUG << "Got frame: " << timestamp;
 
-			// receive tracking data
+			// transfer camera_left_image to renderer (only reference, not copied)
+			connector.camera_left_get_current_image(cam_img_left);
+			renderer->set_camera_left_image(cam_img_left);
 
-			glm::mat4 camera_pose;
-			connector.camera_left_get_pose(timestamp, camera_pose);
+			// receive camera pose
+			glm::mat4 cam_pose_left;
+			connector.camera_left_get_pose(ts, cam_pose_left);
+			renderer->set_camera_left_pose(cam_pose_left);
 
 			// update model based on tracking data
 
@@ -167,7 +225,7 @@ int main(int argc, const char* argv[]) {
 			renderer->pre_render(window);
 
 			// all processing per frame goes here.
-			renderer->render(window, timestamp);
+			renderer->render(window, ts);
 
 			// finalize rendering
 			renderer->post_render(window);

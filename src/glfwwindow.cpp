@@ -11,6 +11,7 @@ Window::Window(int width, int height, const std::string& title) {
     glfwSetErrorCallback(ErrorCallback);
     glfwInit();
 
+	// select OpenGL Version
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -32,9 +33,9 @@ Window::Window(int width, int height, const std::string& title) {
 
 void Window::on_window_size(int w, int h)
 {
-    LINFO << "Received Window Size Event " << w << "," << h;
     int fb_width, fb_height;
     glfwGetFramebufferSize(m_glfwWindow, &fb_width, &fb_height);
+    LINFO << "Received Window Size Event " << w << "," << h << " framebuffer: " << fb_width << "," << fb_height;
     glViewport(0, 0, fb_width, fb_height);
 }
 

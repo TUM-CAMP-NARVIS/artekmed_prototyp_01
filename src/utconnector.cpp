@@ -173,7 +173,7 @@ bool UTSimpleARConnector::teardown()
 
 bool UTSimpleARConnector::camera_left_get_intrinsics(const TimestampT ts, glm::mat3& intrinsics, glm::ivec2& resolution) 
 {
-	if ((!m_pullsink_camera_intrinsics_left) || (m_pullsink_camera_resolution_left)) {
+	if ((!m_pullsink_camera_intrinsics_left) || (!m_pullsink_camera_resolution_left)) {
 		LERROR << "pullsinks are not connected";
 		return false;
 	}
@@ -203,9 +203,11 @@ bool UTSimpleARConnector::camera_left_get_intrinsics(const TimestampT ts, glm::m
 	return true;
 }
 
-bool UTSimpleARConnector::camera_left_update_texture(const TimestampT ts, GLuint textureid) 
+bool UTSimpleARConnector::camera_left_get_current_image(std::shared_ptr<Facade::BasicImageMeasurement >& img)
 {
-	// TBD ...
+	// we need locking here to prevent concurrent access to m_current_camera_left_image (when receiving new frame)
+	tbb::interface5::unique_lock<tbb::mutex> ul( m_textureAccessMutex );
+	img = m_current_camera_left_image;
 	return true;
 }
 
@@ -232,7 +234,7 @@ bool UTSimpleARConnector::camera_left_get_pose(const TimestampT ts, glm::mat4& p
 		glm::mat4 transMatrix = glm::translate(glm::mat4(1.0f), position);
 		pose = rotMatrix * transMatrix;
 
-		LINFO << "camera pose: " << glm::to_string(pose);
+		//LINFO << "camera pose: " << glm::to_string(pose);
 
 	} catch( std::exception &e) {
 		LERROR << "error pulling camera pose: " << e.what();
@@ -282,10 +284,13 @@ bool UTSimpleARConnector::camera_left_get_pose(const TimestampT ts, glm::mat4& p
 
 void UTSimpleARConnector::receive_camera_left_image(std::shared_ptr<Facade::BasicImageMeasurement>& image)
 {
-	LINFO << "Image received for timestamp: " << image->time();
+
+	//LDEBUG << "Image received for timestamp: " << image->time();
 	// store image reference for upload
-	// XXX should be locked ...
-	m_current_camera_left_image = image;
+	{
+		tbb::interface5::unique_lock<tbb::mutex> ul( m_textureAccessMutex );
+		m_current_camera_left_image = image;
+	}
 	// notify renderer that new frame is available
 	set_new_frame(image->time());
 }

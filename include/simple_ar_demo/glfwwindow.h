@@ -26,7 +26,7 @@ public:
 
     // utilities
     bool windowShouldClose() {
-        return glfwWindowShouldClose(m_glfwWindow);
+        return (glfwWindowShouldClose(m_glfwWindow)!=0);
     }
 
     inline void swap() {

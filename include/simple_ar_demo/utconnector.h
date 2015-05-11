@@ -60,6 +60,10 @@ public:
 	virtual bool start();
 	virtual bool stop();
 
+	inline TimestampT now() {
+		return m_utFacade.now();
+	}
+
 protected:
 
 	void set_new_frame(TimestampT ts);
@@ -96,8 +100,8 @@ public:
 	// first camera input
 	// naming already reflects future extensions to stereo camera setup
 	bool camera_left_get_intrinsics(const TimestampT ts, glm::mat3& intrinsics, glm::ivec2& resolution);
-	bool camera_left_update_texture(const TimestampT ts, GLuint textureid);
 	bool camera_left_get_pose(const TimestampT ts, glm::mat4& pose);
+	bool camera_left_get_current_image(std::shared_ptr<Facade::BasicImageMeasurement >& img);
 
 	// some tracking data
 //	bool target1_get_pose(const TimestampT ts, glm::mat4& pose);
@@ -120,7 +124,11 @@ private:
 
 //	Ubitrack::Facade::BasicPullSink< Facade::BasicPoseMeasurement >*             m_pullsink_target1_pose;
 
+
+	tbb::mutex m_textureAccessMutex;
 	std::shared_ptr<Facade::BasicImageMeasurement > m_current_camera_left_image;
+
+
 };
 
 

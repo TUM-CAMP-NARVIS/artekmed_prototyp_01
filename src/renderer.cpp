@@ -24,11 +24,14 @@ void Renderer::pre_render(Window* window) {
 	// create a perspective projection matrix
 	glMatrixMode( GL_PROJECTION );
 	glLoadIdentity();
-	//gluPerspective( m_moduleKey.m_fov, ((double)m_width/(double)m_height), m_moduleKey.m_near, m_moduleKey.m_far );
+
+	// load camera projection matrix
+	gluPerspective( 45., ((double)800/(double)600), 0.001, 100. );
+
 	// compute projection matrix
-	glm::mat4 proj_matrix = compute_projection_matrix(m_intrinsics_left, m_resolution_left, 0.01, 100.);
+	//glm::mat4 proj_matrix = compute_projection_matrix(m_intrinsics_left, m_resolution_left, 0.01, 100.);
 	//LDEBUG << "projection matrix: " << glm::to_string(proj_matrix);
-	glMultMatrixf( glm::value_ptr(proj_matrix) );
+	//glMultMatrixf( glm::value_ptr(proj_matrix) );
 
 
 	// clear model-view transformation
@@ -92,6 +95,8 @@ bool Renderer::render_video_background() {
 	double y1 = m_height - y0;
 	double tx = double( m_camera_left_image->getDimX() ) / m_pow2WidthLeft;
 	double ty = double( m_camera_left_image->getDimY() ) / m_pow2HeightLeft;
+
+	//LINFO << "render_texture: " << m_texture_left << "," << m_width << "," << m_height << ","<< y0 << "," << y1 << "," << tx << "," << ty;
 
 	// draw two triangles
 	glBegin( GL_TRIANGLE_STRIP );
@@ -173,7 +178,8 @@ bool Renderer::camera_left_update_texture()
 		
 		// load image into texture
 		glBindTexture( GL_TEXTURE_2D, m_texture_left );
-		glTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, width, height, imgFormat, GL_UNSIGNED_BYTE,m_camera_left_image->getDataPtr() );
+		glTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, width, height, imgFormat, GL_UNSIGNED_BYTE, m_camera_left_image->getDataPtr() );
+		//LINFO << "update texture: " << width << "," << height << "," << imgFormat;
 		
 		glDisable( GL_TEXTURE_2D );
 

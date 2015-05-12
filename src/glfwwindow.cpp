@@ -12,12 +12,16 @@ Window::Window(int width, int height, const std::string& title) {
     glfwInit();
 
 	// select OpenGL Version
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-    glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
+//    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+//    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+//    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+//    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
+    // oldschool
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+
+    glfwWindowHint(GLFW_RESIZABLE, GL_TRUE);
 
     m_glfwWindow = glfwCreateWindow(width, height, title.c_str(), NULL, NULL);
     glfwMakeContextCurrent(m_glfwWindow);
@@ -29,6 +33,9 @@ Window::Window(int width, int height, const std::string& title) {
     glfwSetFramebufferSizeCallback(m_glfwWindow, WindowResizeCallback);
     glfwSetWindowRefreshCallback(m_glfwWindow, WindowRefreshCallback);
     glfwSetWindowCloseCallback(m_glfwWindow, WindowCloseCallback);
+
+    // should not be needed ...
+    on_window_size(800, 600);
 }
 
 void Window::on_window_size(int w, int h)

@@ -26,19 +26,42 @@ void Renderer::pre_render(Window* window) {
 	glLoadIdentity();
 
 	// load camera projection matrix
-	gluPerspective( 45., ((double)1024/(double)768), 0.001, 100. );
+	//gluPerspective( 45., ((double)m_resolution_left.x/(double)m_resolution_left.y), 0.001, 100. );
+
+	/*
+	working projection matrix:
+
+	(1.810660, 0.000000, 0.000000, 0.000000), 
+	(0.000000, 2.414214, 0.000000, 0.000000), 
+	(0.000000, 0.000000, -1.000020, -1.000000), 
+	(0.000000, 0.000000, -0.002000, 0.000000)
+	*/
 
 	// compute projection matrix
-	//glm::mat4 proj_matrix = compute_projection_matrix(m_intrinsics_left, m_resolution_left, 0.01, 100.);
-	//LDEBUG << "projection matrix: " << glm::to_string(proj_matrix);
-	//glMultMatrixf( glm::value_ptr(proj_matrix) );
+	//glMatrixMode( GL_PROJECTION );
+	//glLoadIdentity();
+	glm::mat4 proj_matrix = compute_projection_matrix(m_intrinsics_left, m_resolution_left, 0.01, 100.);
+	glMultMatrixf( glm::value_ptr(proj_matrix) );
+
+	/*
+	not working projection matrix:
+
+	(1.719300, 0.000000, 0.000000, 0.000000), 
+	(0.000000, 2.307032, 0.000000, 0.000000), 
+	(-0.113703, -0.114905, -1.000020, -1.000000), 
+	(0.000000, 0.000000, 0.000000, 0.000000)
+	*/
+	//GLfloat model[16]; 
+	//glGetFloatv(GL_PROJECTION_MATRIX, model);
+
+	//glm::mat4 dbg_proj_mat = glm::make_mat4(model);
+	//LINFO << "proj matr: " << glm::to_string(dbg_proj_mat);
 
 
 	// clear model-view transformation
 	glMatrixMode( GL_MODELVIEW );
 	glLoadIdentity();
-	//glMultMatrixf( glm::value_ptr(m_camera_left_pose) );
-
+	
 	// update textures from current camera image
 	// if no strict synchronization between camera and renderer is desirable, 
 	// then the timestamp of the image-measurement should be checked for updates
@@ -54,27 +77,29 @@ void Renderer::post_render(Window* window) {
 }
 
 void Renderer::render(Window* window, unsigned long long int ts) {
+
+
 	// do render all scene elements here
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-
 	glMultMatrixf(glm::value_ptr(m_camera_left_pose));
-	glTranslatef(0.0f, 0.0f, -7.0f);
+
+	//glTranslatef(0.0f, 0.0f, -7.0f);
 	glBegin(GL_POLYGON);
 	glColor3f(   1.0,  1.0, 0.0 );
-	glVertex3f(  0.5, -0.5, 0.5 );
-	glVertex3f(  0.5,  0.5, 0.5 );
-	glVertex3f( -0.5,  0.5, 0.5 );
-	glVertex3f( -0.5, -0.5, 0.5 );
+	glVertex3f(  0.05, -0.05, 0.05 );
+	glVertex3f(  0.05,  0.05, 0.05 );
+	glVertex3f( -0.05,  0.05, 0.05 );
+	glVertex3f( -0.05, -0.05, 0.05 );
 	glEnd();
 
 	// Purple side - RIGHT
 	glBegin(GL_POLYGON);
 	glColor3f(  1.0,  0.0,  1.0 );
-	glVertex3f( 0.5, -0.5, -0.5 );
-	glVertex3f( 0.5,  0.5, -0.5 );
-	glVertex3f( 0.5,  0.5,  0.5 );
-	glVertex3f( 0.5, -0.5,  0.5 );
+	glVertex3f( 0.05, -0.05, -0.05 );
+	glVertex3f( 0.05,  0.05, -0.05 );
+	glVertex3f( 0.05,  0.05,  0.05 );
+	glVertex3f( 0.05, -0.05,  0.05 );
 	glEnd();
 }
 
@@ -215,57 +240,14 @@ bool Renderer::camera_left_update_texture()
 
 glm::mat4 Renderer::compute_projection_matrix(glm::mat3& intrinsics, glm::ivec2& resolution, float n, float f) {
 
-/*
-	// XXX Adapted from Ubitrack::Algorithm::Projection
-
-	Math::Matrix< T, 4, 4 > m2;
-	ublas::subrange( m2, 0, 3, 0, 4 ) = m;
-
-	T norm  = sqrt ( m2( 2, 0 )*m2( 2, 0 ) + m2( 2, 1 )*m2( 2, 1 ) + m2( 2, 2 )*m2( 2, 2 ) );
-
-	// copy 3rd row to 4th row
-	ublas::row( m2, 3 ) = ublas::row( m2, 2 );
-	ublas::row( m2, 2 ) *= ( -f - n );
-
-	//factor for normalization
-	T add =  f * n * norm;
-
-	m2( 2, 3 ) += add;
-
-	//compute ortho matrix
-	Math::Matrix< T, 4, 4 > ortho;
-
-	ortho( 0, 0 ) = static_cast< T >( 2.0 ) / ( r - l );
-	ortho( 0, 1 ) = static_cast< T >( 0.0 );
-	ortho( 0, 2 ) = static_cast< T >( 0.0 );
-	ortho( 0, 3 ) = ( r + l ) / ( l - r );
-	ortho( 1, 0 ) = static_cast< T >( 0.0 );
-	ortho( 1, 1 ) = static_cast< T >( 2.0 ) / ( t - b );
-	ortho( 1, 2 ) = static_cast< T >( 0.0 );
-	ortho( 1, 3 ) = ( t + b ) / ( b - t );
-	ortho( 2, 0 ) = static_cast< T >( 0.0 );
-	ortho( 2, 1 ) = static_cast< T >( 0.0 );
-	ortho( 2, 2 ) = static_cast< T >( 2.0 ) / ( n - f );
-	ortho( 2, 3 ) = ( f + n ) / ( n - f );
-	ortho( 3, 0 ) = static_cast< T >( 0.0 );
-	ortho( 3, 1 ) = static_cast< T >( 0.0 );
-	ortho( 3, 2 ) = static_cast< T >( 0.0 );
-	ortho( 3, 3 ) = static_cast< T >( 1.0 );
-
-	return ublas::prod( ortho, m2 );
-*/
-
-	// no guarantee for correctness !!!!
-
 	float l = 0;
 	float r = resolution.x;
 	float b = 0;
 	float t = resolution.y;
 
-
+	// mat4 should be all zeros, but glm initializes mat4 as identity
 	glm::mat4 m2(intrinsics);
-
-	// XXX check column vs. row major !!!
+	m2[3].w = 0.0;
 
 	float norm = glm::sqrt( m2[0].z*m2[0].z + m2[1].z*m2[1].z + m2[2].z*m2[2].z );
 	float nf = ( -f - n );
@@ -281,6 +263,8 @@ glm::mat4 Renderer::compute_projection_matrix(glm::mat3& intrinsics, glm::ivec2&
 	m2[1].z *= nf;
 	m2[2].z *= nf;
 	m2[3].z *= nf;
+
+	m2[3].z += add;
 
 	glm::mat4 ortho;
 
@@ -301,14 +285,7 @@ glm::mat4 Renderer::compute_projection_matrix(glm::mat3& intrinsics, glm::ivec2&
 	ortho[2].w = static_cast< float >( 0.0 );
 	ortho[3].w = static_cast< float >( 1.0 );
 
-	return ortho * m2;
+	glm::mat4 proj_mat = ortho * m2;
+	return proj_mat;
 
-/* 
-  typical result
-  1024x768
-[ 1.70912 0 -0.109582 0 ]
-[ 0 2.28297 -0.126095 0 ]
-[ 0 0 -1.0002 -0.020002 ]
-[ 0 0 -1 0 ]
-*/
 }

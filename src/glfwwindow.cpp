@@ -35,7 +35,7 @@ Window::Window(int width, int height, const std::string& title) {
     glfwSetWindowCloseCallback(m_glfwWindow, WindowCloseCallback);
 
     // should not be needed ...
-    on_window_size(800, 600);
+    on_window_size(1024, 768);
 }
 
 void Window::on_window_size(int w, int h)

@@ -233,10 +233,16 @@ bool UTSimpleARConnector::camera_left_get_pose(const TimestampT ts, glm::mat4& p
 		// this might not be correct .. needs a check !!!
 		//Checked this, it's correct
 		glm::mat4 rotMatrix = glm::mat4_cast(rotation);   //rotation is glm::quat
-		glm::mat4 transMatrix = glm::translate(glm::mat4(1.0f), position);
+		rotMatrix[3].x=position.x;
+		rotMatrix[3].y=position.y;
+		rotMatrix[3].z=position.z;
+		rotMatrix[3].w=1.;
+
+		//glm::mat4 transMatrix = glm::translate(glm::mat4(1.0f), position);
 		//LINFO<<"Rotation: "<<glm::to_string(transMatrix);
-		pose = rotMatrix * transMatrix;
+		//pose = rotMatrix * transMatrix;
 		//LINFO << "camera pose: " << glm::to_string(pose);
+		pose = rotMatrix;
 
 	} catch( std::exception &e) {
 		LERROR << "error pulling camera pose: " << e.what();

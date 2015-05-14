@@ -26,7 +26,7 @@ void Renderer::pre_render(Window* window) {
 	glLoadIdentity();
 
 	// load camera projection matrix
-	gluPerspective( 45., ((double)800/(double)600), 0.001, 100. );
+	gluPerspective( 45., ((double)1024/(double)768), 0.001, 100. );
 
 	// compute projection matrix
 	//glm::mat4 proj_matrix = compute_projection_matrix(m_intrinsics_left, m_resolution_left, 0.01, 100.);
@@ -37,8 +37,7 @@ void Renderer::pre_render(Window* window) {
 	// clear model-view transformation
 	glMatrixMode( GL_MODELVIEW );
 	glLoadIdentity();
-
-	// compute viewpoint matrix
+	//glMultMatrixf( glm::value_ptr(m_camera_left_pose) );
 
 	// update textures from current camera image
 	// if no strict synchronization between camera and renderer is desirable, 
@@ -56,7 +55,29 @@ void Renderer::post_render(Window* window) {
 
 void Renderer::render(Window* window, unsigned long long int ts) {
 	// do render all scene elements here
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+
+	glMultMatrixf(glm::value_ptr(m_camera_left_pose));
+	glTranslatef(0.0f, 0.0f, -7.0f);
+	glBegin(GL_POLYGON);
+	glColor3f(   1.0,  1.0, 0.0 );
+	glVertex3f(  0.5, -0.5, 0.5 );
+	glVertex3f(  0.5,  0.5, 0.5 );
+	glVertex3f( -0.5,  0.5, 0.5 );
+	glVertex3f( -0.5, -0.5, 0.5 );
+	glEnd();
+
+	// Purple side - RIGHT
+	glBegin(GL_POLYGON);
+	glColor3f(  1.0,  0.0,  1.0 );
+	glVertex3f( 0.5, -0.5, -0.5 );
+	glVertex3f( 0.5,  0.5, -0.5 );
+	glVertex3f( 0.5,  0.5,  0.5 );
+	glVertex3f( 0.5, -0.5,  0.5 );
+	glEnd();
 }
+
 
 bool Renderer::render_video_background() {
 	// Disable transparency for background image. The Transparency

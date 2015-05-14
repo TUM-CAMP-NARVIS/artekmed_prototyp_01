@@ -187,6 +187,7 @@ bool UTSimpleARConnector::camera_left_get_intrinsics(const TimestampT ts, glm::m
 		}
 		m_intr->get(v_intr);
 		intrinsics = glm::make_mat3(&v_intr[0]);
+		//LINFO<<"XXXXX Intrinsics: "<<glm::to_string(intrinsics);
 
 		std::vector<float> v_res(2);
 		std::shared_ptr<Facade::BasicVectorMeasurement< 2 > > m_res = m_pullsink_camera_resolution_left->get(ts);
@@ -230,10 +231,11 @@ bool UTSimpleARConnector::camera_left_get_pose(const TimestampT ts, glm::mat4& p
 		glm::quat rotation = glm::make_quat(&v_pose[3]);
 
 		// this might not be correct .. needs a check !!!
+		//Checked this, it's correct
 		glm::mat4 rotMatrix = glm::mat4_cast(rotation);   //rotation is glm::quat
 		glm::mat4 transMatrix = glm::translate(glm::mat4(1.0f), position);
+		//LINFO<<"Rotation: "<<glm::to_string(transMatrix);
 		pose = rotMatrix * transMatrix;
-
 		//LINFO << "camera pose: " << glm::to_string(pose);
 
 	} catch( std::exception &e) {

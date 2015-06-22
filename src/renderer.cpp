@@ -9,12 +9,185 @@ Renderer::Renderer()
 , m_texture_left(0)
 {
 
+	setup_shader();
 }
 
 Renderer::~Renderer() {
 
 }
+void Renderer::setup_shader()
+{	
+	//projection_shader= glGetUniformLocation(render_shader.Program, "projection");
+	//modelview_shader= glGetUniformLocation(render_shader.Program, "view");
+	//haveTexLoc= glGetUniformLocation(render_shader.Program, "haveTex");
 
+	//background_shader= new Shader("H\:\\develop\\simple_ar_demo\\config\\camera_texture.vertexshader", "H\:\\develop\\simple_ar_demo\\config\\camera_texture.fragmentshader");
+
+	GLuint VertexArrayID;
+	glGenVertexArrays(1, &VertexArrayID);
+	glBindVertexArray(VertexArrayID);
+	ProgramID= LoadShaders("H\:\\develop\\simple_ar_demo\\config\\camera_texture.vertexshader", "H\:\\develop\\simple_ar_demo\\config\\camera_texture.fragmentshader");
+
+	MatrixID = glGetUniformLocation(ProgramID, "MVP");
+	TextureID  = glGetUniformLocation(ProgramID, "myTextureSampler");
+
+	Texture = loadBMP_custom("H\:\\develop\\simple_ar_demo\\config\\Capture.bmp");
+	/*static const GLfloat g_vertex_buffer_data[] = { 
+	-1.0f,-1.0f,-1.0f,
+	-1.0f,-1.0f, 1.0f,
+	-1.0f, 1.0f, 1.0f,
+	1.0f, 1.0f,-1.0f,
+	-1.0f,-1.0f,-1.0f,
+	-1.0f, 1.0f,-1.0f,
+	1.0f,-1.0f, 1.0f,
+	-1.0f,-1.0f,-1.0f,
+	1.0f,-1.0f,-1.0f,
+	1.0f, 1.0f,-1.0f,
+	1.0f,-1.0f,-1.0f,
+	-1.0f,-1.0f,-1.0f,
+	-1.0f,-1.0f,-1.0f,
+	-1.0f, 1.0f, 1.0f,
+	-1.0f, 1.0f,-1.0f,
+	1.0f,-1.0f, 1.0f,
+	-1.0f,-1.0f, 1.0f,
+	-1.0f,-1.0f,-1.0f,
+	-1.0f, 1.0f, 1.0f,
+	-1.0f,-1.0f, 1.0f,
+	1.0f,-1.0f, 1.0f,
+	1.0f, 1.0f, 1.0f,
+	1.0f,-1.0f,-1.0f,
+	1.0f, 1.0f,-1.0f,
+	1.0f,-1.0f,-1.0f,
+	1.0f, 1.0f, 1.0f,
+	1.0f,-1.0f, 1.0f,
+	1.0f, 1.0f, 1.0f,
+	1.0f, 1.0f,-1.0f,
+	-1.0f, 1.0f,-1.0f,
+	1.0f, 1.0f, 1.0f,
+	-1.0f, 1.0f,-1.0f,
+	-1.0f, 1.0f, 1.0f,
+	1.0f, 1.0f, 1.0f,
+	-1.0f, 1.0f, 1.0f,
+	1.0f,-1.0f, 1.0f
+	};*/
+
+	static const GLfloat g_vertex_buffer_data[]={
+		-1,1,0,
+		1,1,0,
+		1,-1,0,
+		-1,1,0,
+		1,-1,0,
+		-1,-1,0
+	};
+	// Two UV coordinatesfor each vertex. They were created withe Blender.
+	/*static const GLfloat g_uv_buffer_data[] = { 
+	0.000059f, 1.0f-0.000004f, 
+	0.000103f, 1.0f-0.336048f, 
+	0.335973f, 1.0f-0.335903f, 
+	1.000023f, 1.0f-0.000013f, 
+	0.667979f, 1.0f-0.335851f, 
+	0.999958f, 1.0f-0.336064f, 
+	0.667979f, 1.0f-0.335851f, 
+	0.336024f, 1.0f-0.671877f, 
+	0.667969f, 1.0f-0.671889f, 
+	1.000023f, 1.0f-0.000013f, 
+	0.668104f, 1.0f-0.000013f, 
+	0.667979f, 1.0f-0.335851f, 
+	0.000059f, 1.0f-0.000004f, 
+	0.335973f, 1.0f-0.335903f, 
+	0.336098f, 1.0f-0.000071f, 
+	0.667979f, 1.0f-0.335851f, 
+	0.335973f, 1.0f-0.335903f, 
+	0.336024f, 1.0f-0.671877f, 
+	1.000004f, 1.0f-0.671847f, 
+	0.999958f, 1.0f-0.336064f, 
+	0.667979f, 1.0f-0.335851f, 
+	0.668104f, 1.0f-0.000013f, 
+	0.335973f, 1.0f-0.335903f, 
+	0.667979f, 1.0f-0.335851f, 
+	0.335973f, 1.0f-0.335903f, 
+	0.668104f, 1.0f-0.000013f, 
+	0.336098f, 1.0f-0.000071f, 
+	0.000103f, 1.0f-0.336048f, 
+	0.000004f, 1.0f-0.671870f, 
+	0.336024f, 1.0f-0.671877f, 
+	0.000103f, 1.0f-0.336048f, 
+	0.336024f, 1.0f-0.671877f, 
+	0.335973f, 1.0f-0.335903f, 
+	0.667969f, 1.0f-0.671889f, 
+	1.000004f, 1.0f-0.671847f, 
+	0.667979f, 1.0f-0.335851f
+	};*/
+
+	static const GLfloat g_uv_buffer_data[] = { 
+		0,0,
+		1,0,
+		1,1,
+		0,0,
+		1,1,
+		0,1
+	};
+
+	glGenBuffers(1, &vertexbuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
+
+	glGenBuffers(1, &uvbuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, uvbuffer);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(g_uv_buffer_data), g_uv_buffer_data, GL_STATIC_DRAW);
+}
+bool Renderer::shader_camera_left_update_texture()
+{
+	glm::mat4 Projection = glm::perspective(45.0f, 4.0f / 3.0f, 0.01f, 100.0f);
+	// Camera matrix
+	glm::mat4 View       = glm::lookAt(
+		glm::vec3(4,3,3), // Camera is at (4,3,3), in World Space
+		glm::vec3(0,0,0), // and looks at the origin
+		glm::vec3(0,1,0)  // Head is up (set to 0,-1,0 to look upside-down)
+		);
+	// Model matrix : an identity matrix (model will be at the origin)
+	glm::mat4 Model      = glm::mat4(1.0f);
+	// Our ModelViewProjection : multiplication of our 3 matrices
+	glm::mat4 MVP        = Projection * View * Model; // Remember, matrix multiplication is the other way around
+	glUseProgram(ProgramID);
+
+	glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP[0][0]);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, m_texture_left);
+	// Set our "myTextureSampler" sampler to user Texture Unit 0
+	glUniform1i(TextureID, 0);
+
+	// 1rst attribute buffer : vertices
+	glEnableVertexAttribArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
+	glVertexAttribPointer(
+		0,                  // attribute. No particular reason for 0, but must match the layout in the shader.
+		3,                  // size
+		GL_FLOAT,           // type
+		GL_FALSE,           // normalized?
+		0,                  // stride
+		(void*)0            // array buffer offset
+		);
+
+	// 2nd attribute buffer : UVs
+	glEnableVertexAttribArray(1);
+	glBindBuffer(GL_ARRAY_BUFFER, uvbuffer);
+	glVertexAttribPointer(
+		1,                                // attribute. No particular reason for 1, but must match the layout in the shader.
+		2,                                // size : U+V => 2
+		GL_FLOAT,                         // type
+		GL_FALSE,                         // normalized?
+		0,                                // stride
+		(void*)0                          // array buffer offset
+		);
+	// Draw the triangle !
+	glDrawArrays(GL_TRIANGLES, 0, 2*3); // 12*3 indices starting at 0 -> 12 triangles
+	//glDrawArrays(GL_TRIANGLES, 0, 12*3); // 12*3 indices starting at 0 -> 12 triangles
+	glDisableVertexAttribArray(0);
+	glDisableVertexAttribArray(1);
+	return true;
+}
 void Renderer::pre_render(Window* window) {
 	//LDEBUG << "Renderer::pre_render";
 	// clear buffers
@@ -22,26 +195,26 @@ void Renderer::pre_render(Window* window) {
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
 	// create a perspective projection matrix
-	glMatrixMode( GL_PROJECTION );
-	glLoadIdentity();
-
-	// load camera projection matrix
-	//gluPerspective( 45., ((double)m_resolution_left.x/(double)m_resolution_left.y), 0.001, 100. );
-
-	/*
-	working projection matrix:
-
-	(1.810660, 0.000000, 0.000000, 0.000000), 
-	(0.000000, 2.414214, 0.000000, 0.000000), 
-	(0.000000, 0.000000, -1.000020, -1.000000), 
-	(0.000000, 0.000000, -0.002000, 0.000000)
-	*/
-
-	// compute projection matrix
 	//glMatrixMode( GL_PROJECTION );
 	//glLoadIdentity();
-	glm::mat4 proj_matrix = compute_projection_matrix(m_intrinsics_left, m_resolution_left, 0.01, 100.);
-	glMultMatrixf( glm::value_ptr(proj_matrix) );
+
+	//// load camera projection matrix
+	////gluPerspective( 45., ((double)m_resolution_left.x/(double)m_resolution_left.y), 0.001, 100. );
+
+	///*
+	//working projection matrix:
+
+	//(1.810660, 0.000000, 0.000000, 0.000000), 
+	//(0.000000, 2.414214, 0.000000, 0.000000), 
+	//(0.000000, 0.000000, -1.000020, -1.000000), 
+	//(0.000000, 0.000000, -0.002000, 0.000000)
+	//*/
+
+	//// compute projection matrix
+	////glMatrixMode( GL_PROJECTION );
+	////glLoadIdentity();
+	//glm::mat4 proj_matrix = compute_projection_matrix(m_intrinsics_left, m_resolution_left, 0.01, 100.);
+	//glMultMatrixf( glm::value_ptr(proj_matrix) );
 
 	/*
 	not working projection matrix:
@@ -59,16 +232,17 @@ void Renderer::pre_render(Window* window) {
 
 
 	// clear model-view transformation
-	glMatrixMode( GL_MODELVIEW );
-	glLoadIdentity();
+/*	glMatrixMode( GL_MODELVIEW );
+	glLoadIdentity()*/;
 	
 	// update textures from current camera image
 	// if no strict synchronization between camera and renderer is desirable, 
 	// then the timestamp of the image-measurement should be checked for updates
 	camera_left_update_texture();
+	shader_camera_left_update_texture();
 
 	// render the AR video background
-	render_video_background();
+	//render_video_background();
 }
 
 void Renderer::post_render(Window* window) {
@@ -80,27 +254,27 @@ void Renderer::render(Window* window, unsigned long long int ts) {
 
 
 	// do render all scene elements here
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-	glMultMatrixf(glm::value_ptr(m_camera_left_pose));
+	//glMatrixMode(GL_MODELVIEW);
+	//glLoadIdentity();
+	//glMultMatrixf(glm::value_ptr(m_camera_left_pose));
 
-	//glTranslatef(0.0f, 0.0f, -7.0f);
-	glBegin(GL_POLYGON);
-	glColor3f(   1.0,  1.0, 0.0 );
-	glVertex3f(  0.05, -0.05, 0.05 );
-	glVertex3f(  0.05,  0.05, 0.05 );
-	glVertex3f( -0.05,  0.05, 0.05 );
-	glVertex3f( -0.05, -0.05, 0.05 );
-	glEnd();
+	////glTranslatef(0.0f, 0.0f, -7.0f);
+	//glBegin(GL_POLYGON);
+	//glColor3f(   1.0,  1.0, 0.0 );
+	//glVertex3f(  0.05, -0.05, 0.05 );
+	//glVertex3f(  0.05,  0.05, 0.05 );
+	//glVertex3f( -0.05,  0.05, 0.05 );
+	//glVertex3f( -0.05, -0.05, 0.05 );
+	//glEnd();
 
-	// Purple side - RIGHT
-	glBegin(GL_POLYGON);
-	glColor3f(  1.0,  0.0,  1.0 );
-	glVertex3f( 0.05, -0.05, -0.05 );
-	glVertex3f( 0.05,  0.05, -0.05 );
-	glVertex3f( 0.05,  0.05,  0.05 );
-	glVertex3f( 0.05, -0.05,  0.05 );
-	glEnd();
+	//// Purple side - RIGHT
+	//glBegin(GL_POLYGON);
+	//glColor3f(  1.0,  0.0,  1.0 );
+	//glVertex3f( 0.05, -0.05, -0.05 );
+	//glVertex3f( 0.05,  0.05, -0.05 );
+	//glVertex3f( 0.05,  0.05,  0.05 );
+	//glVertex3f( 0.05, -0.05,  0.05 );
+	//glEnd();
 }
 
 
@@ -211,22 +385,29 @@ bool Renderer::camera_left_update_texture()
 			// create new empty texture
 			glGenTextures( 1, &m_texture_left );
 			glBindTexture( GL_TEXTURE_2D, m_texture_left );
-			
+
 			// define texture parameters
-		    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-		    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
-		    glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL );
+			glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+			glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+			glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
+			glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
+			glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL );
+		//glGenerateMipmap(GL_TEXTURE_2D);;
 			
 			// load empty texture image (defines texture size)
-			glTexImage2D( GL_TEXTURE_2D, 0, 3, m_pow2WidthLeft, m_pow2HeightLeft, 0, imgFormat, GL_UNSIGNED_BYTE, 0 );
+			glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, m_pow2WidthLeft, m_pow2HeightLeft, 0, imgFormat, GL_UNSIGNED_BYTE, 0 );
 			LINFO << "glTexImage2D( width=" << m_pow2WidthLeft << ", height=" << m_pow2HeightLeft << " ): " << glGetError();
 		}
 		
 		// load image into texture
 		glBindTexture( GL_TEXTURE_2D, m_texture_left );
-		glTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, width, height, imgFormat, GL_UNSIGNED_BYTE, m_camera_left_image->getDataPtr() );
+		glTexImage2D( GL_TEXTURE_2D, 0, 3, width, height, 0, imgFormat, GL_UNSIGNED_BYTE, m_camera_left_image->getDataPtr());
+		//glTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, width, height, imgFormat, GL_UNSIGNED_BYTE, m_camera_left_image->getDataPtr() );
 		//LINFO << "update texture: " << width << "," << height << "," << imgFormat;
-		
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); 
 		glDisable( GL_TEXTURE_2D );
 
 	} else {

@@ -17,7 +17,8 @@
 
 
 #include <utFacade/BasicFacadeTypes.h>
-
+#include "simple_ar_demo/shader.hpp"
+#include  "simple_ar_demo/texture.hpp"
 /*
  * The following things need to be considered:
  * - Stereo (side-by-side) rendering
@@ -36,6 +37,7 @@ public:
 	virtual void render(Window* window, unsigned long long int ts);
 	virtual void post_render(Window* window);
 
+	bool shader_camera_left_update_texture();
 
 	// some helper functions for transferring data
 	inline void set_camera_left_image(std::shared_ptr<Ubitrack::Facade::BasicImageMeasurement >&img) {
@@ -65,11 +67,18 @@ protected:
 
 	glm::mat4 m_camera_left_pose;
 
+	void setup_shader();
 	std::shared_ptr<Ubitrack::Facade::BasicImageMeasurement > m_camera_left_image;
 	bool m_bTextureLeftInitialized;
 	unsigned int m_pow2WidthLeft;
 	unsigned int m_pow2HeightLeft;
 	GLuint m_texture_left;
+	GLuint MatrixID;
+	GLuint TextureID;
+	GLuint vertexbuffer;
+	GLuint uvbuffer;
+	GLuint Texture;
+	GLuint ProgramID;
 
 };
 

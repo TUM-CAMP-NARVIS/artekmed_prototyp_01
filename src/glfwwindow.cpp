@@ -12,16 +12,18 @@ Window::Window(int width, int height, const std::string& title) {
     glfwInit();
 
 	// select OpenGL Version
-//    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-//    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
-//    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-//    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-
-    // oldschool
+	glfwWindowHint(GLFW_SAMPLES, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+    //glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    //glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+
+    // oldschool
+    //glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
+    //glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
 
     glfwWindowHint(GLFW_RESIZABLE, GL_TRUE);
+	glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, 1); 
 
     m_glfwWindow = glfwCreateWindow(width, height, title.c_str(), NULL, NULL);
     glfwMakeContextCurrent(m_glfwWindow);
@@ -49,6 +51,7 @@ void Window::on_window_size(int w, int h)
 void Window::on_window_close()
 {
 }
+
 
 void Window::on_keypress(int key, int scancode, int action, int mods)
 {

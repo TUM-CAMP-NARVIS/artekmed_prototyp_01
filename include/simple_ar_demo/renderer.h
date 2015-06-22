@@ -43,6 +43,9 @@ public:
 	inline void set_camera_left_image(std::shared_ptr<Ubitrack::Facade::BasicImageMeasurement >&img) {
 		m_camera_left_image = img;
 	}
+	inline void set_camera_depth_image(std::shared_ptr<Ubitrack::Facade::BasicImageMeasurement >&img) {
+		m_camera_depth = img;
+	}
 
 	inline void set_camera_left_pose(glm::mat4& pose) {
 		m_camera_left_pose = pose;
@@ -58,6 +61,7 @@ protected:
 	glm::mat4 compute_projection_matrix(glm::mat3& intrinsics, glm::ivec2& resolution, float n, float f);
 	// needs better structure .. especially for stereo rendering, to avoid duplicating code.
 	bool camera_left_update_texture();
+	bool camera_depth_update_buffer();
 	bool render_video_background();
 
 
@@ -69,6 +73,7 @@ protected:
 
 	void setup_shader();
 	std::shared_ptr<Ubitrack::Facade::BasicImageMeasurement > m_camera_left_image;
+	std::shared_ptr<Ubitrack::Facade::BasicImageMeasurement > m_camera_depth;
 	bool m_bTextureLeftInitialized;
 	unsigned int m_pow2WidthLeft;
 	unsigned int m_pow2HeightLeft;

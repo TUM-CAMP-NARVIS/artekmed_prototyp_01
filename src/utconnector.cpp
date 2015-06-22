@@ -91,6 +91,7 @@ UTSimpleARConnector::UTSimpleARConnector(const std::string& _components_path)
     , m_pullsink_camera_intrinsics_left(NULL)
 	, m_pullsink_camera_resolution_left(NULL)
     , m_pullsink_camera_pose_left(NULL)
+    , m_pullsink_camera_image_depth(NULL)
 //    , m_pullsink_target1_pose(NULL)
 {}
 
@@ -121,6 +122,11 @@ bool UTSimpleARConnector::initialize(const std::string& _utql_filename)
 		delete m_pullsink_camera_pose_left;
 	}
 	m_pullsink_camera_pose_left = m_utFacade.getPullSink<Facade::BasicPoseMeasurement>("camera_pose_left");
+	if(m_pullsink_camera_image_depth != NULL)
+	{
+		delete m_pullsink_camera_image_depth;
+	}
+	m_pullsink_camera_image_depth= m_utFacade.getPullSink<Facade::BasicImageMeasurement>("depth_camera");
 
 //	if (m_pullsink_target1_pose != NULL) {
 //		delete m_pullsink_target1_pose;
@@ -160,6 +166,8 @@ bool UTSimpleARConnector::teardown()
 	if (m_pullsink_camera_pose_left != NULL) {
 		delete m_pullsink_camera_pose_left;
 	}
+	if(m_pullsink_camera_image_depth !=NULL)
+		delete m_pullsink_camera_image_depth;
 
 //	if (m_pullsink_target1_pose != NULL) {
 //		delete m_pullsink_target1_pose;
@@ -210,6 +218,24 @@ bool UTSimpleARConnector::camera_left_get_current_image(std::shared_ptr<Facade::
 	tbb::interface5::unique_lock<tbb::mutex> ul( m_textureAccessMutex );
 	img = m_current_camera_left_image;
 	return true;
+}
+bool UTSimpleARConnector::camera_depth_get_current_image(const TimestampT ts, std::shared_ptr<Facade::BasicImageMeasurement> & img)
+{
+	if (m_pullsink_camera_image_depth == NULL) {
+		LERROR << "pullsink is not connected";
+		return false;
+	}
+	try{
+		std::shared_ptr<Facade::BasicImageMeasurement> m_image= m_pullsink_camera_image_depth->get(ts);
+		img= m_image;
+	}
+	catch(std::exception & e)
+	{
+		LERROR << "error pulling camera pose: " << e.what();
+		return false;
+	}
+	return true;
+
 }
 
 bool UTSimpleARConnector::camera_left_get_pose(const TimestampT ts, glm::mat4& pose) 

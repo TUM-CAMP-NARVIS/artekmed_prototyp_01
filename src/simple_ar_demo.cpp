@@ -191,6 +191,7 @@ int main(int argc, const char* argv[]) {
 
 		// some "global" variables to use during the rendering loop
 		std::shared_ptr<Facade::BasicImageMeasurement > cam_img_left;
+		std::shared_ptr<Facade::BasicImageMeasurement> depth_img;
 
 		glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
 
@@ -265,6 +266,8 @@ int main(int argc, const char* argv[]) {
 
 			connector.camera_left_get_pose(ts, cam_pose_left);
 			renderer->set_camera_left_pose(cam_pose_left);
+			connector.camera_depth_get_current_image(ts, depth_img);
+			renderer->set_camera_depth_image(depth_img);
 
 			// update model based on tracking data
 

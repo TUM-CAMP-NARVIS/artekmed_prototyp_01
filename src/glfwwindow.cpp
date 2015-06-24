@@ -23,7 +23,7 @@ Window::Window(int width, int height, const std::string& title) {
     //glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
 
     glfwWindowHint(GLFW_RESIZABLE, GL_TRUE);
-	glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, 1); 
+	//glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, 1); 
 
     m_glfwWindow = glfwCreateWindow(width, height, title.c_str(), NULL, NULL);
     glfwMakeContextCurrent(m_glfwWindow);

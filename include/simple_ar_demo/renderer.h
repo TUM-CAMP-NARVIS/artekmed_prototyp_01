@@ -37,7 +37,7 @@ public:
 	virtual void render(Window* window, unsigned long long int ts);
 	virtual void post_render(Window* window);
 
-	bool shader_camera_left_update_texture();
+	bool update_background_depth();
 
 	// some helper functions for transferring data
 	inline void set_camera_left_image(std::shared_ptr<Ubitrack::Facade::BasicImageMeasurement >&img) {
@@ -63,6 +63,7 @@ protected:
 	bool camera_left_update_texture();
 	bool camera_depth_update_buffer();
 	bool render_video_background();
+	bool drawObject();
 
 
 
@@ -75,16 +76,25 @@ protected:
 	std::shared_ptr<Ubitrack::Facade::BasicImageMeasurement > m_camera_left_image;
 	std::shared_ptr<Ubitrack::Facade::BasicImageMeasurement > m_camera_depth;
 	bool m_bTextureLeftInitialized;
+	bool m_bDepthInitialized;
 	unsigned int m_pow2WidthLeft;
 	unsigned int m_pow2HeightLeft;
 	GLuint m_texture_left;
+	GLuint m_texture_depth;
+
 	GLuint MatrixID;
-	GLuint TextureID;
+	GLuint background_textureID;
+	GLuint background_depthID;
 	GLuint vertexbuffer;
 	GLuint uvbuffer;
 	GLuint Texture;
-	GLuint ProgramID;
-
+	GLuint backgroundID;
+	GLuint program_2;
+	GLuint object_matrixID;
+	GLuint object_textureID;
+	GLuint object_vertexbuffer;
+	GLuint object_uvbuffer;
+	GLuint VertexArrayID[2];
 };
 
 

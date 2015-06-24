@@ -193,7 +193,7 @@ int main(int argc, const char* argv[]) {
 		std::shared_ptr<Facade::BasicImageMeasurement > cam_img_left;
 		std::shared_ptr<Facade::BasicImageMeasurement> depth_img;
 
-		glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
+		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
 		// Enable depth test
 		glEnable(GL_DEPTH_TEST);
@@ -212,7 +212,6 @@ int main(int argc, const char* argv[]) {
 		// GL: misc stuff
 		glShadeModel( GL_SMOOTH );
 		glEnable( GL_NORMALIZE );
-
 		// OpenGL setup
 		// GL: enable and set colors
 		//glEnable( GL_COLOR_MATERIAL );
@@ -227,28 +226,16 @@ int main(int argc, const char* argv[]) {
 		//glDisable( GL_CULL_FACE );
 
 		// //GL: light parameters
-		//GLfloat light_pos[] = { 1.0f, 1.0f, 1.0f, 0.0f };
-		//GLfloat light_amb[] = { 0.2f, 0.2f, 0.2f, 1.0f };
-		//GLfloat light_dif[] = { 0.9f, 0.9f, 0.9f, 1.0f };
+		GLfloat light_pos[] = { 1.0f, 1.0f, 1.0f, 0.0f };
+		GLfloat light_amb[] = { 0.2f, 0.2f, 0.2f, 1.0f };
+		GLfloat light_dif[] = { 0.9f, 0.9f, 0.9f, 1.0f };
 
-		// //GL: enable lighting
-		//glLightfv( GL_LIGHT0, GL_POSITION, light_pos );
-		//glLightfv( GL_LIGHT0, GL_AMBIENT,  light_amb );
-		//glLightfv( GL_LIGHT0, GL_DIFFUSE,  light_dif );
-		//glEnable( GL_LIGHTING );
-		//glEnable( GL_LIGHT0 );
-
-		// //GL: bitmap handling
-	
-
-		//// GL: alpha blending
-		//glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
-		//glEnable( GL_BLEND );
-
-		//// GL: misc stuff
-		//glShadeModel( GL_SMOOTH );
-		//glEnable( GL_NORMALIZE );
-
+		 //GL: enable lighting
+		glLightfv( GL_LIGHT0, GL_POSITION, light_pos );
+		glLightfv( GL_LIGHT0, GL_AMBIENT,  light_amb );
+		glLightfv( GL_LIGHT0, GL_DIFFUSE,  light_dif );
+		glEnable( GL_LIGHTING );
+		glEnable( GL_LIGHT0 );
 
 		while(!window->windowShouldClose())
 		{

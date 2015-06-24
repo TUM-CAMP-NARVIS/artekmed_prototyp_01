@@ -91,6 +91,10 @@ protected:
 	GLuint backgroundID;
 	GLuint program_2;
 	GLuint object_matrixID;
+	GLint object_modelMatrixID;
+	GLint object_viewMatrixID;
+	GLint object_projectMatrixID;
+	GLint object_depthTextureID;
 	GLuint object_textureID;
 	GLuint object_vertexbuffer;
 	GLuint object_uvbuffer;

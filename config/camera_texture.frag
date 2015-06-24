@@ -21,13 +21,13 @@ void main(){
 	//float z_n = 2.0 * z_b - 1.0;
 	float z_e = (zNear * zFar) / (zFar - depth * (zFar - zNear));
     //float z_e = 2.0 * zNear * zFar  / (zFar + zNear - z_n * (zFar - zNear));
-	if(depth > -1)
+	/*if(depth > -1)
 	{
 		gl_FragDepth=-0.999999;
 	}
 	if(depth <1)
 	{
 		gl_FragDepth= 0.999999;
-	}
+	}*/
 	color2 =  texture2D( myTextureSampler, UV ).rgb;
 }

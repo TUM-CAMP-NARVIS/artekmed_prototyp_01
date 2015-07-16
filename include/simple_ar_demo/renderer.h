@@ -99,6 +99,8 @@ protected:
 	GLuint object_vertexbuffer;
 	GLuint object_uvbuffer;
 	GLuint VertexArrayID[2];
+	float randomA;
+	float randomB;
 };
 
 

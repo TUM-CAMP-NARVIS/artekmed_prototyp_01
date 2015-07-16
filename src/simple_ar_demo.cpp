@@ -152,7 +152,7 @@ int main(int argc, const char* argv[]) {
 		glfwInit();
 
 		LINFO << "Create OpenGL Window.";
-		Window* window = new Window(1024, 768, "Simple AR Demo");
+		Window* window = new Window(640, 480, "Simple AR Demo");
 
 		// initialize GLEW
 		LINFO << "Initialize GLEW";

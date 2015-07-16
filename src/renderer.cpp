@@ -10,6 +10,8 @@ Renderer::Renderer()
 , m_texture_left(0)
 , m_texture_depth(0)
 {
+	randomA=0.00001;
+	randomB=0.51234;
 	setup_shader();
 }
 
@@ -22,14 +24,18 @@ void Renderer::setup_shader()
 	glGenVertexArrays(2, VertexArrayID);
 	//glBindVertexArray(VertexArrayID[0]);
 	//glBindVertexArray(VertexArrayID[1]);
-	backgroundID= LoadShaders("H\:\\develop\\simple_ar_demo\\config\\camera_texture.vertexshader", "H\:\\develop\\simple_ar_demo\\config\\camera_texture.fragmentshader");
-	program_2= LoadShaders("H\:\\develop\\simple_ar_demo\\config\\cube.vertexshader", "H\:\\develop\\simple_ar_demo\\config\\cube.fragmentshader");
+	backgroundID= LoadShaders("H\:\\develop\\simple_ar_demo\\config\\camera_texture.vert", "H\:\\develop\\simple_ar_demo\\config\\camera_texture.frag");
+	program_2= LoadShaders("H\:\\develop\\simple_ar_demo\\config\\cube.vert", "H\:\\develop\\simple_ar_demo\\config\\cube.frag");
 
 	MatrixID = glGetUniformLocation(backgroundID, "MVP");
 	background_textureID  = glGetUniformLocation(backgroundID, "myTextureSampler");
 	background_depthID  = glGetUniformLocation(backgroundID, "depthSampler");
 	
 	object_matrixID=glGetUniformLocation(program_2, "MVP");
+	object_modelMatrixID=glGetUniformLocation(program_2, "M");
+	object_viewMatrixID=glGetUniformLocation(program_2, "V");
+	object_projectMatrixID=glGetUniformLocation(program_2, "P");
+	object_depthTextureID = glGetUniformLocation(program_2, "depthTexSampler");
 	object_textureID=glGetUniformLocation(program_2, "myTextureSampler");
 	Texture = loadBMP_custom("H\:\\develop\\simple_ar_demo\\config\\uvtemplate.bmp");
 
@@ -71,15 +77,6 @@ void Renderer::setup_shader()
 	-1.0f, 1.0f, 1.0f,
 	1.0f,-1.0f, 1.0f
 	};
-
-	//static const GLfloat g_vertex_buffer_data[]={
-	//	1,3,0,
-	//	3,3,0,
-	//	3,1,0,
-	//	1,3,0,
-	//	3,1,0,
-	//	1,1,0
-	//};
 	static const GLfloat g_vertex_buffer_data[]={
 		-1,1,0,
 		1,1,0,
@@ -129,6 +126,20 @@ void Renderer::setup_shader()
 	};
 
 	static const GLfloat g_uv_buffer_data[] = { 
+		/*	-1,1,0,
+		1,1,0,
+		1,-1,0,
+		-1,1,0,
+		1,-1,0,
+		-1,-1,0*/
+
+		//0,1,
+		//1,1,
+		//1,0,
+		//0,1,
+		//1,0,
+		//0,0
+
 		0,0,
 		1,0,
 		1,1,
@@ -156,7 +167,7 @@ void Renderer::setup_shader()
 }
 bool Renderer::update_background_depth()
 {
-	//glViewport(0,0,1024,768);
+	//glViewport(0,0,640,480);
 	glDisable(GL_DEPTH_TEST);
 	glm::mat4 Projection = glm::perspective(45.0f, 1024.f / 768.f, 0.01f, 100.0f);
 	//glm::mat4 Projection = glm::ortho(0, 1024, 0, 768);
@@ -183,11 +194,15 @@ bool Renderer::update_background_depth()
 	// Our ModelViewProjection : multiplication of our 3 matrices
 	glm::mat4 MVP        = Projection * Model; // Remembe
 
+	GLint randomID= glGetUniformLocation(program_2, "randomInc");
 	glUseProgram(backgroundID);
 	glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP[0][0]);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, m_texture_left);
 	glUniform1i(background_textureID, 0);
+	randomA+=sin(randomB);
+	randomB+=sin(randomA);
+	glUniform2f(randomID, randomA, randomB);
 
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, m_texture_depth);
@@ -225,7 +240,7 @@ bool Renderer::drawObject()
 {
 	glEnable(GL_DEPTH_TEST);
 	//glClear(GL_DEPTH_BUFFER_BIT );
-	glm::mat4 Projection = glm::perspective(45.0f, 1024.f / 768.f, 0.01f, 100.0f);
+	glm::mat4 Projection = glm::perspective(45.0f, 1024.f/768.f, 0.01f, 100.0f);
 	// Camera matrix
 	glm::mat4 View       = glm::lookAt(
 		glm::vec3(0,0,-1), // Camera is at (4,3,3), in World Space
@@ -233,27 +248,34 @@ bool Renderer::drawObject()
 		glm::vec3(0,1,0)  // Head is up (set to 0,-1,0 to look upside-down)
 		);
 	//glm::vec3 viewShift = glm::vec3(1.0f, 0.0f, 3.9f);
-	glm::vec3 viewShift = glm::vec3(0.0f, 0.0f, 5.0f);
+	glm::vec3 viewShift = glm::vec3(0.0f, 0.0f, 4.0f);
 	glm::mat4 Model( 
 		1, 0.0, 0.0, 0.0, 
 		0.0, 1, 0.0, 0.0,
 		0.0, 0.0, 1, 0.0,
 		0.0,0.0,0.0,1.0);
 	
-	glm::mat4 modelView= View*Model;
-	modelView = glm::translate(
-		modelView,
+	Model = glm::translate(
+		Model,
 		viewShift
 		);
+	//glm::mat4 modelView= View*Model;
 	// Model matrix : an identity matrix (model will be at the origin)
 	// Our ModelViewProjection : multiplication of our 3 matrices
-	glm::mat4 MVP        = Projection * modelView; // Remember, matrix multiplication is the other way around
+	//glm::mat4 MVP        = Projection * modelView; // Remember, matrix multiplication is the other way around
 	glUseProgram(program_2);
-	glUniformMatrix4fv(object_matrixID, 1, GL_FALSE, &MVP[0][0]);
+	//glUniformMatrix4fv(object_matrixID, 1, GL_FALSE, &MVP[0][0]);
+	glUniformMatrix4fv(object_modelMatrixID, 1, GL_FALSE, &Model[0][0]);
+	glUniformMatrix4fv(object_viewMatrixID, 1, GL_FALSE, &View[0][0]);
+	glUniformMatrix4fv(object_projectMatrixID, 1, GL_FALSE, &Projection[0][0]);
 
 	glActiveTexture(GL_TEXTURE2);
 	glBindTexture(GL_TEXTURE_2D, Texture);
 	glUniform1i(object_textureID, 2);
+	glActiveTexture(GL_TEXTURE3);
+	glBindTexture(GL_TEXTURE_2D, m_texture_depth);
+
+	glUniform1i(object_depthTextureID, 3);
 
 	// Set our "myTextureSampler" sampler to user Texture Unit 0
 
@@ -280,11 +302,21 @@ bool Renderer::drawObject()
 		0,                                // stride
 		(void*)0                          // array buffer offset
 		);
+	glEnableVertexAttribArray(4);
+	glBindBuffer(GL_ARRAY_BUFFER, uvbuffer);
+	glVertexAttribPointer(
+		4,                                // attribute. No particular reason for 1, but must match the layout in the shader.
+		2,                                // size : U+V => 2
+		GL_FLOAT,                         // type
+		GL_FALSE,                         // normalized?
+		0,                                // stride
+		(void*)0                          // array buffer offset
+		);
 	// Draw the triangle !
-	//glDrawArrays(GL_TRIANGLES, 0, 2*3); // 12*3 indices starting at 0 -> 12 triangles
 	glDrawArrays(GL_TRIANGLES, 0, 12*3); // 12*3 indices starting at 0 -> 12 triangles
 	glDisableVertexAttribArray(2);
 	glDisableVertexAttribArray(3);
+	glDisableVertexAttribArray(4);
 	return true;
 }
 
@@ -321,9 +353,8 @@ void Renderer::pre_render(Window* window) {
 	if(m_camera_depth)
 	{
 		camera_depth_update_buffer();
+		update_background_depth();
 		drawObject();
-		//update_background_depth();
-		//update_background_depth();
 	}
 
 
@@ -527,8 +558,6 @@ bool Renderer::camera_left_update_texture()
 			glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
 			glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
 			glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL );
-		//glGenerateMipmap(GL_TEXTURE_2D);;
-			
 			// load empty texture image (defines texture size)
 			glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, m_pow2WidthLeft, m_pow2HeightLeft, 0, imgFormat, GL_UNSIGNED_BYTE, 0 );
 			//LINFO << "glTexImage2D( width=" << m_pow2WidthLeft << ", height=" << m_pow2HeightLeft << " ): " << glGetError();
@@ -538,11 +567,10 @@ bool Renderer::camera_left_update_texture()
 		glBindTexture( GL_TEXTURE_2D, m_texture_left );
 		glTexImage2D( GL_TEXTURE_2D, 0, 3, width, height, 0, imgFormat, GL_UNSIGNED_BYTE, m_camera_left_image->getDataPtr());
 		//glTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, width, height, imgFormat, GL_UNSIGNED_BYTE, m_camera_left_image->getDataPtr() );
-		//LINFO << "update texture: " << width << "," << height << "," << imgFormat;
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); 
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); 
 		glDisable( GL_TEXTURE_2D );
 
 	} else {

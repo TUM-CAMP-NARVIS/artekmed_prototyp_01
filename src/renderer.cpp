@@ -8,7 +8,7 @@ Renderer::Renderer()
 , m_pow2WidthLeft(0)
 , m_pow2HeightLeft(0)
 , m_texture_left(0)
-, m_texture_depth(0)
+, m_texture_depth_left(0)
 {
 	randomA=0.00001;
 	randomB=0.51234;
@@ -133,19 +133,19 @@ void Renderer::setup_shader()
 		1,-1,0,
 		-1,-1,0*/
 
-		//0,1,
-		//1,1,
-		//1,0,
-		//0,1,
-		//1,0,
-		//0,0
-
-		0,0,
+		0,1,
+		1,1,
 		1,0,
-		1,1,
-		0,0,
-		1,1,
-		0,1
+		0,1,
+		1,0,
+		0,0
+
+		//0,0,
+		//1,0,
+		//1,1,
+		//0,0,
+		//1,1,
+		//0,1
 	};
 
 
@@ -167,9 +167,9 @@ void Renderer::setup_shader()
 }
 bool Renderer::update_background_depth()
 {
-	//glViewport(0,0,640,480);
+	glViewport(0,0,640,480);
 	glDisable(GL_DEPTH_TEST);
-	glm::mat4 Projection = glm::perspective(45.0f, 1024.f / 768.f, 0.01f, 100.0f);
+	glm::mat4 Projection = glm::perspective(45.0f, 640.f / 480.f, 0.001f, 100.0f);
 	//glm::mat4 Projection = glm::ortho(0, 1024, 0, 768);
 	// Camera matrix
 	glm::mat4 View       = glm::lookAt(
@@ -205,7 +205,7 @@ bool Renderer::update_background_depth()
 	glUniform2f(randomID, randomA, randomB);
 
 	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, m_texture_depth);
+	glBindTexture(GL_TEXTURE_2D, m_texture_depth_left);
 	glUniform1i(background_depthID, 1);
 	// 1rst attribute buffer : vertices
 	glEnableVertexAttribArray(0);
@@ -240,10 +240,10 @@ bool Renderer::drawObject()
 {
 	glEnable(GL_DEPTH_TEST);
 	//glClear(GL_DEPTH_BUFFER_BIT );
-	glm::mat4 Projection = glm::perspective(45.0f, 1024.f/768.f, 0.01f, 100.0f);
+	glm::mat4 Projection = glm::perspective(45.0f, 640.f/480.f, 0.01f, 100.0f);
 	// Camera matrix
 	glm::mat4 View       = glm::lookAt(
-		glm::vec3(0,0,-1), // Camera is at (4,3,3), in World Space
+		glm::vec3(4,3,3), // Camera is at (4,3,3), in World Space
 		glm::vec3(0,0,0), // and looks at the origin
 		glm::vec3(0,1,0)  // Head is up (set to 0,-1,0 to look upside-down)
 		);
@@ -255,10 +255,10 @@ bool Renderer::drawObject()
 		0.0, 0.0, 1, 0.0,
 		0.0,0.0,0.0,1.0);
 	
-	Model = glm::translate(
-		Model,
-		viewShift
-		);
+	//Model = glm::translate(
+	//	Model,
+	//	viewShift
+	//	);
 	//glm::mat4 modelView= View*Model;
 	// Model matrix : an identity matrix (model will be at the origin)
 	// Our ModelViewProjection : multiplication of our 3 matrices
@@ -273,7 +273,7 @@ bool Renderer::drawObject()
 	glBindTexture(GL_TEXTURE_2D, Texture);
 	glUniform1i(object_textureID, 2);
 	glActiveTexture(GL_TEXTURE3);
-	glBindTexture(GL_TEXTURE_2D, m_texture_depth);
+	glBindTexture(GL_TEXTURE_2D, m_texture_depth_left);
 
 	glUniform1i(object_depthTextureID, 3);
 
@@ -350,9 +350,11 @@ void Renderer::pre_render(Window* window) {
 	// then the timestamp of the image-measurement should be checked for updates
 
 	camera_left_update_texture();
-	if(m_camera_depth)
+	camera_right_update_texture();
+	if(m_camera_depth_left)
 	{
-		camera_depth_update_buffer();
+		camera_depth_update_buffer_left();
+		camera_depth_update_buffer_right();
 		update_background_depth();
 		drawObject();
 	}
@@ -376,10 +378,8 @@ bool Renderer::render_video_background() {
 	// module might have enabled global transparency for the virtual
 	// scene.  We have to restore this state below.
 	glDisable( GL_BLEND );
-
 	// check if we have an image to display as background
 	if (!m_camera_left_image->isValid()) return false;
-
 	int m_width  = m_resolution_left.x;
 	int m_height = m_resolution_left.y;
 
@@ -432,10 +432,10 @@ bool Renderer::render_video_background() {
 
 	return true;
 }
-bool Renderer::camera_depth_update_buffer()
+bool Renderer::camera_depth_update_buffer_left()
 {
 	GLenum imgFormat = GL_LUMINANCE;
-	switch(m_camera_depth->getPixelFormat())
+	switch(m_camera_depth_left->getPixelFormat())
 	{
 	case Ubitrack::Facade::BasicImageMeasurement::LUMINANCE:
 		break;
@@ -447,15 +447,15 @@ bool Renderer::camera_depth_update_buffer()
 		imgFormat = GL_BGR_EXT;
 		break;
 	default:
-		LERROR << "received incompatible pixelformat: " << m_camera_left_image->getPixelFormat();
+		LERROR << "received incompatible pixelformat: " << m_camera_depth_left->getPixelFormat();
 		return false;
 	}
 	//LINFO<<" Pixel format:   "<< m_camera_depth->getPixelFormat();
 
-	unsigned int width = m_camera_depth->getDimX();
-	unsigned int height = m_camera_depth->getDimY();
-	unsigned int nchannels = m_camera_depth->getDimZ();
-	unsigned int pixelSize = m_camera_depth->getPixelSize();
+	unsigned int width = m_camera_depth_left->getDimX();
+	unsigned int height = m_camera_depth_left->getDimY();
+	unsigned int nchannels = m_camera_depth_left->getDimZ();
+	unsigned int pixelSize = m_camera_depth_left->getPixelSize();
 	//LINFO<<"Number channels: "<< nchannels;
 	unsigned int m_pow2WidthDepth=1;
 	unsigned int m_pow2HeightDepth=1;
@@ -476,8 +476,8 @@ bool Renderer::camera_depth_update_buffer()
 				m_pow2HeightDepth <<= 1;
 
 			// create new empty texture
-			glGenTextures( 1, &m_texture_depth );
-			glBindTexture( GL_TEXTURE_2D, m_texture_depth );
+			glGenTextures( 1, &m_texture_depth_left );
+			glBindTexture( GL_TEXTURE_2D, m_texture_depth_left );
 
 			// define texture parameters
 			glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
@@ -490,8 +490,8 @@ bool Renderer::camera_depth_update_buffer()
 			glTexImage2D( GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16, m_pow2WidthDepth, m_pow2HeightDepth, 0, GL_DEPTH_COMPONENT16, GL_UNSIGNED_BYTE, 0 );
 			//LINFO << "glTexImage2D( width=" << m_pow2WidthLeft << ", height=" << m_pow2HeightLeft << " ): " << glGetError();
 		}
-		glBindTexture( GL_TEXTURE_2D, m_texture_depth );
-		glTexImage2D( GL_TEXTURE_2D, 0, 3, width, height, 0, imgFormat, GL_UNSIGNED_BYTE, m_camera_depth->getDataPtr());
+		glBindTexture( GL_TEXTURE_2D, m_texture_depth_left );
+		glTexImage2D( GL_TEXTURE_2D, 0, 3, width, height, 0, imgFormat, GL_UNSIGNED_BYTE, m_camera_depth_left->getDataPtr());
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -500,12 +500,84 @@ bool Renderer::camera_depth_update_buffer()
 	}
 	else 
 	{
-		LERROR << "Received incompatible image, format: " << m_camera_depth->getPixelFormat() << " nchannels " << nchannels << " pixelsize " << pixelSize;
+		LERROR << "Received incompatible image, format: " << m_camera_depth_left->getPixelFormat() << " nchannels " << nchannels << " pixelsize " << pixelSize;
 		return false;
 	}
 	return true;
 }
+bool Renderer::camera_depth_update_buffer_right()
+{
+	GLenum imgFormat = GL_LUMINANCE;
+	switch(m_camera_depth_right->getPixelFormat())
+	{
+	case Ubitrack::Facade::BasicImageMeasurement::LUMINANCE:
+		break;
+		imgFormat = GL_LUMINANCE;
+	case Ubitrack::Facade::BasicImageMeasurement::RGB:
+		imgFormat = GL_RGB;
+		break;
+	case Ubitrack::Facade::BasicImageMeasurement::BGR:
+		imgFormat = GL_BGR_EXT;
+		break;
+	default:
+		LERROR << "received incompatible pixelformat: " << m_camera_depth_right->getPixelFormat();
+		return false;
+	}
+	//LINFO<<" Pixel format:   "<< m_camera_depth->getPixelFormat();
 
+	unsigned int width = m_camera_depth_right->getDimX();
+	unsigned int height = m_camera_depth_right->getDimY();
+	unsigned int nchannels = m_camera_depth_right->getDimZ();
+	unsigned int pixelSize = m_camera_depth_right->getPixelSize();
+	//LINFO<<"Number channels: "<< nchannels;
+	unsigned int m_pow2WidthDepth=1;
+	unsigned int m_pow2HeightDepth=1;
+	if((nchannels==1)&& (pixelSize ==1))
+	{
+		//glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT)
+		if ( !m_bDepthInitialized )
+		{
+			m_bDepthInitialized = true;
+
+			// generate power-of-two sizes
+			m_pow2WidthDepth = 1;
+			while ( m_pow2WidthDepth < width )
+				m_pow2WidthDepth <<= 1;
+
+			m_pow2HeightDepth = 1;
+			while ( m_pow2HeightDepth < height )
+				m_pow2HeightDepth <<= 1;
+
+			// create new empty texture
+			glGenTextures( 1, &m_texture_depth_right );
+			glBindTexture( GL_TEXTURE_2D, m_texture_depth_right );
+
+			// define texture parameters
+			glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+			glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+			glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
+			glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
+			glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL );
+
+			// load empty texture image (defines texture size)
+			glTexImage2D( GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16, m_pow2WidthDepth, m_pow2HeightDepth, 0, GL_DEPTH_COMPONENT16, GL_UNSIGNED_BYTE, 0 );
+			//LINFO << "glTexImage2D( width=" << m_pow2WidthLeft << ", height=" << m_pow2HeightLeft << " ): " << glGetError();
+		}
+		glBindTexture( GL_TEXTURE_2D, m_texture_depth_right );
+		glTexImage2D( GL_TEXTURE_2D, 0, 3, width, height, 0, imgFormat, GL_UNSIGNED_BYTE, m_camera_depth_right->getDataPtr());
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); 
+		glDisable( GL_TEXTURE_2D );
+	}
+	else 
+	{
+		LERROR << "Received incompatible image, format: " << m_camera_depth_right->getPixelFormat() << " nchannels " << nchannels << " pixelsize " << pixelSize;
+		return false;
+	}
+	return true;
+}
 bool Renderer::camera_left_update_texture() 
 {
 
@@ -580,7 +652,80 @@ bool Renderer::camera_left_update_texture()
 
 	return true;
 }
+bool Renderer::camera_right_update_texture() 
+{
 
+	GLenum imgFormat = GL_LUMINANCE;
+	switch(m_camera_right_image->getPixelFormat())
+	{
+	case Ubitrack::Facade::BasicImageMeasurement::LUMINANCE:
+		break;
+	case Ubitrack::Facade::BasicImageMeasurement::RGB:
+		imgFormat = GL_RGB;
+		break;
+	case Ubitrack::Facade::BasicImageMeasurement::BGR:
+		imgFormat = GL_BGR_EXT;
+		break;
+	default:
+		LERROR << "received incompatible pixelformat: " << m_camera_right_image->getPixelFormat();
+		return false;
+	}
+
+	unsigned int width = m_camera_right_image->getDimX();
+	unsigned int height = m_camera_right_image->getDimY();
+	unsigned int nchannels = m_camera_right_image->getDimZ();
+	unsigned int pixelSize = m_camera_right_image->getPixelSize();
+
+
+	if ((nchannels == 3) && (pixelSize == 1)) {
+		// all good BGR/RGB uchar image type .. only supported for now
+		glEnable( GL_TEXTURE_2D );
+
+		if ( !m_bTextureRightInitialized )
+		{
+			m_bTextureRightInitialized = true;
+
+			// generate power-of-two sizes
+			m_pow2WidthRight = 1;
+			while ( m_pow2WidthRight < width )
+				m_pow2WidthRight <<= 1;
+
+			m_pow2HeightRight = 1;
+			while ( m_pow2HeightRight < height )
+				m_pow2HeightRight <<= 1;
+
+			// create new empty texture
+			glGenTextures( 1, &m_texture_right );
+			glBindTexture( GL_TEXTURE_2D, m_texture_right );
+
+			// define texture parameters
+			glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+			glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+			glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
+			glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
+			glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL );
+			// load empty texture image (defines texture size)
+			glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, m_pow2WidthRight, m_pow2HeightRight, 0, imgFormat, GL_UNSIGNED_BYTE, 0 );
+			//LINFO << "glTexImage2D( width=" << m_pow2Widthright << ", height=" << m_pow2Heightright << " ): " << glGetError();
+		}
+
+		// load image into texture
+		glBindTexture( GL_TEXTURE_2D, m_texture_right );
+		glTexImage2D( GL_TEXTURE_2D, 0, 3, width, height, 0, imgFormat, GL_UNSIGNED_BYTE, m_camera_right_image->getDataPtr());
+		//glTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, width, height, imgFormat, GL_UNSIGNED_BYTE, m_camera_right_image->getDataPtr() );
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); 
+		glDisable( GL_TEXTURE_2D );
+
+	} else {
+		LERROR << "Received incompatible image, format: " << m_camera_right_image->getPixelFormat() << " nchannels " << nchannels << " pixelsize " << pixelSize;
+		return false;
+	}
+
+	return true;
+}
 
 glm::mat4 Renderer::compute_projection_matrix(glm::mat3& intrinsics, glm::ivec2& resolution, float n, float f) {
 

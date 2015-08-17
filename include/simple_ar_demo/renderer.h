@@ -43,8 +43,14 @@ public:
 	inline void set_camera_left_image(std::shared_ptr<Ubitrack::Facade::BasicImageMeasurement >&img) {
 		m_camera_left_image = img;
 	}
-	inline void set_camera_depth_image(std::shared_ptr<Ubitrack::Facade::BasicImageMeasurement >&img) {
-		m_camera_depth = img;
+	inline void set_camera_depth_image_left(std::shared_ptr<Ubitrack::Facade::BasicImageMeasurement >&img) {
+		m_camera_depth_left = img;
+	}
+	inline void set_camera_right_image(std::shared_ptr<Ubitrack::Facade::BasicImageMeasurement >&img) {
+		m_camera_right_image = img;
+	}
+	inline void set_camera_depth_image_right(std::shared_ptr<Ubitrack::Facade::BasicImageMeasurement >&img) {
+		m_camera_depth_right = img;
 	}
 
 	inline void set_camera_left_pose(glm::mat4& pose) {
@@ -55,13 +61,19 @@ public:
 		m_intrinsics_left = intrinsics;
 		m_resolution_left = resolution;
 	}
+	inline void set_intrinsics_right(glm::mat3& intrinsics, glm::ivec2& resolution) {
+		m_intrinsics_right = intrinsics;
+		m_resolution_right = resolution;
+	}
 
 protected:
 
 	glm::mat4 compute_projection_matrix(glm::mat3& intrinsics, glm::ivec2& resolution, float n, float f);
 	// needs better structure .. especially for stereo rendering, to avoid duplicating code.
 	bool camera_left_update_texture();
-	bool camera_depth_update_buffer();
+	bool camera_right_update_texture();
+	bool camera_depth_update_buffer_left();
+	bool camera_depth_update_buffer_right();
 	bool render_video_background();
 	bool drawObject();
 
@@ -69,18 +81,27 @@ protected:
 
 	glm::mat3 m_intrinsics_left;
 	glm::ivec2 m_resolution_left;
+	glm::mat3 m_intrinsics_right;
+	glm::ivec2 m_resolution_right;
 
 	glm::mat4 m_camera_left_pose;
 
 	void setup_shader();
 	std::shared_ptr<Ubitrack::Facade::BasicImageMeasurement > m_camera_left_image;
-	std::shared_ptr<Ubitrack::Facade::BasicImageMeasurement > m_camera_depth;
+	std::shared_ptr<Ubitrack::Facade::BasicImageMeasurement > m_camera_depth_left;
+	std::shared_ptr<Ubitrack::Facade::BasicImageMeasurement > m_camera_right_image;
+	std::shared_ptr<Ubitrack::Facade::BasicImageMeasurement > m_camera_depth_right;
 	bool m_bTextureLeftInitialized;
+	bool m_bTextureRightInitialized;
 	bool m_bDepthInitialized;
 	unsigned int m_pow2WidthLeft;
 	unsigned int m_pow2HeightLeft;
+	unsigned int m_pow2WidthRight;
+	unsigned int m_pow2HeightRight;
 	GLuint m_texture_left;
-	GLuint m_texture_depth;
+	GLuint m_texture_right;
+	GLuint m_texture_depth_left;
+	GLuint m_texture_depth_right;
 
 	GLuint MatrixID;
 	GLuint background_textureID;

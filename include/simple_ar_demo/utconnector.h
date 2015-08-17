@@ -100,9 +100,12 @@ public:
 	// first camera input
 	// naming already reflects future extensions to stereo camera setup
 	bool camera_left_get_intrinsics(const TimestampT ts, glm::mat3& intrinsics, glm::ivec2& resolution);
+	bool camera_right_get_intrinsics(const TimestampT ts, glm::mat3& intrinsics, glm::ivec2& resolution);
 	bool camera_left_get_pose(const TimestampT ts, glm::mat4& pose);
 	bool camera_left_get_current_image(std::shared_ptr<Facade::BasicImageMeasurement >& img);
-	bool camera_depth_get_current_image(const TimestampT ts, std::shared_ptr<Facade::BasicImageMeasurement> & img);
+	bool camera_get_current_image_right(const TimestampT ts, std::shared_ptr<Facade::BasicImageMeasurement> & img);
+	bool camera_depth_get_current_image_left(const TimestampT ts, std::shared_ptr<Facade::BasicImageMeasurement> & img);
+	bool camera_depth_get_current_image_right(const TimestampT ts, std::shared_ptr<Facade::BasicImageMeasurement> & img);
 
 	// some tracking data
 //	bool target1_get_pose(const TimestampT ts, glm::mat4& pose);
@@ -118,10 +121,15 @@ public:
 
 private:
 	Ubitrack::Facade::BasicPushSink< Facade::BasicImageMeasurement >*            m_pushsink_camera_image_left;
-	Ubitrack::Facade::BasicPullSink< Facade::BasicImageMeasurement >*            m_pullsink_camera_image_depth;
+	Ubitrack::Facade::BasicPullSink< Facade::BasicImageMeasurement >*            m_pullsink_camera_image_right;
+	Ubitrack::Facade::BasicPullSink< Facade::BasicImageMeasurement >*            m_pullsink_camera_image_depth_left;
+	Ubitrack::Facade::BasicPullSink< Facade::BasicImageMeasurement >*            m_pullsink_camera_image_depth_right;
 	//Ubitrack::Facade::BasicPullSink< Facade::BasicCameraIntrinsicsMeasurement >* m_pullsink_camera_intrinsics_left;
 	Ubitrack::Facade::BasicPullSink< Facade::BasicMatrixMeasurement< 3, 3 > >*   m_pullsink_camera_intrinsics_left;
 	Ubitrack::Facade::BasicPullSink< Facade::BasicVectorMeasurement< 2 > >*      m_pullsink_camera_resolution_left;
+
+	Ubitrack::Facade::BasicPullSink< Facade::BasicMatrixMeasurement< 3, 3 > >*   m_pullsink_camera_intrinsics_right;
+	Ubitrack::Facade::BasicPullSink< Facade::BasicVectorMeasurement< 2 > >*      m_pullsink_camera_resolution_right;
 	Ubitrack::Facade::BasicPullSink< Facade::BasicPoseMeasurement >*             m_pullsink_camera_pose_left;
 
 //	Ubitrack::Facade::BasicPullSink< Facade::BasicPoseMeasurement >*             m_pullsink_target1_pose;

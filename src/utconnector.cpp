@@ -91,8 +91,12 @@ UTSimpleARConnector::UTSimpleARConnector(const std::string& _components_path)
     , m_pullsink_camera_intrinsics_left(NULL)
 	, m_pullsink_camera_resolution_left(NULL)
     , m_pullsink_camera_pose_left(NULL)
-    , m_pullsink_camera_image_depth(NULL)
-//    , m_pullsink_target1_pose(NULL)
+    , m_pullsink_camera_image_depth_left(NULL)
+	, m_pullsink_camera_intrinsics_right(NULL)
+	, m_pullsink_camera_resolution_right(NULL)
+	, m_pullsink_camera_image_depth_right(NULL)
+	, m_pullsink_camera_image_right(NULL)
+	//    , m_pullsink_target1_pose(NULL)
 {}
 
 UTSimpleARConnector::~UTSimpleARConnector()
@@ -108,6 +112,27 @@ bool UTSimpleARConnector::initialize(const std::string& _utql_filename)
 	}
 	m_pushsink_camera_image_left = m_utFacade.getPushSink<Facade::BasicImageMeasurement>("camera_image_left");
 
+	if(m_pullsink_camera_image_right !=NULL)
+		delete m_pullsink_camera_image_right;
+	m_pullsink_camera_image_right = m_utFacade.getPullSink<Facade::BasicImageMeasurement>("camera_image_right");
+
+	
+	if(m_pullsink_camera_image_depth_right !=NULL)
+		delete m_pullsink_camera_image_depth_right;
+	m_pullsink_camera_image_depth_right = m_utFacade.getPullSink<Facade::BasicImageMeasurement>("depth_image_right");
+
+
+	if (m_pullsink_camera_intrinsics_right != NULL) {
+		delete m_pullsink_camera_intrinsics_right;
+	}
+	m_pullsink_camera_intrinsics_right = m_utFacade.getPullSink<Facade::BasicMatrixMeasurement< 3, 3 > >("camera_intrinsics_right");
+
+	if (m_pullsink_camera_resolution_right != NULL) {
+		delete m_pullsink_camera_resolution_right;
+	}
+	m_pullsink_camera_resolution_right = m_utFacade.getPullSink<Facade::BasicVectorMeasurement< 2 > >("camera_resolution_right");
+
+
 	if (m_pullsink_camera_intrinsics_left != NULL) {
 		delete m_pullsink_camera_intrinsics_left;
 	}
@@ -122,19 +147,11 @@ bool UTSimpleARConnector::initialize(const std::string& _utql_filename)
 		delete m_pullsink_camera_pose_left;
 	}
 	m_pullsink_camera_pose_left = m_utFacade.getPullSink<Facade::BasicPoseMeasurement>("camera_pose_left");
-	if(m_pullsink_camera_image_depth != NULL)
+	if(m_pullsink_camera_image_depth_left != NULL)
 	{
-		delete m_pullsink_camera_image_depth;
+		delete m_pullsink_camera_image_depth_left;
 	}
-	m_pullsink_camera_image_depth= m_utFacade.getPullSink<Facade::BasicImageMeasurement>("depth_camera");
-
-//	if (m_pullsink_target1_pose != NULL) {
-//		delete m_pullsink_target1_pose;
-//	}
-//	m_pullsink_target1_pose = m_utFacade.getPullSink<Facade::BasicPoseMeasurement>("target1_pose");
-
-
-	// register callbacks here
+	m_pullsink_camera_image_depth_left= m_utFacade.getPullSink<Facade::BasicImageMeasurement>("depth_camera_left");
 
 	if (m_pushsink_camera_image_left) {
 		m_pushsink_camera_image_left->registerCallback(std::bind(&UTSimpleARConnector::receive_camera_left_image, this, std::placeholders::_1));
@@ -166,8 +183,8 @@ bool UTSimpleARConnector::teardown()
 	if (m_pullsink_camera_pose_left != NULL) {
 		delete m_pullsink_camera_pose_left;
 	}
-	if(m_pullsink_camera_image_depth !=NULL)
-		delete m_pullsink_camera_image_depth;
+	if(m_pullsink_camera_image_depth_left !=NULL)
+		delete m_pullsink_camera_image_depth_left;
 
 //	if (m_pullsink_target1_pose != NULL) {
 //		delete m_pullsink_target1_pose;
@@ -177,7 +194,38 @@ bool UTSimpleARConnector::teardown()
 	return ret;
 }
 
+bool UTSimpleARConnector::camera_right_get_intrinsics(const TimestampT ts, glm::mat3& intrinsics, glm::ivec2& resolution) 
+{
+	if ((!m_pullsink_camera_intrinsics_right) || (!m_pullsink_camera_resolution_right)) {
+		LERROR << "pullsinks are not connected";
+		return false;
+	}
 
+	try {
+		std::vector<float> v_intr(9);
+		std::shared_ptr<Facade::BasicMatrixMeasurement< 3, 3 > > m_intr = m_pullsink_camera_intrinsics_right->get(ts);
+		if (!m_intr) {
+			LERROR << "no measurement for camera intrinsics";
+			return false;
+		}
+		m_intr->get(v_intr);
+		intrinsics = glm::make_mat3(&v_intr[0]);
+		//LINFO<<"XXXXX Intrinsics: "<<glm::to_string(intrinsics);
+
+		std::vector<float> v_res(2);
+		std::shared_ptr<Facade::BasicVectorMeasurement< 2 > > m_res = m_pullsink_camera_resolution_right->get(ts);
+		if (!m_res) {
+			LERROR << "no measurement for camera resolution";
+			return false;
+		}
+		m_res->get(v_res);
+		resolution = glm::ivec2( (int)(v_res.at(0)), (int)(v_res.at(1)) );
+	} catch( std::exception &e) {
+		LERROR << "error pulling intrinsics: " << e.what();
+		return false;
+	}
+	return true;
+}
 
 bool UTSimpleARConnector::camera_left_get_intrinsics(const TimestampT ts, glm::mat3& intrinsics, glm::ivec2& resolution) 
 {
@@ -219,14 +267,49 @@ bool UTSimpleARConnector::camera_left_get_current_image(std::shared_ptr<Facade::
 	img = m_current_camera_left_image;
 	return true;
 }
-bool UTSimpleARConnector::camera_depth_get_current_image(const TimestampT ts, std::shared_ptr<Facade::BasicImageMeasurement> & img)
+bool UTSimpleARConnector::camera_depth_get_current_image_left(const TimestampT ts, std::shared_ptr<Facade::BasicImageMeasurement> & img)
 {
-	if (m_pullsink_camera_image_depth == NULL) {
+	if (m_pullsink_camera_image_depth_left == NULL) {
 		LERROR << "pullsink is not connected";
 		return false;
 	}
 	try{
-		std::shared_ptr<Facade::BasicImageMeasurement> m_image= m_pullsink_camera_image_depth->get(ts);
+		std::shared_ptr<Facade::BasicImageMeasurement> m_image= m_pullsink_camera_image_depth_left->get(ts);
+		img= m_image;
+	}
+	catch(std::exception & e)
+	{
+		LERROR << "error pulling camera pose: " << e.what();
+		return false;
+	}
+	return true;
+
+}
+bool UTSimpleARConnector::camera_depth_get_current_image_right(const TimestampT ts, std::shared_ptr<Facade::BasicImageMeasurement> & img)
+{
+	if (m_pullsink_camera_image_depth_right == NULL) {
+		LERROR << "pullsink is not connected";
+		return false;
+	}
+	try{
+		std::shared_ptr<Facade::BasicImageMeasurement> m_image= m_pullsink_camera_image_depth_right->get(ts);
+		img= m_image;
+	}
+	catch(std::exception & e)
+	{
+		LERROR << "error pulling camera pose: " << e.what();
+		return false;
+	}
+	return true;
+}
+bool UTSimpleARConnector::camera_get_current_image_right(const TimestampT ts, std::shared_ptr<Facade::BasicImageMeasurement> & img)
+{
+	if (m_pullsink_camera_image_right == NULL) {
+		LERROR << "pullsink is not connected";
+		return false;
+	}
+	try{
+		std::shared_ptr<Facade::BasicImageMeasurement> m_image= m_pullsink_camera_image_right->get(ts);
 		img= m_image;
 	}
 	catch(std::exception & e)

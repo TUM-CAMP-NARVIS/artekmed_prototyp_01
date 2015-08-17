@@ -1,8 +1,8 @@
 /*
- * UbiTrack - Basic Facade Example
- * by Ulrich Eck <ueck@net-labs.de>
- *
- */
+* UbiTrack - Basic Facade Example
+* by Ulrich Eck <ueck@net-labs.de>
+*
+*/
 
 // platform independent Sleep
 #ifdef _WINDOWS
@@ -25,8 +25,8 @@
 
 
 #ifdef _WIN32
- #include <conio.h>
- #pragma warning (disable : 4231)
+#include <conio.h>
+#pragma warning (disable : 4231)
 #endif
 
 #include <utFacade/BasicFacade.h>
@@ -41,34 +41,34 @@
 // only once in main!!
 _INITIALIZE_EASYLOGGINGPP
 
-using namespace Ubitrack;
+	using namespace Ubitrack;
 
 /*
- * Commandline arguments handling
- */
+* Commandline arguments handling
+*/
 struct Arg: public option::Arg
 {
-  static option::ArgStatus Required(const option::Option& option, bool)
-  {
-    return option.arg == 0 ? option::ARG_ILLEGAL : option::ARG_OK;
-  }
+	static option::ArgStatus Required(const option::Option& option, bool)
+	{
+		return option.arg == 0 ? option::ARG_ILLEGAL : option::ARG_OK;
+	}
 };
 
 
- enum  optionIndex { UNKNOWN, HELP, UTQL, COMPONENTSPATH };
- const option::Descriptor usage[] =
- {
-  {UNKNOWN,           0,"" , ""                 ,Arg::None,     "USAGE: simple_ar_demo [options]\n\n"
-                                                                "Options:" },
-  {HELP,              0,"" , "help"             ,Arg::None,     "  --help  \tPrint usage and exit." },
-  {UTQL,              0,"u", "utql"             ,Arg::Required, "  --utql, -u  \tUTQL File to load." },
-  {COMPONENTSPATH,    0,"c", "components_path"  ,Arg::Required, "  --components_path, -c  \tThe Ubitrack Components Path." },
-  {0,0,0,0,0,0}
- };
+enum  optionIndex { UNKNOWN, HELP, UTQL, COMPONENTSPATH };
+const option::Descriptor usage[] =
+{
+	{UNKNOWN,           0,"" , ""                 ,Arg::None,     "USAGE: simple_ar_demo [options]\n\n"
+	"Options:" },
+	{HELP,              0,"" , "help"             ,Arg::None,     "  --help  \tPrint usage and exit." },
+	{UTQL,              0,"u", "utql"             ,Arg::Required, "  --utql, -u  \tUTQL File to load." },
+	{COMPONENTSPATH,    0,"c", "components_path"  ,Arg::Required, "  --components_path, -c  \tThe Ubitrack Components Path." },
+	{0,0,0,0,0,0}
+};
 
 /*
- * Utils
- */
+* Utils
+*/
 
 void print_vector(std::vector<double>& v) {
 	std::cout << "[";
@@ -113,32 +113,32 @@ int main(int argc, const char* argv[]) {
 	std::string sComponentsPath;
 	std::string sLogConfig("log4cpp.conf");
 
-    try
-    {
+	try
+	{
 		argc-=(argc>0); argv+=(argc>0); // skip program name argv[0] if present
 		option::Stats  stats(usage, argc, argv);
 		option::Option* options = new option::Option[stats.options_max];
 		option::Option* buffer  = new option::Option[stats.buffer_max];
 		option::Parser parse(usage, argc, argv, options, buffer);
 
-	   if (parse.error())
-	     return 1;
+		if (parse.error())
+			return 1;
 
-	   if (options[HELP] || argc == 0) {
-	     option::printUsage(std::cout, usage);
-	     return 0;
-	   }
+		if (options[HELP] || argc == 0) {
+			option::printUsage(std::cout, usage);
+			return 0;
+		}
 
 		// use cmdline arguments
 		sUtqlFile = options[UTQL].arg;
 		sComponentsPath = options[COMPONENTSPATH].arg;
 
 
-	    // initialize Ubitrack logging
+		// initialize Ubitrack logging
 		Facade::initUbitrackLogging(sLogConfig.c_str());
 
 		// configure ubitrack
-        LINFO << "Initialize Connector.";
+		LINFO << "Initialize Connector.";
 		UTSimpleARConnector connector( sComponentsPath.c_str() );
 
 		LINFO << "Instantiating dataflow network from " << sUtqlFile << "...";
@@ -146,6 +146,14 @@ int main(int argc, const char* argv[]) {
 			LERROR << "Unable to load dataflow.";
 			return 1;
 		};
+		//const char * test="H\:\\develop\\simple_ipsi_demo\\config\\simple_demo\\main_calib.dfg" ;
+		////std::string test("H\:\\develop\\simple_ipsi_demo\\config\\simple_demo\\main_calib.dfg");
+		//UTSimpleARConnector connector_2(test );
+		//connector_2.initialize(test);
+/*		if (!connector.initialize( sUtqlFile.c_str() )) {
+			LERROR << "Unable to load dataflow.";
+			return 1;
+		};*/
 
 		// initialize GLFW
 		LINFO << "Initialize GLFW";
@@ -183,15 +191,22 @@ int main(int argc, const char* argv[]) {
 		// retrieve camera left intrinsics information
 		glm::mat3 intrinsics_left;
 		glm::ivec2 resolution_left;
+		glm::mat3 intrinsics_right;
+		glm::ivec2 resolution_right;
 		connector.camera_left_get_intrinsics(ts, intrinsics_left, resolution_left);
-		
+		connector.camera_right_get_intrinsics(ts, intrinsics_right, resolution_right);
+
+
 		// store camera left intrinsics information
 		renderer->set_intrinsics_left(intrinsics_left, resolution_left);
+		renderer->set_intrinsics_right(intrinsics_right, resolution_right);
 
 
 		// some "global" variables to use during the rendering loop
 		std::shared_ptr<Facade::BasicImageMeasurement > cam_img_left;
-		std::shared_ptr<Facade::BasicImageMeasurement> depth_img;
+		std::shared_ptr<Facade::BasicImageMeasurement > cam_img_right;
+		std::shared_ptr<Facade::BasicImageMeasurement> depth_img_left;
+		std::shared_ptr<Facade::BasicImageMeasurement> depth_img_right;
 
 		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
@@ -230,7 +245,7 @@ int main(int argc, const char* argv[]) {
 		GLfloat light_amb[] = { 0.2f, 0.2f, 0.2f, 1.0f };
 		GLfloat light_dif[] = { 0.9f, 0.9f, 0.9f, 1.0f };
 
-		 //GL: enable lighting
+		//GL: enable lighting
 		glLightfv( GL_LIGHT0, GL_POSITION, light_pos );
 		glLightfv( GL_LIGHT0, GL_AMBIENT,  light_amb );
 		glLightfv( GL_LIGHT0, GL_DIFFUSE,  light_dif );
@@ -251,10 +266,14 @@ int main(int argc, const char* argv[]) {
 			// receive camera pose
 			glm::mat4 cam_pose_left;
 
-			connector.camera_left_get_pose(ts, cam_pose_left);
-			renderer->set_camera_left_pose(cam_pose_left);
-			connector.camera_depth_get_current_image(ts, depth_img);
-			renderer->set_camera_depth_image(depth_img);
+			//connector.camera_left_get_pose(ts, cam_pose_left);
+			//renderer->set_camera_left_pose(cam_pose_left);
+			connector.camera_depth_get_current_image_left(ts, depth_img_left);
+			renderer->set_camera_depth_image_left(depth_img_left);
+			connector.camera_depth_get_current_image_right(ts, depth_img_right);
+			renderer->set_camera_depth_image_right(depth_img_right);
+			connector.camera_get_current_image_right(ts, cam_img_right);
+			renderer->set_camera_right_image(cam_img_right);
 
 			// update model based on tracking data
 
@@ -275,18 +294,18 @@ int main(int argc, const char* argv[]) {
 			glfwPollEvents();
 
 		}
-		
-        LINFO << "Stopping dataflow...";
-        connector.stop();
+
+		LINFO << "Stopping dataflow...";
+		connector.stop();
 
 
 		// this should be executed also if execptions happen above .. restructure try/catch block
-        LINFO << "Finished, cleaning up...";
+		LINFO << "Finished, cleaning up...";
 		connector.teardown();
 	}
 	catch( std::exception& e )
 	{
-	        LERROR << "exception occurred: " << e.what();
+		LERROR << "exception occurred: " << e.what();
 	}
 	catch(...) {
 		LERROR << "unkown error occured";
@@ -296,6 +315,6 @@ int main(int argc, const char* argv[]) {
 
 	glfwTerminate();
 
-	
-	
+
+
 }

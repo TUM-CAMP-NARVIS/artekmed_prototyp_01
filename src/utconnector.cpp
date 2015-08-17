@@ -119,7 +119,7 @@ bool UTSimpleARConnector::initialize(const std::string& _utql_filename)
 	
 	if(m_pullsink_camera_image_depth_right !=NULL)
 		delete m_pullsink_camera_image_depth_right;
-	m_pullsink_camera_image_depth_right = m_utFacade.getPullSink<Facade::BasicImageMeasurement>("depth_image_right");
+	m_pullsink_camera_image_depth_right = m_utFacade.getPullSink<Facade::BasicImageMeasurement>("depth_camera_right");
 
 
 	if (m_pullsink_camera_intrinsics_right != NULL) {
@@ -171,7 +171,9 @@ bool UTSimpleARConnector::teardown()
 	if (m_pushsink_camera_image_left != NULL) {
 		delete m_pushsink_camera_image_left;
 	}
-
+	if (m_pullsink_camera_image_right != NULL) {
+		delete m_pullsink_camera_image_right;
+	}
 	if (m_pullsink_camera_intrinsics_left != NULL) {
 		delete m_pullsink_camera_intrinsics_left;
 	}
@@ -270,7 +272,7 @@ bool UTSimpleARConnector::camera_left_get_current_image(std::shared_ptr<Facade::
 bool UTSimpleARConnector::camera_depth_get_current_image_left(const TimestampT ts, std::shared_ptr<Facade::BasicImageMeasurement> & img)
 {
 	if (m_pullsink_camera_image_depth_left == NULL) {
-		LERROR << "pullsink is not connected";
+		LERROR << "pullsink depth left is not connected";
 		return false;
 	}
 	try{
@@ -279,7 +281,7 @@ bool UTSimpleARConnector::camera_depth_get_current_image_left(const TimestampT t
 	}
 	catch(std::exception & e)
 	{
-		LERROR << "error pulling camera pose: " << e.what();
+		LERROR << "error pulling camera image left: " << e.what();
 		return false;
 	}
 	return true;
@@ -288,7 +290,7 @@ bool UTSimpleARConnector::camera_depth_get_current_image_left(const TimestampT t
 bool UTSimpleARConnector::camera_depth_get_current_image_right(const TimestampT ts, std::shared_ptr<Facade::BasicImageMeasurement> & img)
 {
 	if (m_pullsink_camera_image_depth_right == NULL) {
-		LERROR << "pullsink is not connected";
+		LERROR << "pullsink depth right is not connected";
 		return false;
 	}
 	try{
@@ -297,7 +299,7 @@ bool UTSimpleARConnector::camera_depth_get_current_image_right(const TimestampT 
 	}
 	catch(std::exception & e)
 	{
-		LERROR << "error pulling camera pose: " << e.what();
+		LERROR << "error pulling camera depth right: " << e.what();
 		return false;
 	}
 	return true;
@@ -305,16 +307,17 @@ bool UTSimpleARConnector::camera_depth_get_current_image_right(const TimestampT 
 bool UTSimpleARConnector::camera_get_current_image_right(const TimestampT ts, std::shared_ptr<Facade::BasicImageMeasurement> & img)
 {
 	if (m_pullsink_camera_image_right == NULL) {
-		LERROR << "pullsink is not connected";
+		LERROR << "pullsink camera right is not connected";
 		return false;
 	}
 	try{
-		std::shared_ptr<Facade::BasicImageMeasurement> m_image= m_pullsink_camera_image_right->get(ts);
-		img= m_image;
+		//std::shared_ptr<Facade::BasicImageMeasurement> m_image= m_pullsink_camera_image_right->get(ts);
+		//img= m_image;
+		img= m_pullsink_camera_image_right->get(ts);
 	}
 	catch(std::exception & e)
 	{
-		LERROR << "error pulling camera pose: " << e.what();
+		LERROR << "error pulling camera image right: " << e.what();
 		return false;
 	}
 	return true;

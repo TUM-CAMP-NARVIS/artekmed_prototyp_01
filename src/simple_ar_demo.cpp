@@ -160,7 +160,7 @@ int main(int argc, const char* argv[]) {
 		glfwInit();
 
 		LINFO << "Create OpenGL Window.";
-		Window* window = new Window(640, 480, "Simple AR Demo");
+		Window* window = new Window( 1280, 480, "Simple AR Demo");
 
 		// initialize GLEW
 		LINFO << "Initialize GLEW";
@@ -270,8 +270,10 @@ int main(int argc, const char* argv[]) {
 			//renderer->set_camera_left_pose(cam_pose_left);
 			connector.camera_depth_get_current_image_left(ts, depth_img_left);
 			renderer->set_camera_depth_image_left(depth_img_left);
+
 			connector.camera_depth_get_current_image_right(ts, depth_img_right);
 			renderer->set_camera_depth_image_right(depth_img_right);
+
 			connector.camera_get_current_image_right(ts, cam_img_right);
 			renderer->set_camera_right_image(cam_img_right);
 

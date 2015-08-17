@@ -4,11 +4,14 @@
 
 Renderer::Renderer()
 : m_bTextureLeftInitialized(false) 
-, m_bDepthInitialized (false)
+, m_bTextureRightInitialized(false) 
+, m_bDepthInitializedLeft (false)
+, m_bDepthInitializedRight (false)
 , m_pow2WidthLeft(0)
 , m_pow2HeightLeft(0)
 , m_texture_left(0)
 , m_texture_depth_left(0)
+, m_texture_depth_right(0)
 {
 	randomA=0.00001;
 	randomB=0.51234;
@@ -25,18 +28,19 @@ void Renderer::setup_shader()
 	//glBindVertexArray(VertexArrayID[0]);
 	//glBindVertexArray(VertexArrayID[1]);
 	backgroundID= LoadShaders("H\:\\develop\\simple_ar_demo\\config\\camera_texture.vert", "H\:\\develop\\simple_ar_demo\\config\\camera_texture.frag");
-	program_2= LoadShaders("H\:\\develop\\simple_ar_demo\\config\\cube.vert", "H\:\\develop\\simple_ar_demo\\config\\cube.frag");
+	object_programID= LoadShaders("H\:\\develop\\simple_ar_demo\\config\\cube.vert", "H\:\\develop\\simple_ar_demo\\config\\cube.frag");
 
-	MatrixID = glGetUniformLocation(backgroundID, "MVP");
+	background_MatrixID = glGetUniformLocation(backgroundID, "MVP");
 	background_textureID  = glGetUniformLocation(backgroundID, "myTextureSampler");
 	background_depthID  = glGetUniformLocation(backgroundID, "depthSampler");
 	
-	object_matrixID=glGetUniformLocation(program_2, "MVP");
-	object_modelMatrixID=glGetUniformLocation(program_2, "M");
-	object_viewMatrixID=glGetUniformLocation(program_2, "V");
-	object_projectMatrixID=glGetUniformLocation(program_2, "P");
-	object_depthTextureID = glGetUniformLocation(program_2, "depthTexSampler");
-	object_textureID=glGetUniformLocation(program_2, "myTextureSampler");
+	object_matrixID=glGetUniformLocation(object_programID, "MVP");
+	object_modelMatrixID=glGetUniformLocation(object_programID, "M");
+	object_viewMatrixID=glGetUniformLocation(object_programID, "V");
+	object_projectMatrixID=glGetUniformLocation(object_programID, "P");
+	object_depthTextureID = glGetUniformLocation(object_programID, "depthTexSampler");
+	object_textureID=glGetUniformLocation(object_programID, "myTextureSampler");
+	object_isRightID = glGetUniformLocation(object_programID, "isRight");
 	Texture = loadBMP_custom("H\:\\develop\\simple_ar_demo\\config\\uvtemplate.bmp");
 
 	static const GLfloat g_vertex_buffer_data_2[] = { 
@@ -165,48 +169,53 @@ void Renderer::setup_shader()
 	glBindBuffer(GL_ARRAY_BUFFER, object_uvbuffer);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(g_uv_buffer_data_2), g_uv_buffer_data_2, GL_STATIC_DRAW);
 }
-bool Renderer::update_background_depth()
+bool Renderer::update_background_left()
 {
-	glViewport(0,0,640,480);
+	//glDisable(GL_BLEND);
+	glViewport(0, 0, 640, 480);
 	glDisable(GL_DEPTH_TEST);
-	glm::mat4 Projection = glm::perspective(45.0f, 640.f / 480.f, 0.001f, 100.0f);
-	//glm::mat4 Projection = glm::ortho(0, 1024, 0, 768);
-	// Camera matrix
-	glm::mat4 View       = glm::lookAt(
-		glm::vec3(0,0,10), // Camera is at (4,3,3), in World Space
-		glm::vec3(0,0,0), // and looks at the origin
-		glm::vec3(0,1,0)  // Head is up (set to 0,-1,0 to look upside-down)
-		);
-	// Model matrix : an identity matrix (model will be at the origin)
-	glm::vec3 viewShift = glm::vec3(0.0f, 0.0f, 3.9f);
-	glm::mat4 Model( 
-		1, 0.0, 0.0, 0.0, 
-		0.0, 1, 0.0, 0.0,
-		0.0, 0.0, 1, 0.0,
-		0.0,0.0,0.0,1.0);
-
-	glm::mat4 modelView= View*Model;
-	modelView = glm::translate(
-		modelView,
-		viewShift
-		);
-	// Model matrix : an identity matrix (model will be at the origin)
-	// Our ModelViewProjection : multiplication of our 3 matrices
-	glm::mat4 MVP        = Projection * Model; // Remembe
-
-	GLint randomID= glGetUniformLocation(program_2, "randomInc");
 	glUseProgram(backgroundID);
-	glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP[0][0]);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, m_texture_left);
 	glUniform1i(background_textureID, 0);
-	randomA+=sin(randomB);
-	randomB+=sin(randomA);
-	glUniform2f(randomID, randomA, randomB);
+	glEnableVertexAttribArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
+	glVertexAttribPointer(
+		0,                  // attribute. No particular reason for 0, but must match the layout in the shader.
+		3,                  // size
+		GL_FLOAT,           // type
+		GL_FALSE,           // normalized?
+		0,                  // stride
+		(void*)0            // array buffer offset
+		);
 
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, m_texture_depth_left);
-	glUniform1i(background_depthID, 1);
+	// 2nd attribute buffer : UVs
+	glEnableVertexAttribArray(1);
+	glBindBuffer(GL_ARRAY_BUFFER, uvbuffer);
+	glVertexAttribPointer(
+		1,                                // attribute. No particular reason for 1, but must match the layout in the shader.
+		2,                                // size : U+V => 2
+		GL_FLOAT,                         // type
+		GL_FALSE,                         // normalized?
+		0,                                // stride
+		(void*)0                          // array buffer offset
+		);
+	// Draw the triangle !
+	glDrawArrays(GL_TRIANGLES, 0, 2*3); // 12*3 indices starting at 0 -> 12 triangles
+	glDisableVertexAttribArray(0);
+	glDisableVertexAttribArray(1);
+	//glEnable(GL_BLEND);
+	return true;
+}
+bool Renderer::update_background_right()
+{
+	//glDisable(GL_BLEND
+	glViewport(640, 0, 640, 480);
+	glDisable(GL_DEPTH_TEST);
+	glUseProgram(backgroundID);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, m_texture_right);
+	glUniform1i(background_textureID, 0);
 	// 1rst attribute buffer : vertices
 	glEnableVertexAttribArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
@@ -234,10 +243,13 @@ bool Renderer::update_background_depth()
 	glDrawArrays(GL_TRIANGLES, 0, 2*3); // 12*3 indices starting at 0 -> 12 triangles
 	glDisableVertexAttribArray(0);
 	glDisableVertexAttribArray(1);
+	//glEnable(GL_BLEND);
 	return true;
 }
-bool Renderer::drawObject()
-{
+bool Renderer::drawObject_Left()
+{ 
+	LINFO<<"Render object";
+	glViewport(0, 0, 640, 480);
 	glEnable(GL_DEPTH_TEST);
 	//glClear(GL_DEPTH_BUFFER_BIT );
 	glm::mat4 Projection = glm::perspective(45.0f, 640.f/480.f, 0.01f, 100.0f);
@@ -263,22 +275,17 @@ bool Renderer::drawObject()
 	// Model matrix : an identity matrix (model will be at the origin)
 	// Our ModelViewProjection : multiplication of our 3 matrices
 	//glm::mat4 MVP        = Projection * modelView; // Remember, matrix multiplication is the other way around
-	glUseProgram(program_2);
-	//glUniformMatrix4fv(object_matrixID, 1, GL_FALSE, &MVP[0][0]);
+	glUseProgram(object_programID);
 	glUniformMatrix4fv(object_modelMatrixID, 1, GL_FALSE, &Model[0][0]);
 	glUniformMatrix4fv(object_viewMatrixID, 1, GL_FALSE, &View[0][0]);
 	glUniformMatrix4fv(object_projectMatrixID, 1, GL_FALSE, &Projection[0][0]);
-
+	glUniform1i(object_isRightID, 0);
 	glActiveTexture(GL_TEXTURE2);
 	glBindTexture(GL_TEXTURE_2D, Texture);
 	glUniform1i(object_textureID, 2);
 	glActiveTexture(GL_TEXTURE3);
 	glBindTexture(GL_TEXTURE_2D, m_texture_depth_left);
-
 	glUniform1i(object_depthTextureID, 3);
-
-	// Set our "myTextureSampler" sampler to user Texture Unit 0
-
 	// 1rst attribute buffer : vertices
 	glEnableVertexAttribArray(2);
 	glBindBuffer(GL_ARRAY_BUFFER, object_vertexbuffer);
@@ -319,49 +326,106 @@ bool Renderer::drawObject()
 	glDisableVertexAttribArray(4);
 	return true;
 }
+bool Renderer::drawObject_Right()
+{ 
+	LINFO<<"Render object";
+	glViewport(640, 0, 640, 480);
+	glEnable(GL_DEPTH_TEST);
+	//glClear(GL_DEPTH_BUFFER_BIT );
+	glm::mat4 Projection = glm::perspective(45.0f, 640.f/480.f, 0.01f, 100.0f);
+	// Camera matrix
+	glm::mat4 View       = glm::lookAt(
+		glm::vec3(4,3,3), // Camera is at (4,3,3), in World Space
+		glm::vec3(0,0,0), // and looks at the origin
+		glm::vec3(0,1,0)  // Head is up (set to 0,-1,0 to look upside-down)
+		);
+	//glm::vec3 viewShift = glm::vec3(1.0f, 0.0f, 3.9f);
+	glm::vec3 viewShift = glm::vec3(0.0f, 0.0f, 4.0f);
+	glm::mat4 Model( 
+		1, 0.0, 0.0, 0.0, 
+		0.0, 1, 0.0, 0.0,
+		0.0, 0.0, 1, 0.0,
+		0.0,0.0,0.0,1.0);
+	
+	//Model = glm::translate(
+	//	Model,
+	//	viewShift
+	//	);
+	//glm::mat4 modelView= View*Model;
+	// Model matrix : an identity matrix (model will be at the origin)
+	// Our ModelViewProjection : multiplication of our 3 matrices
+	//glm::mat4 MVP        = Projection * modelView; // Remember, matrix multiplication is the other way around
+	glUseProgram(object_programID);
+	glUniformMatrix4fv(object_modelMatrixID, 1, GL_FALSE, &Model[0][0]);
+	glUniformMatrix4fv(object_viewMatrixID, 1, GL_FALSE, &View[0][0]);
+	glUniformMatrix4fv(object_projectMatrixID, 1, GL_FALSE, &Projection[0][0]);
+	glUniform1i(object_isRightID, 1);
+	glActiveTexture(GL_TEXTURE5);
+	glBindTexture(GL_TEXTURE_2D, Texture);
+	glUniform1i(object_textureID, 5);
+	glActiveTexture(GL_TEXTURE6);
+	glBindTexture(GL_TEXTURE_2D, m_texture_depth_right);
+	glUniform1i(object_depthTextureID, 6);
+	// 1rst attribute buffer : vertices
+	glEnableVertexAttribArray(2);
+	glBindBuffer(GL_ARRAY_BUFFER, object_vertexbuffer);
+	glVertexAttribPointer(
+		2,                  // attribute. No particular reason for 0, but must match the layout in the shader.
+		3,                  // size
+		GL_FLOAT,           // type
+		GL_FALSE,           // normalized?
+		0,                  // stride
+		(void*)0            // array buffer offset
+		);
 
+	// 2nd attribute buffer : UVs
+	glEnableVertexAttribArray(3);
+	glBindBuffer(GL_ARRAY_BUFFER, object_uvbuffer);
+	glVertexAttribPointer(
+		3,                                // attribute. No particular reason for 1, but must match the layout in the shader.
+		2,                                // size : U+V => 2
+		GL_FLOAT,                         // type
+		GL_FALSE,                         // normalized?
+		0,                                // stride
+		(void*)0                          // array buffer offset
+		);
+	glEnableVertexAttribArray(4);
+	glBindBuffer(GL_ARRAY_BUFFER, uvbuffer);
+	glVertexAttribPointer(
+		4,                                // attribute. No particular reason for 1, but must match the layout in the shader.
+		2,                                // size : U+V => 2
+		GL_FLOAT,                         // type
+		GL_FALSE,                         // normalized?
+		0,                                // stride
+		(void*)0                          // array buffer offset
+		);
+	// Draw the triangle !
+	glDrawArrays(GL_TRIANGLES, 0, 12*3); // 12*3 indices starting at 0 -> 12 triangles
+	glDisableVertexAttribArray(2);
+	glDisableVertexAttribArray(3);
+	glDisableVertexAttribArray(4);
+	return true;
+}
 void Renderer::pre_render(Window* window) {
 	//LDEBUG << "Renderer::pre_render";
 	// clear buffers
 	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
-	// create a perspective projection matrix
-
-	//// load camera projection matrix
-	//gluPerspective( 45., ((double)m_resolution_left.x/(double)m_resolution_left.y), 0.001, 100. );
-
-	//// compute projection matrix
-	////glMatrixMode( GL_PROJECTION );
-	////glLoadIdentity();
-	//glm::mat4 proj_matrix = compute_projection_matrix(m_intrinsics_left, m_resolution_left, 0.01, 100.);
-	//glMultMatrixf( glm::value_ptr(proj_matrix) );
-
-	//GLfloat model[16]; 
-	//glGetFloatv(GL_PROJECTION_MATRIX, model);
-
-
-	// clear model-view transformation
-	//glMatrixMode( GL_MODELVIEW );
-	//glLoadIdentity();
-	
-	// update textures from current camera image
-	// if no strict synchronization between camera and renderer is desirable, 
-	// then the timestamp of the image-measurement should be checked for updates
-
-	camera_left_update_texture();
-	camera_right_update_texture();
-	if(m_camera_depth_left)
+	if(m_camera_left_image && m_camera_right_image)
 	{
-		camera_depth_update_buffer_left();
-		camera_depth_update_buffer_right();
-		update_background_depth();
-		drawObject();
+		camera_left_update_texture();
+		camera_right_update_texture();
+		if(m_camera_depth_left)
+		{
+			camera_depth_update_buffer_left();
+			camera_depth_update_buffer_right();
+			update_background_left();
+			update_background_right();
+			drawObject_Left();
+			drawObject_Right();
+		}
 	}
-
-
-	// render the AR video background
-	//render_video_background();
 }
 
 void Renderer::post_render(Window* window) {
@@ -462,9 +526,9 @@ bool Renderer::camera_depth_update_buffer_left()
 	if((nchannels==1)&& (pixelSize ==1))
 	{
 		//glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT)
-		if ( !m_bDepthInitialized )
+		if ( !m_bDepthInitializedLeft )
 		{
-			m_bDepthInitialized = true;
+			m_bDepthInitializedLeft = true;
 
 			// generate power-of-two sizes
 			m_pow2WidthDepth = 1;
@@ -500,7 +564,7 @@ bool Renderer::camera_depth_update_buffer_left()
 	}
 	else 
 	{
-		LERROR << "Received incompatible image, format: " << m_camera_depth_left->getPixelFormat() << " nchannels " << nchannels << " pixelsize " << pixelSize;
+		LERROR << "Received incompatible image depth left, format: " << m_camera_depth_left->getPixelFormat() << " nchannels " << nchannels << " pixelsize " << pixelSize;
 		return false;
 	}
 	return true;
@@ -535,9 +599,9 @@ bool Renderer::camera_depth_update_buffer_right()
 	if((nchannels==1)&& (pixelSize ==1))
 	{
 		//glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT)
-		if ( !m_bDepthInitialized )
+		if ( !m_bDepthInitializedRight )
 		{
-			m_bDepthInitialized = true;
+			m_bDepthInitializedRight = true;
 
 			// generate power-of-two sizes
 			m_pow2WidthDepth = 1;
@@ -573,7 +637,7 @@ bool Renderer::camera_depth_update_buffer_right()
 	}
 	else 
 	{
-		LERROR << "Received incompatible image, format: " << m_camera_depth_right->getPixelFormat() << " nchannels " << nchannels << " pixelsize " << pixelSize;
+		LERROR << "Received incompatible depth right image, format: " << m_camera_depth_right->getPixelFormat() << " nchannels " << nchannels << " pixelsize " << pixelSize;
 		return false;
 	}
 	return true;
@@ -646,7 +710,7 @@ bool Renderer::camera_left_update_texture()
 		glDisable( GL_TEXTURE_2D );
 
 	} else {
-		LERROR << "Received incompatible image, format: " << m_camera_left_image->getPixelFormat() << " nchannels " << nchannels << " pixelsize " << pixelSize;
+		LERROR << "Received incompatible  left image, format: " << m_camera_left_image->getPixelFormat() << " nchannels " << nchannels << " pixelsize " << pixelSize;
 		return false;
 	}
 
@@ -720,7 +784,7 @@ bool Renderer::camera_right_update_texture()
 		glDisable( GL_TEXTURE_2D );
 
 	} else {
-		LERROR << "Received incompatible image, format: " << m_camera_right_image->getPixelFormat() << " nchannels " << nchannels << " pixelsize " << pixelSize;
+		LERROR << "Received incompatible right image, format: " << m_camera_right_image->getPixelFormat() << " nchannels " << nchannels << " pixelsize " << pixelSize;
 		return false;
 	}
 

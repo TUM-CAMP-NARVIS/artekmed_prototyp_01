@@ -37,7 +37,8 @@ public:
 	virtual void render(Window* window, unsigned long long int ts);
 	virtual void post_render(Window* window);
 
-	bool update_background_depth();
+	bool update_background_left();
+	bool update_background_right();
 
 	// some helper functions for transferring data
 	inline void set_camera_left_image(std::shared_ptr<Ubitrack::Facade::BasicImageMeasurement >&img) {
@@ -75,7 +76,8 @@ protected:
 	bool camera_depth_update_buffer_left();
 	bool camera_depth_update_buffer_right();
 	bool render_video_background();
-	bool drawObject();
+	bool drawObject_Left();
+	bool drawObject_Right();
 
 
 
@@ -93,7 +95,8 @@ protected:
 	std::shared_ptr<Ubitrack::Facade::BasicImageMeasurement > m_camera_depth_right;
 	bool m_bTextureLeftInitialized;
 	bool m_bTextureRightInitialized;
-	bool m_bDepthInitialized;
+	bool m_bDepthInitializedLeft;
+	bool m_bDepthInitializedRight;
 	unsigned int m_pow2WidthLeft;
 	unsigned int m_pow2HeightLeft;
 	unsigned int m_pow2WidthRight;
@@ -103,19 +106,20 @@ protected:
 	GLuint m_texture_depth_left;
 	GLuint m_texture_depth_right;
 
-	GLuint MatrixID;
+	GLuint background_MatrixID;
 	GLuint background_textureID;
 	GLuint background_depthID;
 	GLuint vertexbuffer;
 	GLuint uvbuffer;
 	GLuint Texture;
 	GLuint backgroundID;
-	GLuint program_2;
+	GLuint object_programID;
 	GLuint object_matrixID;
 	GLint object_modelMatrixID;
 	GLint object_viewMatrixID;
 	GLint object_projectMatrixID;
 	GLint object_depthTextureID;
+	GLint object_isRightID;
 	GLuint object_textureID;
 	GLuint object_vertexbuffer;
 	GLuint object_uvbuffer;

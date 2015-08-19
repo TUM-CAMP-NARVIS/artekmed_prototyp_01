@@ -102,6 +102,7 @@ public:
 	bool camera_left_get_intrinsics(const TimestampT ts, glm::mat3& intrinsics, glm::ivec2& resolution);
 	bool camera_right_get_intrinsics(const TimestampT ts, glm::mat3& intrinsics, glm::ivec2& resolution);
 	bool camera_left_get_pose(const TimestampT ts, glm::mat4& pose);
+	bool left2right_get_pose(const TimestampT ts, glm::mat4& pose);
 	bool camera_left_get_current_image(std::shared_ptr<Facade::BasicImageMeasurement >& img);
 	bool camera_get_current_image_right(const TimestampT ts, std::shared_ptr<Facade::BasicImageMeasurement> & img);
 	bool camera_depth_get_current_image_left(const TimestampT ts, std::shared_ptr<Facade::BasicImageMeasurement> & img);
@@ -131,6 +132,7 @@ private:
 	Ubitrack::Facade::BasicPullSink< Facade::BasicMatrixMeasurement< 3, 3 > >*   m_pullsink_camera_intrinsics_right;
 	Ubitrack::Facade::BasicPullSink< Facade::BasicVectorMeasurement< 2 > >*      m_pullsink_camera_resolution_right;
 	Ubitrack::Facade::BasicPullSink< Facade::BasicPoseMeasurement >*             m_pullsink_camera_pose_left;
+	Ubitrack::Facade::BasicPullSink< Facade::BasicPoseMeasurement >*             m_pullsink_left2right_pose;
 
 //	Ubitrack::Facade::BasicPullSink< Facade::BasicPoseMeasurement >*             m_pullsink_target1_pose;
 

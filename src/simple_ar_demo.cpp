@@ -193,13 +193,16 @@ int main(int argc, const char* argv[]) {
 		glm::ivec2 resolution_left;
 		glm::mat3 intrinsics_right;
 		glm::ivec2 resolution_right;
+		glm::mat4 left2right;
 		connector.camera_left_get_intrinsics(ts, intrinsics_left, resolution_left);
 		connector.camera_right_get_intrinsics(ts, intrinsics_right, resolution_right);
+		connector.left2right_get_pose(ts, left2right);
 
 
 		// store camera left intrinsics information
 		renderer->set_intrinsics_left(intrinsics_left, resolution_left);
 		renderer->set_intrinsics_right(intrinsics_right, resolution_right);
+		renderer->set_left2right(left2right);
 
 
 		// some "global" variables to use during the rendering loop
@@ -266,8 +269,8 @@ int main(int argc, const char* argv[]) {
 			// receive camera pose
 			glm::mat4 cam_pose_left;
 
-			//connector.camera_left_get_pose(ts, cam_pose_left);
-			//renderer->set_camera_left_pose(cam_pose_left);
+			connector.camera_left_get_pose(ts, cam_pose_left);
+			renderer->set_camera_left_pose(cam_pose_left);
 			connector.camera_depth_get_current_image_left(ts, depth_img_left);
 			renderer->set_camera_depth_image_left(depth_img_left);
 

@@ -96,7 +96,7 @@ UTSimpleARConnector::UTSimpleARConnector(const std::string& _components_path)
 	, m_pullsink_camera_resolution_right(NULL)
 	, m_pullsink_camera_image_depth_right(NULL)
 	, m_pullsink_camera_image_right(NULL)
-	//    , m_pullsink_target1_pose(NULL)
+	    , m_pullsink_left2right_pose(NULL)
 {}
 
 UTSimpleARConnector::~UTSimpleARConnector()
@@ -106,6 +106,9 @@ bool UTSimpleARConnector::initialize(const std::string& _utql_filename)
 {
 	bool ret = UTBaseConnector::initialize(_utql_filename);
 
+	if(m_pullsink_left2right_pose !=NULL)
+		delete m_pullsink_left2right_pose;
+	m_pullsink_left2right_pose= m_utFacade.getPullSink<Facade::BasicPoseMeasurement>("left2right_transformation");
 	// create sinks/sources
 	if (m_pushsink_camera_image_left != NULL) {
 		delete m_pushsink_camera_image_left;
@@ -188,9 +191,9 @@ bool UTSimpleARConnector::teardown()
 	if(m_pullsink_camera_image_depth_left !=NULL)
 		delete m_pullsink_camera_image_depth_left;
 
-//	if (m_pullsink_target1_pose != NULL) {
-//		delete m_pullsink_target1_pose;
-//	}
+	if (m_pullsink_left2right_pose != NULL) {
+		delete m_pullsink_left2right_pose;
+	}
 
 	bool ret = UTBaseConnector::teardown();
 	return ret;
@@ -322,6 +325,47 @@ bool UTSimpleARConnector::camera_get_current_image_right(const TimestampT ts, st
 	}
 	return true;
 
+}
+bool UTSimpleARConnector::left2right_get_pose(const TimestampT ts, glm::mat4& pose) 
+{
+	if (m_pullsink_left2right_pose == NULL) {
+		LERROR << "pullsink is not connected";
+		return false;
+	}
+	try {
+		std::vector<float> v_pose(7);
+		std::shared_ptr<Facade::BasicPoseMeasurement > m_pose = m_pullsink_left2right_pose->get(ts);
+		if (!m_pose) {
+			LERROR << "no measurement for camera pose";
+			return false;
+		}
+		m_pose->get(v_pose);
+
+		glm::vec3 position = glm::make_vec3(&v_pose[0]);
+		glm::quat rotation = glm::make_quat(&v_pose[3]);
+
+		// this might not be correct .. needs a check !!!
+		//Checked this, it's correct
+		glm::mat4 rotMatrix = glm::mat4_cast(rotation);   //rotation is glm::quat
+		rotMatrix[3].x=position.x;
+		rotMatrix[3].y=position.y;
+		rotMatrix[3].z=position.z;
+		rotMatrix[3].w=1.;
+
+		//glm::mat4 transMatrix = glm::translate(glm::mat4(1.0f), position);
+		//LINFO<<"Rotation: "<<glm::to_string(transMatrix);
+		//pose = rotMatrix * transMatrix;
+		//LINFO << "camera pose: " << glm::to_string(pose);
+		pose = rotMatrix;
+
+	} catch( std::exception &e) {
+		LERROR << "error pulling camera pose: " << e.what();
+		return false;
+	} catch(...) {
+		LERROR << "error pulling camera pose (undefined) ";
+		return false;
+	}
+	return true;
 }
 
 bool UTSimpleARConnector::camera_left_get_pose(const TimestampT ts, glm::mat4& pose) 

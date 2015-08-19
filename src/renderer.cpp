@@ -248,7 +248,8 @@ bool Renderer::update_background_right()
 }
 bool Renderer::drawObject_Left()
 { 
-	LINFO<<"Render object";
+	float scale_object= 0.3;
+	//LINFO<<"Render object";
 	glViewport(0, 0, 640, 480);
 	glEnable(GL_DEPTH_TEST);
 	//glClear(GL_DEPTH_BUFFER_BIT );
@@ -262,9 +263,9 @@ bool Renderer::drawObject_Left()
 	//glm::vec3 viewShift = glm::vec3(1.0f, 0.0f, 3.9f);
 	glm::vec3 viewShift = glm::vec3(0.0f, 0.0f, 4.0f);
 	glm::mat4 Model( 
-		1, 0.0, 0.0, 0.0, 
-		0.0, 1, 0.0, 0.0,
-		0.0, 0.0, 1, 0.0,
+		scale_object, 0.0, 0.0, 0.0, 
+		0.0, scale_object, 0.0, 0.0,
+		0.0, 0.0, scale_object, 0.0,
 		0.0,0.0,0.0,1.0);
 	
 	//Model = glm::translate(
@@ -277,8 +278,8 @@ bool Renderer::drawObject_Left()
 	//glm::mat4 MVP        = Projection * modelView; // Remember, matrix multiplication is the other way around
 	glUseProgram(object_programID);
 	glUniformMatrix4fv(object_modelMatrixID, 1, GL_FALSE, &Model[0][0]);
-	glUniformMatrix4fv(object_viewMatrixID, 1, GL_FALSE, &View[0][0]);
-	glUniformMatrix4fv(object_projectMatrixID, 1, GL_FALSE, &Projection[0][0]);
+	glUniformMatrix4fv(object_viewMatrixID, 1, GL_FALSE, &m_camera_left_pose[0][0]);
+	glUniformMatrix4fv(object_projectMatrixID, 1, GL_FALSE, &m_projection_left[0][0]);
 	glUniform1i(object_isRightID, 0);
 	glActiveTexture(GL_TEXTURE2);
 	glBindTexture(GL_TEXTURE_2D, Texture);
@@ -328,7 +329,8 @@ bool Renderer::drawObject_Left()
 }
 bool Renderer::drawObject_Right()
 { 
-	LINFO<<"Render object";
+	float scale_object= 0.3;
+	//LINFO<<"Render object";
 	glViewport(640, 0, 640, 480);
 	glEnable(GL_DEPTH_TEST);
 	//glClear(GL_DEPTH_BUFFER_BIT );
@@ -342,9 +344,9 @@ bool Renderer::drawObject_Right()
 	//glm::vec3 viewShift = glm::vec3(1.0f, 0.0f, 3.9f);
 	glm::vec3 viewShift = glm::vec3(0.0f, 0.0f, 4.0f);
 	glm::mat4 Model( 
-		1, 0.0, 0.0, 0.0, 
-		0.0, 1, 0.0, 0.0,
-		0.0, 0.0, 1, 0.0,
+		scale_object, 0.0, 0.0, 0.0, 
+		0.0, scale_object, 0.0, 0.0,
+		0.0, 0.0,scale_object, 0.0,
 		0.0,0.0,0.0,1.0);
 	
 	//Model = glm::translate(
@@ -356,9 +358,10 @@ bool Renderer::drawObject_Right()
 	// Our ModelViewProjection : multiplication of our 3 matrices
 	//glm::mat4 MVP        = Projection * modelView; // Remember, matrix multiplication is the other way around
 	glUseProgram(object_programID);
+	glm::mat4 right_view= m_left2right_pose * m_camera_left_pose;
 	glUniformMatrix4fv(object_modelMatrixID, 1, GL_FALSE, &Model[0][0]);
-	glUniformMatrix4fv(object_viewMatrixID, 1, GL_FALSE, &View[0][0]);
-	glUniformMatrix4fv(object_projectMatrixID, 1, GL_FALSE, &Projection[0][0]);
+	glUniformMatrix4fv(object_viewMatrixID, 1, GL_FALSE, &right_view[0][0]);
+	glUniformMatrix4fv(object_projectMatrixID, 1, GL_FALSE, &m_projection_right[0][0]);
 	glUniform1i(object_isRightID, 1);
 	glActiveTexture(GL_TEXTURE5);
 	glBindTexture(GL_TEXTURE_2D, Texture);
@@ -411,6 +414,8 @@ void Renderer::pre_render(Window* window) {
 	// clear buffers
 	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+	m_projection_left = compute_projection_matrix(m_intrinsics_left, m_resolution_left, 0.01, 100);
+	m_projection_right = compute_projection_matrix(m_intrinsics_right, m_resolution_right, 0.01, 100);
 
 	if(m_camera_left_image && m_camera_right_image)
 	{

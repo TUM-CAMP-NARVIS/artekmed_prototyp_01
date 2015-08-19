@@ -66,6 +66,9 @@ public:
 		m_intrinsics_right = intrinsics;
 		m_resolution_right = resolution;
 	}
+	inline void set_left2right(glm::mat4& pose){
+		m_left2right_pose = pose;
+	}
 
 protected:
 
@@ -87,6 +90,9 @@ protected:
 	glm::ivec2 m_resolution_right;
 
 	glm::mat4 m_camera_left_pose;
+	glm::mat4 m_projection_left;
+	glm::mat4 m_projection_right;
+	glm::mat4 m_left2right_pose;
 
 	void setup_shader();
 	std::shared_ptr<Ubitrack::Facade::BasicImageMeasurement > m_camera_left_image;

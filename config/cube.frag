@@ -24,9 +24,17 @@ void main(){
 		uv2.x = uv2.x - 1.0;
 	}
     uv2.y =  1.0 - uv2.y;
-    //uv2.x= uv2.x;
+ 
+	float nearPlane = 0.15;
+	float farPlane= 1.0; 
+
     float d = texture(depthTexSampler, uv2).r;
+	float zdepth = (farPlane + nearPlane) / (farPlane-nearPlane) + (-2 * nearPlane * farPlane) / ((farPlane - nearPlane) * d);
+	//zdepth = (zdepth + 1.0) / 2.0;
+    
     if (d == 1.0) {
+    //if (zdepth  >=  0.15 && zdepth <= 1.0) {
+	//if(zdepth > zVS){
         discard;
     } else
 		color = texture2D( myTextureSampler, uv2 ).rgb;

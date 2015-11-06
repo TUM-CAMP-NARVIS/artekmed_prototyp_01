@@ -12,8 +12,8 @@ out float zVS;
 uniform mat4 MVP;
 uniform mat4 M, V, P;
 void main(){
-    vec4 pVS =  V *  M  * vec4(vertexPosition_modelspace, 1);
-    zVS = pVS.z;
+    vec4 pVS = V *  M  * vec4(vertexPosition_modelspace, 1);
+    zVS = pVS.z / 1000.0;
     // Output position of the vertex, in clip space : MVP * position
 	gl_Position =  P* pVS;
     // UV of the vertex. No special space for this one.

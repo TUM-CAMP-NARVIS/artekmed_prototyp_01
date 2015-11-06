@@ -277,8 +277,9 @@ bool Renderer::drawObject_Left()
 	// Our ModelViewProjection : multiplication of our 3 matrices
 	//glm::mat4 MVP        = Projection * modelView; // Remember, matrix multiplication is the other way around
 	glUseProgram(object_programID);
+	glm::mat4 left_view=  m_camera_left_pose;
 	glUniformMatrix4fv(object_modelMatrixID, 1, GL_FALSE, &Model[0][0]);
-	glUniformMatrix4fv(object_viewMatrixID, 1, GL_FALSE, &m_camera_left_pose[0][0]);
+	glUniformMatrix4fv(object_viewMatrixID, 1, GL_FALSE, &left_view[0][0]);
 	glUniformMatrix4fv(object_projectMatrixID, 1, GL_FALSE, &m_projection_left[0][0]);
 	glUniform1i(object_isRightID, 0);
 	glActiveTexture(GL_TEXTURE2);
@@ -358,7 +359,7 @@ bool Renderer::drawObject_Right()
 	// Our ModelViewProjection : multiplication of our 3 matrices
 	//glm::mat4 MVP        = Projection * modelView; // Remember, matrix multiplication is the other way around
 	glUseProgram(object_programID);
-	glm::mat4 right_view= m_left2right_pose * m_camera_left_pose;
+	glm::mat4 right_view= m_camera_left_pose;
 	glUniformMatrix4fv(object_modelMatrixID, 1, GL_FALSE, &Model[0][0]);
 	glUniformMatrix4fv(object_viewMatrixID, 1, GL_FALSE, &right_view[0][0]);
 	glUniformMatrix4fv(object_projectMatrixID, 1, GL_FALSE, &m_projection_right[0][0]);

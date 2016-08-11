@@ -61,7 +61,7 @@ macro( FIND_UBITRACK_LIBRARY MYLIBRARY)
 	    find_library( ${MYLIBRARY}_${MYLIBRARYNAME}
 	        NAMES
 	            ${MYLIBRARYNAME}
-				${MYLIBRARYNAME}100 
+				${MYLIBRARYNAME}130 
 	        HINTS
 	            ${UBITRACK_ROOT}
 	            $ENV{UBITRACK_ROOT}
@@ -80,7 +80,7 @@ macro( FIND_UBITRACK_LIBRARY MYLIBRARY)
 	    find_library( ${MYLIBRARY}_${MYLIBRARYNAME}_d
 	        NAMES
 	            ${MYLIBRARYNAME}d
-	            ${MYLIBRARYNAME}100d
+	            ${MYLIBRARYNAME}130d
 	        HINTS
 	            ${UBITRACK_ROOT}
 	            $ENV{UBITRACK_ROOT}

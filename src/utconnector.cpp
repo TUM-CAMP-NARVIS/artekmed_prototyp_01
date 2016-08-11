@@ -1,5 +1,7 @@
-#include "simple_ar_demo/utconnector.h"
-#include "simple_ar_demo/easylogging++.h"
+#include "basic_facade_demo/utconnector.h"
+
+#include <log4cpp/Category.hh>
+static log4cpp::Category& logger(log4cpp::Category::getInstance("BasicFacadeExample.utconnector"));
 
 // implementation of UTBaseConnector
 
@@ -96,7 +98,7 @@ UTSimpleARConnector::UTSimpleARConnector(const std::string& _components_path)
 	, m_pullsink_camera_resolution_right(NULL)
 	, m_pullsink_camera_image_depth_right(NULL)
 	, m_pullsink_camera_image_right(NULL)
-	    , m_pullsink_left2right_pose(NULL)
+	, m_pullsink_left2right_pose(NULL)
 {}
 
 UTSimpleARConnector::~UTSimpleARConnector()
@@ -106,10 +108,11 @@ bool UTSimpleARConnector::initialize(const std::string& _utql_filename)
 {
 	bool ret = UTBaseConnector::initialize(_utql_filename);
 
-	if(m_pullsink_left2right_pose !=NULL)
-		delete m_pullsink_left2right_pose;
-	m_pullsink_left2right_pose= m_utFacade.getPullSink<Facade::BasicPoseMeasurement>("left2right_transformation");
 	// create sinks/sources
+	if (m_pullsink_left2right_pose != NULL)
+		delete m_pullsink_left2right_pose;
+	m_pullsink_left2right_pose = m_utFacade.getPullSink<Facade::BasicPoseMeasurement>("left2right_transformation");
+	
 	if (m_pushsink_camera_image_left != NULL) {
 		delete m_pushsink_camera_image_left;
 	}
@@ -202,7 +205,7 @@ bool UTSimpleARConnector::teardown()
 bool UTSimpleARConnector::camera_right_get_intrinsics(const TimestampT ts, glm::mat3& intrinsics, glm::ivec2& resolution) 
 {
 	if ((!m_pullsink_camera_intrinsics_right) || (!m_pullsink_camera_resolution_right)) {
-		LERROR << "pullsinks are not connected";
+		LOG4CPP_ERROR( logger, "pullsinks are not connected");
 		return false;
 	}
 
@@ -210,23 +213,22 @@ bool UTSimpleARConnector::camera_right_get_intrinsics(const TimestampT ts, glm::
 		std::vector<float> v_intr(9);
 		std::shared_ptr<Facade::BasicMatrixMeasurement< 3, 3 > > m_intr = m_pullsink_camera_intrinsics_right->get(ts);
 		if (!m_intr) {
-			LERROR << "no measurement for camera intrinsics";
+			LOG4CPP_ERROR(logger, "no measurement for camera intrinsics");
 			return false;
 		}
 		m_intr->get(v_intr);
 		intrinsics = glm::make_mat3(&v_intr[0]);
-		//LINFO<<"XXXXX Intrinsics: "<<glm::to_string(intrinsics);
-
+		
 		std::vector<float> v_res(2);
 		std::shared_ptr<Facade::BasicVectorMeasurement< 2 > > m_res = m_pullsink_camera_resolution_right->get(ts);
 		if (!m_res) {
-			LERROR << "no measurement for camera resolution";
+			LOG4CPP_ERROR(logger, "no measurement for camera resolution");
 			return false;
 		}
 		m_res->get(v_res);
 		resolution = glm::ivec2( (int)(v_res.at(0)), (int)(v_res.at(1)) );
 	} catch( std::exception &e) {
-		LERROR << "error pulling intrinsics: " << e.what();
+		LOG4CPP_ERROR(logger, "error pulling intrinsics: " << e.what());
 		return false;
 	}
 	return true;
@@ -235,7 +237,7 @@ bool UTSimpleARConnector::camera_right_get_intrinsics(const TimestampT ts, glm::
 bool UTSimpleARConnector::camera_left_get_intrinsics(const TimestampT ts, glm::mat3& intrinsics, glm::ivec2& resolution) 
 {
 	if ((!m_pullsink_camera_intrinsics_left) || (!m_pullsink_camera_resolution_left)) {
-		LERROR << "pullsinks are not connected";
+		LOG4CPP_ERROR(logger, "pullsinks are not connected");
 		return false;
 	}
 
@@ -243,23 +245,22 @@ bool UTSimpleARConnector::camera_left_get_intrinsics(const TimestampT ts, glm::m
 		std::vector<float> v_intr(9);
 		std::shared_ptr<Facade::BasicMatrixMeasurement< 3, 3 > > m_intr = m_pullsink_camera_intrinsics_left->get(ts);
 		if (!m_intr) {
-			LERROR << "no measurement for camera intrinsics";
+			LOG4CPP_ERROR(logger, "no measurement for camera intrinsics");
 			return false;
 		}
 		m_intr->get(v_intr);
 		intrinsics = glm::make_mat3(&v_intr[0]);
-		//LINFO<<"XXXXX Intrinsics: "<<glm::to_string(intrinsics);
 
 		std::vector<float> v_res(2);
 		std::shared_ptr<Facade::BasicVectorMeasurement< 2 > > m_res = m_pullsink_camera_resolution_left->get(ts);
 		if (!m_res) {
-			LERROR << "no measurement for camera resolution";
+			LOG4CPP_ERROR(logger, "no measurement for camera resolution");
 			return false;
 		}
 		m_res->get(v_res);
 		resolution = glm::ivec2( (int)(v_res.at(0)), (int)(v_res.at(1)) );
 	} catch( std::exception &e) {
-		LERROR << "error pulling intrinsics: " << e.what();
+		LOG4CPP_ERROR(logger, "error pulling intrinsics: " << e.what());
 		return false;
 	}
 	return true;
@@ -275,7 +276,7 @@ bool UTSimpleARConnector::camera_left_get_current_image(std::shared_ptr<Facade::
 bool UTSimpleARConnector::camera_depth_get_current_image_left(const TimestampT ts, std::shared_ptr<Facade::BasicImageMeasurement> & img)
 {
 	if (m_pullsink_camera_image_depth_left == NULL) {
-		LERROR << "pullsink depth left is not connected";
+		LOG4CPP_ERROR(logger, "pullsink depth left is not connected");
 		return false;
 	}
 	try{
@@ -284,7 +285,7 @@ bool UTSimpleARConnector::camera_depth_get_current_image_left(const TimestampT t
 	}
 	catch(std::exception & e)
 	{
-		LERROR << "error pulling camera image left: " << e.what();
+		LOG4CPP_ERROR(logger, "error pulling camera image left: " << e.what());
 		return false;
 	}
 	return true;
@@ -293,7 +294,7 @@ bool UTSimpleARConnector::camera_depth_get_current_image_left(const TimestampT t
 bool UTSimpleARConnector::camera_depth_get_current_image_right(const TimestampT ts, std::shared_ptr<Facade::BasicImageMeasurement> & img)
 {
 	if (m_pullsink_camera_image_depth_right == NULL) {
-		LERROR << "pullsink depth right is not connected";
+		LOG4CPP_ERROR(logger, "pullsink depth right is not connected");
 		return false;
 	}
 	try{
@@ -302,7 +303,7 @@ bool UTSimpleARConnector::camera_depth_get_current_image_right(const TimestampT 
 	}
 	catch(std::exception & e)
 	{
-		LERROR << "error pulling camera depth right: " << e.what();
+		LOG4CPP_ERROR(logger, "error pulling camera depth right: " << e.what());
 		return false;
 	}
 	return true;
@@ -310,17 +311,15 @@ bool UTSimpleARConnector::camera_depth_get_current_image_right(const TimestampT 
 bool UTSimpleARConnector::camera_get_current_image_right(const TimestampT ts, std::shared_ptr<Facade::BasicImageMeasurement> & img)
 {
 	if (m_pullsink_camera_image_right == NULL) {
-		LERROR << "pullsink camera right is not connected";
+		LOG4CPP_ERROR(logger, "pullsink camera right is not connected");
 		return false;
 	}
 	try{
-		//std::shared_ptr<Facade::BasicImageMeasurement> m_image= m_pullsink_camera_image_right->get(ts);
-		//img= m_image;
-		img= m_pullsink_camera_image_right->get(ts);
+		img = m_pullsink_camera_image_right->get(ts);
 	}
 	catch(std::exception & e)
 	{
-		LERROR << "error pulling camera image right: " << e.what();
+		LOG4CPP_ERROR(logger, "error pulling camera image right: " << e.what());
 		return false;
 	}
 	return true;
@@ -329,14 +328,14 @@ bool UTSimpleARConnector::camera_get_current_image_right(const TimestampT ts, st
 bool UTSimpleARConnector::left2right_get_pose(const TimestampT ts, glm::mat4& pose) 
 {
 	if (m_pullsink_left2right_pose == NULL) {
-		LERROR << "pullsink is not connected";
+		LOG4CPP_ERROR(logger, "pullsink is not connected");
 		return false;
 	}
 	try {
 		std::vector<float> v_pose(7);
 		std::shared_ptr<Facade::BasicPoseMeasurement > m_pose = m_pullsink_left2right_pose->get(ts);
 		if (!m_pose) {
-			LERROR << "no measurement for camera pose";
+			LOG4CPP_ERROR(logger, "no measurement for camera pose");
 			return false;
 		}
 		m_pose->get(v_pose);
@@ -359,10 +358,10 @@ bool UTSimpleARConnector::left2right_get_pose(const TimestampT ts, glm::mat4& po
 		pose = rotMatrix;
 
 	} catch( std::exception &e) {
-		LERROR << "error pulling camera pose: " << e.what();
+		LOG4CPP_ERROR(logger, "error pulling camera pose: " << e.what());
 		return false;
 	} catch(...) {
-		LERROR << "error pulling camera pose (undefined) ";
+		LOG4CPP_ERROR(logger, "error pulling camera pose (undefined) ");
 		return false;
 	}
 	return true;
@@ -371,14 +370,14 @@ bool UTSimpleARConnector::left2right_get_pose(const TimestampT ts, glm::mat4& po
 bool UTSimpleARConnector::camera_left_get_pose(const TimestampT ts, glm::mat4& pose) 
 {
 	if (m_pullsink_camera_pose_left == NULL) {
-		LERROR << "pullsink is not connected";
+		LOG4CPP_ERROR(logger, "pullsink is not connected");
 		return false;
 	}
 	try {
 		std::vector<float> v_pose(7);
 		std::shared_ptr<Facade::BasicPoseMeasurement > m_pose = m_pullsink_camera_pose_left->get(ts);
 		if (!m_pose) {
-			LERROR << "no measurement for camera pose";
+			LOG4CPP_ERROR(logger, "no measurement for camera pose");
 			return false;
 		}
 		m_pose->get(v_pose);
@@ -401,10 +400,10 @@ bool UTSimpleARConnector::camera_left_get_pose(const TimestampT ts, glm::mat4& p
 		pose = rotMatrix;
 
 	} catch( std::exception &e) {
-		LERROR << "error pulling camera pose: " << e.what();
+		LOG4CPP_ERROR(logger, "error pulling camera pose: " << e.what());
 		return false;
 	} catch(...) {
-		LERROR << "error pulling camera pose (undefined) ";
+		LOG4CPP_ERROR(logger, "error pulling camera pose (undefined) ");
 		return false;
 	}
 	return true;

@@ -8,7 +8,7 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
-#include "simple_ar_demo/shader.h"
+#include "basic_facade_demo/shader.h"
 
 #include <assimp/Importer.hpp>
 

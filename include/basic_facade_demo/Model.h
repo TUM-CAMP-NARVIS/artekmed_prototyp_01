@@ -12,8 +12,8 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
-#include "simple_ar_demo/shader.h"
-#include "simple_ar_demo/Mesh.h"
+#include "basic_facade_demo/shader.h"
+#include "basic_facade_demo/Mesh.h"
 
 
 class Model {

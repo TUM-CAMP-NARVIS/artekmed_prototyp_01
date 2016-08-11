@@ -1,4 +1,4 @@
-#include "simple_ar_demo/Mesh.h"
+#include "basic_facade_demo/Mesh.h"
 
 Mesh::Mesh(std::vector<Vertex> v, std::vector<GLuint> i, std::vector<Texture> t) {
     this->vertices = v;

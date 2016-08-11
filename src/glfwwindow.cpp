@@ -2,8 +2,11 @@
 // Created by Ulrich Eck on 10/05/15.
 //
 
+#include "basic_facade_demo/glfwwindow.h"
 
-#include "simple_ar_demo/glfwwindow.h"
+#include <log4cpp/Category.hh>
+static log4cpp::Category& logger(log4cpp::Category::getInstance("BasicFacadeExample.glfwwindow"));
+
 
 Window::Window(int width, int height, const std::string& title) {
     // initialise glfw and m_glfwWindow,
@@ -44,7 +47,7 @@ void Window::on_window_size(int w, int h)
 {
     int fb_width, fb_height;
     glfwGetFramebufferSize(m_glfwWindow, &fb_width, &fb_height);
-    LINFO << "Received Window Size Event " << w << "," << h << " framebuffer: " << fb_width << "," << fb_height;
+    LOG4CPP_INFO( logger, "Received Window Size Event " << w << "," << h << " framebuffer: " << fb_width << "," << fb_height);
     glViewport(0, 0, fb_width, fb_height);
 }
 
@@ -56,7 +59,7 @@ void Window::on_window_close()
 void Window::on_keypress(int key, int scancode, int action, int mods)
 {
     if (key == GLFW_KEY_ESCAPE) {
-        LINFO << "Received Window Close Event.";
+		LOG4CPP_INFO(logger, "Received Window Close Event.");
         glfwSetWindowShouldClose(m_glfwWindow, GL_TRUE);
     }
 }

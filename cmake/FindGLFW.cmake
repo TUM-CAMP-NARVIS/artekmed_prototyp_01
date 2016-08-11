@@ -4,6 +4,7 @@
 # GLFW_LIBRARY
 
 find_path(GLFW_INCLUDE_DIR GLFW/glfw3.h
+    "${GLFW_ROOT}/include"
     $ENV{GLFWDIR}/include
     $ENV{GLFW_HOME}/include
     $ENV{PROGRAMFILES}/GLFW/include
@@ -23,6 +24,7 @@ find_library(GLFW_LIBRARY
     NAMES glfw3 glfw glfw3dll glfwdll
     PATHS
     ${GLFW_LIBRARY_DIR}  # provided by glfw config
+    "${GLFW_ROOT}/lib"
     $ENV{GLFWDIR}/lib
     $ENV{GLFWDIR}/lib/x64
     $ENV{GLFWDIR}/lib/cocoa
@@ -54,6 +56,7 @@ if(WIN32)
     find_file(GLFW_BINARY
         NAMES glfw3.dll
         PATHS
+        "${GLFW_ROOT}/bin"
         $ENV{GLFWDIR}/bin
         $ENV{GLFW_HOME}/bin
         $ENV{GLFWDIR}/bin/${GLFW_BUILD_DIR}

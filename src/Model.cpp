@@ -1,7 +1,7 @@
-#include "simple_ar_demo/Model.h"
+#include "basic_facade_demo/Model.h"
 
 #define STB_IMAGE_IMPLEMENTATION
-#include <simple_ar_demo/stb_image.h>
+#include <basic_facade_demo/stb_image.h>
 
 
 GLint TextureFromFile(const char* path, std::string directory);

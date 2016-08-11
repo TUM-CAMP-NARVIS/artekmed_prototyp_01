@@ -1,20 +1,16 @@
-#include "simple_ar_demo/renderer.h"
-#include  "simple_ar_demo/easylogging++.h"
+#include "basic_facade_demo/renderer.h"
 
+#include <log4cpp/Category.hh>
+static log4cpp::Category& logger(log4cpp::Category::getInstance("BasicFacadeExample.renderer"));
 
 Renderer::Renderer()
 : m_bTextureLeftInitialized(false) 
-, m_bTextureRightInitialized(false) 
-, m_bDepthInitializedLeft (false)
-, m_bDepthInitializedRight (false)
 , m_pow2WidthLeft(0)
 , m_pow2HeightLeft(0)
 , m_texture_left(0)
-, m_texture_depth_left(0)
-, m_texture_depth_right(0)
 {
-	randomA=0.00001;
-	randomB=0.51234;
+	randomA = 0.00001f;
+	randomB = 0.51234f;
 	setup_shader();
 }
 
@@ -23,25 +19,19 @@ Renderer::~Renderer() {
 }
 void Renderer::setup_shader()
 {	
-	//background_shader= new Shader("H\:\\develop\\simple_ar_demo\\config\\camera_texture.vertexshader", "H\:\\develop\\simple_ar_demo\\config\\camera_texture.fragmentshader");
 	glGenVertexArrays(2, VertexArrayID);
-	//glBindVertexArray(VertexArrayID[0]);
-	//glBindVertexArray(VertexArrayID[1]);
-	backgroundID= LoadShaders("H\:\\develop\\simple_ar_demo\\config\\camera_texture.vert", "H\:\\develop\\simple_ar_demo\\config\\camera_texture.frag");
-	object_programID= LoadShaders("H\:\\develop\\simple_ar_demo\\config\\cube.vert", "H\:\\develop\\simple_ar_demo\\config\\cube.frag");
+	backgroundID = LoadShaders("camera_texture.vert", "camera_texture.frag");
+	object_programID = LoadShaders("cube.vert", "cube.frag");
 
 	background_MatrixID = glGetUniformLocation(backgroundID, "MVP");
 	background_textureID  = glGetUniformLocation(backgroundID, "myTextureSampler");
-	background_depthID  = glGetUniformLocation(backgroundID, "depthSampler");
 	
 	object_matrixID=glGetUniformLocation(object_programID, "MVP");
 	object_modelMatrixID=glGetUniformLocation(object_programID, "M");
 	object_viewMatrixID=glGetUniformLocation(object_programID, "V");
 	object_projectMatrixID=glGetUniformLocation(object_programID, "P");
-	object_depthTextureID = glGetUniformLocation(object_programID, "depthTexSampler");
 	object_textureID=glGetUniformLocation(object_programID, "myTextureSampler");
-	object_isRightID = glGetUniformLocation(object_programID, "isRight");
-	Texture = loadBMP_custom("H\:\\develop\\simple_ar_demo\\config\\uvtemplate.bmp");
+	Texture = loadBMP_custom("uvtemplate.bmp");
 
 	static const GLfloat g_vertex_buffer_data_2[] = { 
 	-1.0f,-1.0f,-1.0f,
@@ -130,26 +120,12 @@ void Renderer::setup_shader()
 	};
 
 	static const GLfloat g_uv_buffer_data[] = { 
-		/*	-1,1,0,
-		1,1,0,
-		1,-1,0,
-		-1,1,0,
-		1,-1,0,
-		-1,-1,0*/
-
 		0,1,
 		1,1,
 		1,0,
 		0,1,
 		1,0,
 		0,0
-
-		//0,0,
-		//1,0,
-		//1,1,
-		//0,0,
-		//1,1,
-		//0,1
 	};
 
 
@@ -207,48 +183,10 @@ bool Renderer::update_background_left()
 	//glEnable(GL_BLEND);
 	return true;
 }
-bool Renderer::update_background_right()
-{
-	//glDisable(GL_BLEND
-	glViewport(640, 0, 640, 480);
-	glDisable(GL_DEPTH_TEST);
-	glUseProgram(backgroundID);
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, m_texture_right);
-	glUniform1i(background_textureID, 0);
-	// 1rst attribute buffer : vertices
-	glEnableVertexAttribArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-	glVertexAttribPointer(
-		0,                  // attribute. No particular reason for 0, but must match the layout in the shader.
-		3,                  // size
-		GL_FLOAT,           // type
-		GL_FALSE,           // normalized?
-		0,                  // stride
-		(void*)0            // array buffer offset
-		);
 
-	// 2nd attribute buffer : UVs
-	glEnableVertexAttribArray(1);
-	glBindBuffer(GL_ARRAY_BUFFER, uvbuffer);
-	glVertexAttribPointer(
-		1,                                // attribute. No particular reason for 1, but must match the layout in the shader.
-		2,                                // size : U+V => 2
-		GL_FLOAT,                         // type
-		GL_FALSE,                         // normalized?
-		0,                                // stride
-		(void*)0                          // array buffer offset
-		);
-	// Draw the triangle !
-	glDrawArrays(GL_TRIANGLES, 0, 2*3); // 12*3 indices starting at 0 -> 12 triangles
-	glDisableVertexAttribArray(0);
-	glDisableVertexAttribArray(1);
-	//glEnable(GL_BLEND);
-	return true;
-}
 bool Renderer::drawObject_Left()
 { 
-	float scale_object= 0.3;
+	float scale_object = 0.3f;
 	//LINFO<<"Render object";
 	glViewport(0, 0, 640, 480);
 	glEnable(GL_DEPTH_TEST);
@@ -281,13 +219,11 @@ bool Renderer::drawObject_Left()
 	glUniformMatrix4fv(object_modelMatrixID, 1, GL_FALSE, &Model[0][0]);
 	glUniformMatrix4fv(object_viewMatrixID, 1, GL_FALSE, &left_view[0][0]);
 	glUniformMatrix4fv(object_projectMatrixID, 1, GL_FALSE, &m_projection_left[0][0]);
-	glUniform1i(object_isRightID, 0);
+
 	glActiveTexture(GL_TEXTURE2);
 	glBindTexture(GL_TEXTURE_2D, Texture);
 	glUniform1i(object_textureID, 2);
-	glActiveTexture(GL_TEXTURE3);
-	glBindTexture(GL_TEXTURE_2D, m_texture_depth_left);
-	glUniform1i(object_depthTextureID, 3);
+
 	// 1rst attribute buffer : vertices
 	glEnableVertexAttribArray(2);
 	glBindBuffer(GL_ARRAY_BUFFER, object_vertexbuffer);
@@ -328,109 +264,18 @@ bool Renderer::drawObject_Left()
 	glDisableVertexAttribArray(4);
 	return true;
 }
-bool Renderer::drawObject_Right()
-{ 
-	float scale_object= 0.3;
-	//LINFO<<"Render object";
-	glViewport(640, 0, 640, 480);
-	glEnable(GL_DEPTH_TEST);
-	//glClear(GL_DEPTH_BUFFER_BIT );
-	glm::mat4 Projection = glm::perspective(45.0f, 640.f/480.f, 0.01f, 100.0f);
-	// Camera matrix
-	glm::mat4 View       = glm::lookAt(
-		glm::vec3(4,3,3), // Camera is at (4,3,3), in World Space
-		glm::vec3(0,0,0), // and looks at the origin
-		glm::vec3(0,1,0)  // Head is up (set to 0,-1,0 to look upside-down)
-		);
-	//glm::vec3 viewShift = glm::vec3(1.0f, 0.0f, 3.9f);
-	glm::vec3 viewShift = glm::vec3(0.0f, 0.0f, 4.0f);
-	glm::mat4 Model( 
-		scale_object, 0.0, 0.0, 0.0, 
-		0.0, scale_object, 0.0, 0.0,
-		0.0, 0.0,scale_object, 0.0,
-		0.0,0.0,0.0,1.0);
-	
-	//Model = glm::translate(
-	//	Model,
-	//	viewShift
-	//	);
-	//glm::mat4 modelView= View*Model;
-	// Model matrix : an identity matrix (model will be at the origin)
-	// Our ModelViewProjection : multiplication of our 3 matrices
-	//glm::mat4 MVP        = Projection * modelView; // Remember, matrix multiplication is the other way around
-	glUseProgram(object_programID);
-	glm::mat4 right_view= m_camera_left_pose;
-	glUniformMatrix4fv(object_modelMatrixID, 1, GL_FALSE, &Model[0][0]);
-	glUniformMatrix4fv(object_viewMatrixID, 1, GL_FALSE, &right_view[0][0]);
-	glUniformMatrix4fv(object_projectMatrixID, 1, GL_FALSE, &m_projection_right[0][0]);
-	glUniform1i(object_isRightID, 1);
-	glActiveTexture(GL_TEXTURE5);
-	glBindTexture(GL_TEXTURE_2D, Texture);
-	glUniform1i(object_textureID, 5);
-	glActiveTexture(GL_TEXTURE6);
-	glBindTexture(GL_TEXTURE_2D, m_texture_depth_right);
-	glUniform1i(object_depthTextureID, 6);
-	// 1rst attribute buffer : vertices
-	glEnableVertexAttribArray(2);
-	glBindBuffer(GL_ARRAY_BUFFER, object_vertexbuffer);
-	glVertexAttribPointer(
-		2,                  // attribute. No particular reason for 0, but must match the layout in the shader.
-		3,                  // size
-		GL_FLOAT,           // type
-		GL_FALSE,           // normalized?
-		0,                  // stride
-		(void*)0            // array buffer offset
-		);
 
-	// 2nd attribute buffer : UVs
-	glEnableVertexAttribArray(3);
-	glBindBuffer(GL_ARRAY_BUFFER, object_uvbuffer);
-	glVertexAttribPointer(
-		3,                                // attribute. No particular reason for 1, but must match the layout in the shader.
-		2,                                // size : U+V => 2
-		GL_FLOAT,                         // type
-		GL_FALSE,                         // normalized?
-		0,                                // stride
-		(void*)0                          // array buffer offset
-		);
-	glEnableVertexAttribArray(4);
-	glBindBuffer(GL_ARRAY_BUFFER, uvbuffer);
-	glVertexAttribPointer(
-		4,                                // attribute. No particular reason for 1, but must match the layout in the shader.
-		2,                                // size : U+V => 2
-		GL_FLOAT,                         // type
-		GL_FALSE,                         // normalized?
-		0,                                // stride
-		(void*)0                          // array buffer offset
-		);
-	// Draw the triangle !
-	glDrawArrays(GL_TRIANGLES, 0, 12*3); // 12*3 indices starting at 0 -> 12 triangles
-	glDisableVertexAttribArray(2);
-	glDisableVertexAttribArray(3);
-	glDisableVertexAttribArray(4);
-	return true;
-}
 void Renderer::pre_render(Window* window) {
 	//LDEBUG << "Renderer::pre_render";
 	// clear buffers
 	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-	m_projection_left = compute_projection_matrix(m_intrinsics_left, m_resolution_left, 0.01, 100);
-	m_projection_right = compute_projection_matrix(m_intrinsics_right, m_resolution_right, 0.01, 100);
+	m_projection_left = compute_projection_matrix(m_intrinsics_left, m_resolution_left, 0.01f, 100);
 
-	if(m_camera_left_image && m_camera_right_image)
+	if(m_camera_left_image)
 	{
 		camera_left_update_texture();
-		camera_right_update_texture();
-		if(m_camera_depth_left)
-		{
-			camera_depth_update_buffer_left();
-			camera_depth_update_buffer_right();
-			update_background_left();
-			update_background_right();
-			drawObject_Left();
-			drawObject_Right();
-		}
+		update_background_left();
 	}
 }
 
@@ -440,6 +285,7 @@ void Renderer::post_render(Window* window) {
 }
 
 void Renderer::render(Window* window, unsigned long long int ts) {
+	drawObject_Left();
 }
 
 
@@ -502,152 +348,7 @@ bool Renderer::render_video_background() {
 
 	return true;
 }
-bool Renderer::camera_depth_update_buffer_left()
-{
-	GLenum imgFormat = GL_LUMINANCE;
-	switch(m_camera_depth_left->getPixelFormat())
-	{
-	case Ubitrack::Facade::BasicImageMeasurement::LUMINANCE:
-		break;
-		imgFormat = GL_LUMINANCE;
-	case Ubitrack::Facade::BasicImageMeasurement::RGB:
-		imgFormat = GL_RGB;
-		break;
-	case Ubitrack::Facade::BasicImageMeasurement::BGR:
-		imgFormat = GL_BGR_EXT;
-		break;
-	default:
-		LERROR << "received incompatible pixelformat: " << m_camera_depth_left->getPixelFormat();
-		return false;
-	}
-	//LINFO<<" Pixel format:   "<< m_camera_depth->getPixelFormat();
 
-	unsigned int width = m_camera_depth_left->getDimX();
-	unsigned int height = m_camera_depth_left->getDimY();
-	unsigned int nchannels = m_camera_depth_left->getDimZ();
-	unsigned int pixelSize = m_camera_depth_left->getPixelSize();
-	//LINFO<<"Number channels: "<< nchannels;
-	unsigned int m_pow2WidthDepth=1;
-	unsigned int m_pow2HeightDepth=1;
-	if((nchannels==1)&& (pixelSize ==1))
-	{
-		//glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT)
-		if ( !m_bDepthInitializedLeft )
-		{
-			m_bDepthInitializedLeft = true;
-
-			// generate power-of-two sizes
-			m_pow2WidthDepth = 1;
-			while ( m_pow2WidthDepth < width )
-				m_pow2WidthDepth <<= 1;
-
-			m_pow2HeightDepth = 1;
-			while ( m_pow2HeightDepth < height )
-				m_pow2HeightDepth <<= 1;
-
-			// create new empty texture
-			glGenTextures( 1, &m_texture_depth_left );
-			glBindTexture( GL_TEXTURE_2D, m_texture_depth_left );
-
-			// define texture parameters
-			glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-			glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
-			glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
-			glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
-			glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL );
-
-			// load empty texture image (defines texture size)
-			glTexImage2D( GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16, m_pow2WidthDepth, m_pow2HeightDepth, 0, GL_DEPTH_COMPONENT16, GL_UNSIGNED_BYTE, 0 );
-			//LINFO << "glTexImage2D( width=" << m_pow2WidthLeft << ", height=" << m_pow2HeightLeft << " ): " << glGetError();
-		}
-		glBindTexture( GL_TEXTURE_2D, m_texture_depth_left );
-		glTexImage2D( GL_TEXTURE_2D, 0, 3, width, height, 0, imgFormat, GL_UNSIGNED_BYTE, m_camera_depth_left->getDataPtr());
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); 
-		glDisable( GL_TEXTURE_2D );
-	}
-	else 
-	{
-		LERROR << "Received incompatible image depth left, format: " << m_camera_depth_left->getPixelFormat() << " nchannels " << nchannels << " pixelsize " << pixelSize;
-		return false;
-	}
-	return true;
-}
-bool Renderer::camera_depth_update_buffer_right()
-{
-	GLenum imgFormat = GL_LUMINANCE;
-	switch(m_camera_depth_right->getPixelFormat())
-	{
-	case Ubitrack::Facade::BasicImageMeasurement::LUMINANCE:
-		break;
-		imgFormat = GL_LUMINANCE;
-	case Ubitrack::Facade::BasicImageMeasurement::RGB:
-		imgFormat = GL_RGB;
-		break;
-	case Ubitrack::Facade::BasicImageMeasurement::BGR:
-		imgFormat = GL_BGR_EXT;
-		break;
-	default:
-		LERROR << "received incompatible pixelformat: " << m_camera_depth_right->getPixelFormat();
-		return false;
-	}
-	//LINFO<<" Pixel format:   "<< m_camera_depth->getPixelFormat();
-
-	unsigned int width = m_camera_depth_right->getDimX();
-	unsigned int height = m_camera_depth_right->getDimY();
-	unsigned int nchannels = m_camera_depth_right->getDimZ();
-	unsigned int pixelSize = m_camera_depth_right->getPixelSize();
-	//LINFO<<"Number channels: "<< nchannels;
-	unsigned int m_pow2WidthDepth=1;
-	unsigned int m_pow2HeightDepth=1;
-	if((nchannels==1)&& (pixelSize ==1))
-	{
-		//glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT)
-		if ( !m_bDepthInitializedRight )
-		{
-			m_bDepthInitializedRight = true;
-
-			// generate power-of-two sizes
-			m_pow2WidthDepth = 1;
-			while ( m_pow2WidthDepth < width )
-				m_pow2WidthDepth <<= 1;
-
-			m_pow2HeightDepth = 1;
-			while ( m_pow2HeightDepth < height )
-				m_pow2HeightDepth <<= 1;
-
-			// create new empty texture
-			glGenTextures( 1, &m_texture_depth_right );
-			glBindTexture( GL_TEXTURE_2D, m_texture_depth_right );
-
-			// define texture parameters
-			glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-			glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
-			glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
-			glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
-			glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL );
-
-			// load empty texture image (defines texture size)
-			glTexImage2D( GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16, m_pow2WidthDepth, m_pow2HeightDepth, 0, GL_DEPTH_COMPONENT16, GL_UNSIGNED_BYTE, 0 );
-			//LINFO << "glTexImage2D( width=" << m_pow2WidthLeft << ", height=" << m_pow2HeightLeft << " ): " << glGetError();
-		}
-		glBindTexture( GL_TEXTURE_2D, m_texture_depth_right );
-		glTexImage2D( GL_TEXTURE_2D, 0, 3, width, height, 0, imgFormat, GL_UNSIGNED_BYTE, m_camera_depth_right->getDataPtr());
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); 
-		glDisable( GL_TEXTURE_2D );
-	}
-	else 
-	{
-		LERROR << "Received incompatible depth right image, format: " << m_camera_depth_right->getPixelFormat() << " nchannels " << nchannels << " pixelsize " << pixelSize;
-		return false;
-	}
-	return true;
-}
 bool Renderer::camera_left_update_texture() 
 {
 
@@ -663,7 +364,7 @@ bool Renderer::camera_left_update_texture()
 		imgFormat = GL_BGR_EXT;
 		break;
 	default:
-		LERROR << "received incompatible pixelformat: " << m_camera_left_image->getPixelFormat();
+		LOG4CPP_ERROR(logger, "received incompatible pixelformat: " << m_camera_left_image->getPixelFormat());
 		return false;
 	}
 
@@ -716,81 +417,7 @@ bool Renderer::camera_left_update_texture()
 		glDisable( GL_TEXTURE_2D );
 
 	} else {
-		LERROR << "Received incompatible  left image, format: " << m_camera_left_image->getPixelFormat() << " nchannels " << nchannels << " pixelsize " << pixelSize;
-		return false;
-	}
-
-	return true;
-}
-bool Renderer::camera_right_update_texture() 
-{
-
-	GLenum imgFormat = GL_LUMINANCE;
-	switch(m_camera_right_image->getPixelFormat())
-	{
-	case Ubitrack::Facade::BasicImageMeasurement::LUMINANCE:
-		break;
-	case Ubitrack::Facade::BasicImageMeasurement::RGB:
-		imgFormat = GL_RGB;
-		break;
-	case Ubitrack::Facade::BasicImageMeasurement::BGR:
-		imgFormat = GL_BGR_EXT;
-		break;
-	default:
-		LERROR << "received incompatible pixelformat: " << m_camera_right_image->getPixelFormat();
-		return false;
-	}
-
-	unsigned int width = m_camera_right_image->getDimX();
-	unsigned int height = m_camera_right_image->getDimY();
-	unsigned int nchannels = m_camera_right_image->getDimZ();
-	unsigned int pixelSize = m_camera_right_image->getPixelSize();
-
-
-	if ((nchannels == 3) && (pixelSize == 1)) {
-		// all good BGR/RGB uchar image type .. only supported for now
-		glEnable( GL_TEXTURE_2D );
-
-		if ( !m_bTextureRightInitialized )
-		{
-			m_bTextureRightInitialized = true;
-
-			// generate power-of-two sizes
-			m_pow2WidthRight = 1;
-			while ( m_pow2WidthRight < width )
-				m_pow2WidthRight <<= 1;
-
-			m_pow2HeightRight = 1;
-			while ( m_pow2HeightRight < height )
-				m_pow2HeightRight <<= 1;
-
-			// create new empty texture
-			glGenTextures( 1, &m_texture_right );
-			glBindTexture( GL_TEXTURE_2D, m_texture_right );
-
-			// define texture parameters
-			glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-			glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
-			glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
-			glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
-			glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL );
-			// load empty texture image (defines texture size)
-			glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, m_pow2WidthRight, m_pow2HeightRight, 0, imgFormat, GL_UNSIGNED_BYTE, 0 );
-			//LINFO << "glTexImage2D( width=" << m_pow2Widthright << ", height=" << m_pow2Heightright << " ): " << glGetError();
-		}
-
-		// load image into texture
-		glBindTexture( GL_TEXTURE_2D, m_texture_right );
-		glTexImage2D( GL_TEXTURE_2D, 0, 3, width, height, 0, imgFormat, GL_UNSIGNED_BYTE, m_camera_right_image->getDataPtr());
-		//glTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, width, height, imgFormat, GL_UNSIGNED_BYTE, m_camera_right_image->getDataPtr() );
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); 
-		glDisable( GL_TEXTURE_2D );
-
-	} else {
-		LERROR << "Received incompatible right image, format: " << m_camera_right_image->getPixelFormat() << " nchannels " << nchannels << " pixelsize " << pixelSize;
+		LOG4CPP_ERROR(logger, "Received incompatible  left image, format: " << m_camera_left_image->getPixelFormat() << " nchannels " << nchannels << " pixelsize " << pixelSize);
 		return false;
 	}
 
@@ -800,9 +427,9 @@ bool Renderer::camera_right_update_texture()
 glm::mat4 Renderer::compute_projection_matrix(glm::mat3& intrinsics, glm::ivec2& resolution, float n, float f) {
 
 	float l = 0;
-	float r = resolution.x;
+	float r = (float)resolution.x;
 	float b = 0;
-	float t = resolution.y;
+	float t = (float)resolution.y;
 
 	// mat4 should be all zeros, but glm initializes mat4 as identity
 	glm::mat4 m2(intrinsics);

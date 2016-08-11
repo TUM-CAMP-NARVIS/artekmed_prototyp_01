@@ -10,7 +10,7 @@
 #include <string>
 #include <GLFW/glfw3.h>
 
-#include "simple_ar_demo/easylogging++.h"
+
 
 class Window {
 public:

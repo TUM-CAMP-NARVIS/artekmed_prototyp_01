@@ -1,20 +1,24 @@
 cmake_minimum_required(VERSION 2.8)
 
-SET(PROJECT_NAME "simple_ar_demo")
+SET(PROJECT_NAME "basic_facade_demo")
 
 PROJECT(${PROJECT_NAME})
 
 SET(ENABLE_CXX11 "-std=c++11")
-if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
+if (${CMAKE_CXX_COMPILER_ID} MATCHES "GNU")
     execute_process(
         COMMAND ${CMAKE_CXX_COMPILER} -dumpversion OUTPUT_VARIABLE GCC_VERSION)
     if (GCC_VERSION VERSION_GREATER 4.7 OR GCC_VERSION VERSION_EQUAL 4.7)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ENABLE_CXX11}")
     endif ()
-elseif ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
+elseif (${CMAKE_CXX_COMPILER_ID} MATCHES "Clang")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ENABLE_CXX11} -stdlib=libc++")
 endif ()
 
+if(WIN32)
+  MESSAGE(STATUS "Setting minimum Windows version to Vista WINVER=0x0600")
+  add_definitions(-DWINVER=0x0600)
+endif(WIN32)
 
 
 # auto configuration when ubitrack externals are installed
@@ -25,6 +29,10 @@ macro(getenv_path VAR)
      string( REGEX REPLACE "\\\\" "/" ENV_${VAR} ${ENV_${VAR}} )
    endif ()
 endmacro(getenv_path)
+
+
+include(cmake/UbiTrackDetectCXXCompiler.cmake)
+
 
 IF(X86_64)
   getenv_path(UBITRACKLIB_EXTERNAL64)
@@ -38,7 +46,7 @@ ELSE()
   ENDIF(ENV_UBITRACKLIB_EXTERNAL32)
 ENDIF(X86_64)
 
-
+MESSAGE(STATUS "External Library Dir: ${EXTERNAL_LIBRARIES_DIR}")
 
 # Add a cache variable PREFER_STATIC_LIBRARIES to have the choice of generating a project
 # linking against static libraries if they exist. Default is NO since most people will not use this.
@@ -67,10 +75,6 @@ SET( ${PROJECT_NAME}_MAJOR_VERSION 1 )
 SET( ${PROJECT_NAME}_MINOR_VERSION 0 )
 SET( ${PROJECT_NAME}_BUILD_VERSION 0 )
 
-# enable g++ C++0x extensions
-#IF(CMAKE_COMPILER_IS_GNUCXX)
-#	SET(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-std=gnu++0x")
-#ENDIF(CMAKE_COMPILER_IS_GNUCXX)
 
 # Needed to convert from \ to / on windows. Not needed in the FindModules since
 # call to macro takes care of that there.
@@ -79,26 +83,6 @@ IF( EXISTS $ENV{UBITRACK_PATH} )
   FILE( TO_CMAKE_PATH $ENV{UBITRACK_PATH} CONVERTED_UBITRACK_PATH )
 ENDIF( EXISTS $ENV{UBITRACK_PATH} )
 SET(CMAKE_MODULE_PATH  ${${PROJECT_NAME}_SOURCE_DIR}/cmake ${CONVERTED_UBITRACK_PATH}/..share/UbiTrack/cmake)
-
-MACRO(getenv_path VAR)
-  SET(ENV_${VAR} $ENV{${VAR}})
-  # replace won't work if var is blank
-  IF(ENV_${VAR})
-    FILE( TO_CMAKE_PATH ENV_${VAR} ${ENV_${VAR}} )
-  ENDIF ()
-ENDMACRO(getenv_path)
-
-IF(X86_64)
-  getenv_path(UBITRACKLIB_EXTERNAL64)
-  IF(ENV_UBITRACKLIB_EXTERNAL64)
-    SET(EXTERNAL_LIBRARIES_DIR "${ENV_UBITRACKLIB_EXTERNAL64}")
-  ENDIF(ENV_UBITRACKLIB_EXTERNAL64)
-ELSE()
-  getenv_path(UBITRACKLIB_EXTERNAL32)
-  IF(ENV_UBITRACKLIB_EXTERNAL32)
-    SET(EXTERNAL_LIBRARIES_DIR "${ENV_UBITRACKLIB_EXTERNAL32}")
-  ENDIF(ENV_UBITRACKLIB_EXTERNAL32)
-ENDIF(X86_64)
 
 
 # UbiTrack  
@@ -113,19 +97,64 @@ IF(WIN32)
   set(${PROJECT_NAME}_DEFINES "WIN32" "_MBCS" "_WIN32_WINNT=0x501")	
 ENDIF(WIN32) 
 
-
 # settings for 3rdparty libraries
+
+# Find Boost library. Required to compile.
+IF(WIN32 AND DEFINED EXTERNAL_LIBRARIES_DIR)
+  set(BOOST_ROOT_DIR "${EXTERNAL_LIBRARIES_DIR}/boost")
+ENDIF(WIN32 AND DEFINED EXTERNAL_LIBRARIES_DIR)
+
+SET(HAVE_BOOST 0)
+
+if(ENABLE_BOOST_STATIC_LINKING)
+  set(Boost_USE_STATIC_LIBS ON)
+else()
+  set(Boost_USE_STATIC_LIBS OFF)
+endif()
+set(Boost_USE_MULTITHREADED ON)
+set(Boost_USE_STATIC_RUNTIME OFF)
+find_package( Boost 1.55 COMPONENTS thread program_options REQUIRED)
+if(Boost_FOUND)
+  #add_definitions("-DBOOST_ALL_NO_LIB")
+  add_definitions("-DBOOST_ALL_DYN_LINK")
+  add_definitions(-DHAVE_BOOST)
+  SET(HAVE_BOOST 1)
+  include_directories( ${Boost_INCLUDE_DIR} )
+  set(requiredLibs ${requiredLibs} ${Boost_LIBRARIES})
+  link_directories(${Boost_LIBRARY_DIRS})
+  message (STATUS "  Boost_LIBRARIES: ${Boost_LIBRARIES}")
+endif(Boost_FOUND)
+
+# log4cpp
+find_package(Log4cpp REQUIRED)
+set(requiredLibs ${requiredLibs} ${LOG4CPP_LIBRARIES})
+include_directories( ${LOG4CPP_INCLUDE_DIRS} )
+
+
 find_package(OpenGL REQUIRED)
 set(requiredLibs ${requiredLibs} ${OPENGL_LIBRARIES})
 include_directories( ${OPENGL_INCLUDE_DIRS} )
+
+
+IF(WIN32 AND DEFINED EXTERNAL_LIBRARIES_DIR)
+  set(GLFW_ROOT "${EXTERNAL_LIBRARIES_DIR}/glfw")
+ENDIF(WIN32 AND DEFINED EXTERNAL_LIBRARIES_DIR)
 
 find_package(GLFW REQUIRED)
 set(requiredLibs ${requiredLibs} ${GLFW_LIBRARY})
 include_directories( ${GLFW_INCLUDE_DIR} )
 
+IF(WIN32 AND DEFINED EXTERNAL_LIBRARIES_DIR)
+  set(GLEW_ROOT "${EXTERNAL_LIBRARIES_DIR}/glew")
+ENDIF(WIN32 AND DEFINED EXTERNAL_LIBRARIES_DIR)
+
 find_package(GLEW REQUIRED)
 set(requiredLibs ${requiredLibs} ${GLEW_LIBRARIES})
 include_directories( ${GLEW_INCLUDE_DIR} )
+
+IF(WIN32 AND DEFINED EXTERNAL_LIBRARIES_DIR)
+  set(GLM_ROOT_DIR "${EXTERNAL_LIBRARIES_DIR}/glm")
+ENDIF(WIN32 AND DEFINED EXTERNAL_LIBRARIES_DIR)
 
 find_package(GLM REQUIRED)
 include_directories( ${GLM_INCLUDE_DIRS} )

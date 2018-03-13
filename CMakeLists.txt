@@ -1,307 +1,41 @@
-cmake_minimum_required(VERSION 2.8)
+SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
-SET(PROJECT_NAME "basic_facade_demo")
+project(basic_facade_demo)
 
-PROJECT(${PROJECT_NAME})
+cmake_minimum_required(VERSION 3.4.0)
 
-SET(ENABLE_CXX11 "-std=c++11")
-if (${CMAKE_CXX_COMPILER_ID} MATCHES "GNU")
-    execute_process(
-        COMMAND ${CMAKE_CXX_COMPILER} -dumpversion OUTPUT_VARIABLE GCC_VERSION)
-    if (GCC_VERSION VERSION_GREATER 4.7 OR GCC_VERSION VERSION_EQUAL 4.7)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ENABLE_CXX11}")
-    endif ()
-elseif (${CMAKE_CXX_COMPILER_ID} MATCHES "Clang")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ENABLE_CXX11} -stdlib=libc++")
-endif ()
+include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+conan_basic_setup(KEEP_RPATHS)
 
-if(WIN32)
-  MESSAGE(STATUS "Setting minimum Windows version to Vista WINVER=0x0600")
-  add_definitions(-DWINVER=0x0600)
-endif(WIN32)
+include(GNUInstallDirs)
+include(cmake/UbitrackConfig)
 
+IF(ENABLE_BASICFACADE)
+  set(UBITRACK_COMPILE_DEFINITIONS ${UBITRACK_COMPILE_DEFINITIONS} "ENABLE_BASICFACADE")
+ENDIF(ENABLE_BASICFACADE)
 
-# auto configuration when ubitrack externals are installed
-macro(getenv_path VAR)
-   set(ENV_${VAR} $ENV{${VAR}})
-   # replace won't work if var is blank
-   if (ENV_${VAR})
-     string( REGEX REPLACE "\\\\" "/" ENV_${VAR} ${ENV_${VAR}} )
-   endif ()
-endmacro(getenv_path)
+# External Libraries (could this be solved with conan dependencies ??)
 
+# OpenGL
+SET(HAVE_OPENGL 0)
+find_package(OpenGL)
+IF(OpenGL_FOUND)
+  set(UBITRACK_COMPILE_DEFINITIONS ${UBITRACK_COMPILE_DEFINITIONS} "HAVE_OPENGL")
+  SET(HAVE_OPENGL 1)
+  MESSAGE(STATUS "Found OpenGL: ${OpenGL_INCLUDE_DIR} - ${OpenGL_LIBRARIES}")
+ENDIF(OpenGL_FOUND)
 
-include(cmake/UbiTrackDetectCXXCompiler.cmake)
+# OpenCL
+SET(HAVE_OPENCL 0)
+find_package(OpenCL)
+IF(OpenCL_FOUND)
+  set(UBITRACK_COMPILE_DEFINITIONS ${UBITRACK_COMPILE_DEFINITIONS} "HAVE_OPENCL")
+  include_directories(${OpenCL_INCLUDE_DIR})
+  SET(HAVE_OPENCL 1)
+  MESSAGE(STATUS "Found OpenCL: ${OpenCL_INCLUDE_DIR} - ${OpenCL_LIBRARY}")
+ENDIF(OpenCL_FOUND)
 
+set(UBITRACK_EXTRA_LIBS ${OPENGL_gl_LIBRARY} ${OPENGL_glu_LIBRARY} ${OpenCL_LIBRARY})
 
-IF(X86_64)
-  getenv_path(UBITRACKLIB_EXTERNAL64)
-  IF(ENV_UBITRACKLIB_EXTERNAL64)
-    SET(EXTERNAL_LIBRARIES_DIR "${ENV_UBITRACKLIB_EXTERNAL64}")
-  ENDIF(ENV_UBITRACKLIB_EXTERNAL64)
-ELSE()
-  getenv_path(UBITRACKLIB_EXTERNAL32)
-  IF(ENV_UBITRACKLIB_EXTERNAL32)
-    SET(EXTERNAL_LIBRARIES_DIR "${ENV_UBITRACKLIB_EXTERNAL32}")
-  ENDIF(ENV_UBITRACKLIB_EXTERNAL32)
-ENDIF(X86_64)
-
-MESSAGE(STATUS "External Library Dir: ${EXTERNAL_LIBRARIES_DIR}")
-
-# Add a cache variable PREFER_STATIC_LIBRARIES to have the choice of generating a project
-# linking against static libraries if they exist. Default is NO since most people will not use this.
-IF( NOT DEFINED PREFER_STATIC_LIBRARIES )
-  SET( PREFER_STATIC_LIBRARIES "NO" CACHE BOOL "Decides if CMake should prefer static libraries to dynamic libraries when both exist." )
-  MARK_AS_ADVANCED(PREFER_STATIC_LIBRARIES)
-ENDIF( NOT DEFINED PREFER_STATIC_LIBRARIES )
-
-IF( PREFER_STATIC_LIBRARIES )
-  SET( CMAKE_FIND_LIBRARY_SUFFIXES .a;${CMAKE_FIND_LIBRARY_SUFFIXES} )
-ENDIF( PREFER_STATIC_LIBRARIES )
-
-SET( ${PROJECT_NAME}_COMPILE_FLAGS "-D${PROJECT_NAME}_EXPORTS" )
-SET( ${PROJECT_NAME}_SOURCE_DIR ${${PROJECT_NAME}_SOURCE_DIR} )
-
-INCLUDE( "${${PROJECT_NAME}_SOURCE_DIR}/SourceFiles.txt" )
-
-SET(${PROJECT_NAME}_SRCS ${PROJECT_SRCS})
-SET(${PROJECT_NAME}_HEADERS ${PROJECT_HEADERS})
-
-SET(optionalLibs)
-SET(requiredLibs)
-
-# Version of ${PROJECT_NAME}
-SET( ${PROJECT_NAME}_MAJOR_VERSION 1 )
-SET( ${PROJECT_NAME}_MINOR_VERSION 0 )
-SET( ${PROJECT_NAME}_BUILD_VERSION 0 )
-
-
-# Needed to convert from \ to / on windows. Not needed in the FindModules since
-# call to macro takes care of that there.
-SET( CONVERTED_UBITRACK_PATH "" )
-IF( EXISTS $ENV{UBITRACK_PATH} )
-  FILE( TO_CMAKE_PATH $ENV{UBITRACK_PATH} CONVERTED_UBITRACK_PATH )
-ENDIF( EXISTS $ENV{UBITRACK_PATH} )
-SET(CMAKE_MODULE_PATH  ${${PROJECT_NAME}_SOURCE_DIR}/cmake ${CONVERTED_UBITRACK_PATH}/..share/UbiTrack/cmake)
-
-
-# UbiTrack  
-FIND_PACKAGE(Ubitrack REQUIRED)
-SET(HAVE_UBITRACK 1)
-INCLUDE_DIRECTORIES( ${UBITRACK_INCLUDE_DIR} )
-SET(requiredLibs ${requiredLibs} ${UBITRACK_LIBRARIES} )
-
-IF(WIN32)
-  set(${PROJECT_NAME}_COMPILE_FLAGS "${${PROJECT_NAME}_COMPILE_FLAGS} /EHsc /c /W3 /GR /wd4355 /wd4996 /wd4251 /wd4275 /wd4819 /wd4290")
-  set(${PROJECT_NAME}_LINK_FLAGS "/SUBSYSTEM:CONSOLE")
-  set(${PROJECT_NAME}_DEFINES "WIN32" "_MBCS" "_WIN32_WINNT=0x501")	
-ENDIF(WIN32) 
-
-# settings for 3rdparty libraries
-
-# Find Boost library. Required to compile.
-IF(WIN32 AND DEFINED EXTERNAL_LIBRARIES_DIR)
-  set(BOOST_ROOT_DIR "${EXTERNAL_LIBRARIES_DIR}/boost")
-ENDIF(WIN32 AND DEFINED EXTERNAL_LIBRARIES_DIR)
-
-SET(HAVE_BOOST 0)
-
-if(ENABLE_BOOST_STATIC_LINKING)
-  set(Boost_USE_STATIC_LIBS ON)
-else()
-  set(Boost_USE_STATIC_LIBS OFF)
-endif()
-set(Boost_USE_MULTITHREADED ON)
-set(Boost_USE_STATIC_RUNTIME OFF)
-find_package( Boost 1.55 COMPONENTS thread program_options REQUIRED)
-if(Boost_FOUND)
-  #add_definitions("-DBOOST_ALL_NO_LIB")
-  add_definitions("-DBOOST_ALL_DYN_LINK")
-  add_definitions(-DHAVE_BOOST)
-  SET(HAVE_BOOST 1)
-  include_directories( ${Boost_INCLUDE_DIR} )
-  set(requiredLibs ${requiredLibs} ${Boost_LIBRARIES})
-  link_directories(${Boost_LIBRARY_DIRS})
-  message (STATUS "  Boost_LIBRARIES: ${Boost_LIBRARIES}")
-endif(Boost_FOUND)
-
-# log4cpp
-find_package(Log4cpp REQUIRED)
-set(requiredLibs ${requiredLibs} ${LOG4CPP_LIBRARIES})
-include_directories( ${LOG4CPP_INCLUDE_DIRS} )
-
-
-find_package(OpenGL REQUIRED)
-set(requiredLibs ${requiredLibs} ${OPENGL_LIBRARIES})
-include_directories( ${OPENGL_INCLUDE_DIRS} )
-
-
-IF(WIN32 AND DEFINED EXTERNAL_LIBRARIES_DIR)
-  set(GLFW_ROOT "${EXTERNAL_LIBRARIES_DIR}/glfw")
-ENDIF(WIN32 AND DEFINED EXTERNAL_LIBRARIES_DIR)
-
-find_package(GLFW REQUIRED)
-set(requiredLibs ${requiredLibs} ${GLFW_LIBRARY})
-include_directories( ${GLFW_INCLUDE_DIR} )
-
-IF(WIN32 AND DEFINED EXTERNAL_LIBRARIES_DIR)
-  set(GLEW_ROOT "${EXTERNAL_LIBRARIES_DIR}/glew")
-ENDIF(WIN32 AND DEFINED EXTERNAL_LIBRARIES_DIR)
-
-find_package(GLEW REQUIRED)
-set(requiredLibs ${requiredLibs} ${GLEW_LIBRARIES})
-include_directories( ${GLEW_INCLUDE_DIR} )
-
-IF(WIN32 AND DEFINED EXTERNAL_LIBRARIES_DIR)
-  set(GLM_ROOT_DIR "${EXTERNAL_LIBRARIES_DIR}/glm")
-ENDIF(WIN32 AND DEFINED EXTERNAL_LIBRARIES_DIR)
-
-find_package(GLM REQUIRED)
-include_directories( ${GLM_INCLUDE_DIRS} )
-
-# TBB
-# setup defaults for windows binary distributions
-if (WIN32)
-    if (MSVC71)
-        set (TBB_COMPILER "vc7.1")
-    endif(MSVC71)
-    if (MSVC80)
-        set(TBB_COMPILER "vc8")
-    endif(MSVC80)
-    if (MSVC90)
-        set(TBB_COMPILER "vc9")
-    endif(MSVC90)
-    if(MSVC10)
-        set(TBB_COMPILER "vc10")
-    endif(MSVC10)
-    if(MSVC11)
-        set(TBB_COMPILER "vc11")
-    endif(MSVC11)
-    if(MSVC12)
-        set(TBB_COMPILER "vc12")
-    endif(MSVC12)
-  IF(X86_64)
-    set(TBB_ARCHITECTURE "intel64")
-  ELSE()
-    set(TBB_ARCHITECTURE "ia32")
-  ENDIF(X86_64)
-endif (WIN32)
-
-IF(WIN32 AND DEFINED EXTERNAL_LIBRARIES_DIR)
-  set(TBB_INSTALL_DIR "${EXTERNAL_LIBRARIES_DIR}/tbb")
-ENDIF(WIN32 AND DEFINED EXTERNAL_LIBRARIES_DIR)
-
-SET(HAVE_TBB 0)
-find_package(TBB)
-IF(TBB_FOUND)
-  add_definitions(-DHAVE_TBB)
-  include_directories( ${TBB_INCLUDE_DIRS})
-  set(requiredLibs ${requiredLibs} ${TBB_LIBRARIES})
-  SET(HAVE_TBB 1)
-ENDIF(TBB_FOUND)
-
-
-INCLUDE_DIRECTORIES( "${${PROJECT_NAME}_SOURCE_DIR}/include" )
-
-# autogenerate ${PROJECT_NAME}.h depending on the libraries available.
-#CONFIGURE_FILE( ${${PROJECT_NAME}_SOURCE_DIR}/../include/${PROJECT_NAME}/${PROJECT_NAME}.cmake ${${PROJECT_NAME}_SOURCE_DIR}/../include/${PROJECT_NAME}/${PROJECT_NAME}.h )
-
-IF(MSVC)
-  # Add the ${PROJECT_NAME}.rc resource file if Visual Studio
-  #SET( ${PROJECT_NAME}_SRCS ${${PROJECT_NAME}_SRCS} ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.rc )
-ENDIF(MSVC)
-
-IF( COMMAND cmake_policy )
-  IF( POLICY CMP0003 )
-    CMAKE_POLICY(SET CMP0003 OLD)
-  ENDIF( POLICY CMP0003 )
-ENDIF( COMMAND cmake_policy )
-ADD_EXECUTABLE(${PROJECT_NAME} ${${PROJECT_NAME}_SRCS} ${${PROJECT_NAME}_HEADERS})
-
-TARGET_LINK_LIBRARIES( ${PROJECT_NAME} ${requiredLibs} ${optionalLibs} )
-
-# make the name of debug libraries end in _d.
-SET_TARGET_PROPERTIES( ${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX "_d" )
-
-IF(UNIX) 
-  SET_TARGET_PROPERTIES( ${PROJECT_NAME} PROPERTIES OUTPUT_NAME ${PROJECT_NAME} )
-ENDIF(UNIX)
-
-IF(MSVC)
-  # Create variables
-  SET( ${PROJECT_NAME}_LINK_FLAGS_DEBUG "" )
-  
-  SET( PROJECT_MSVC_VERSION 6 )
-  SET( TEMP_MSVC_VERSION 1299 )
-  WHILE( ${MSVC_VERSION} GREATER ${TEMP_MSVC_VERSION} )
-    MATH( EXPR PROJECT_MSVC_VERSION "${PROJECT_MSVC_VERSION} + 1" )
-    MATH( EXPR TEMP_MSVC_VERSION "${TEMP_MSVC_VERSION} + 100" )
-  ENDWHILE( ${MSVC_VERSION} GREATER ${TEMP_MSVC_VERSION} )
-  
-  # Treat wchar_t as built in type for all visual studio versions.
-  # This is default for every version above 7 ( so far ) but we still set it for all.
-  SET( ${PROJECT_NAME}_COMPILE_FLAGS "${${PROJECT_NAME}_COMPILE_FLAGS} /Zc:wchar_t")
-  
-  IF( ${MSVC_VERSION} GREATER 1399 )
-    # Remove compiler warnings about deprecation for visual studio versions 8 and above.
-    SET( ${PROJECT_NAME}_COMPILE_FLAGS "${${PROJECT_NAME}_COMPILE_FLAGS} -D_CRT_SECURE_NO_DEPRECATE" )
-  ENDIF( ${MSVC_VERSION} GREATER 1399 )
-
-  IF( ${MSVC_VERSION} GREATER 1499 )
-    # Build using several threads for visual studio versions 9 and above.
-    SET( ${PROJECT_NAME}_COMPILE_FLAGS "${${PROJECT_NAME}_COMPILE_FLAGS} /MP" )
-    # Remove link against default library for debug builds.
-    SET( ${PROJECT_NAME}_LINK_FLAGS_DEBUG "${${PROJECT_NAME}_LINK_FLAGS_DEBUG} /NODEFAULTLIB:msvcrt" )
-  ENDIF( ${MSVC_VERSION} GREATER 1499 )
-
-  SET_TARGET_PROPERTIES( ${PROJECT_NAME} PROPERTIES OUTPUT_NAME ${PROJECT_NAME}_vc${PROJECT_MSVC_VERSION} )
-
-  # Seems like ${PROJECT_NAME} needs to have incremental linking shut off for vc8. Since this is
-  # not the most important feature it is shut off for all visual studio versions.
-  SET_TARGET_PROPERTIES( ${PROJECT_NAME} PROPERTIES LINK_FLAGS_DEBUG "${${PROJECT_NAME}_LINK_FLAGS_DEBUG} /INCREMENTAL:NO" )
-
-  # autogenerate ${PROJECT_NAME}.rc depending on the version
-  #CONFIGURE_FILE( ${PROJECT_NAME}.rc.cmake ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.rc )
-  
-  #ADD_CUSTOM_COMMAND( TARGET ${PROJECT_NAME}
-  #	PRE_BUILD
-  #	COMMAND ${${PROJECT_NAME}_SOURCE_DIR}/UpdateResourceFile 
-  #	ARGS ${PROJECT_NAME} ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.rc ${${PROJECT_NAME}_SOURCE_DIR}/${PROJECT_NAME}.rc.cmake
-  #	${${PROJECT_NAME}_MAJOR_VERSION} ${${PROJECT_NAME}_MINOR_VERSION}
-  #	${${PROJECT_NAME}_BUILD_VERSION} "${${PROJECT_NAME}_SVN_VERSION}"
-  #	"${PROJECT_NAME}_Output_Name"
-  #	"$(TargetFileName)" )
-
-ENDIF(MSVC)
-
-SET( ${PROJECT_NAME}_FULL_VERSION ${${PROJECT_NAME}_MAJOR_VERSION}.${${PROJECT_NAME}_MINOR_VERSION}.${${PROJECT_NAME}_BUILD_VERSION} ) 
-SET_TARGET_PROPERTIES( ${PROJECT_NAME} PROPERTIES VERSION ${${PROJECT_NAME}_FULL_VERSION} )
-
-# set compile flags for ${PROJECT_NAME} project
-SET_TARGET_PROPERTIES( ${PROJECT_NAME} PROPERTIES COMPILE_FLAGS "${${PROJECT_NAME}_COMPILE_FLAGS}" )
-
-IF( UNIX )
-# Install header files on non-windows system (e.g. Unix).
-INSTALL( FILES ${${PROJECT_NAME}_HEADERS}
-         DESTINATION include/${PROJECT_NAME} )
-ENDIF( UNIX )
-
-SET( DEFAULT_BIN_INSTALL "bin" )
-SET( DEFAULT_LIB_INSTALL "lib" )
-
-IF( WIN32 )
-  SET( DEFAULT_BIN_INSTALL "bin32" )
-  SET( DEFAULT_LIB_INSTALL "lib32" )
-  IF( CMAKE_SIZEOF_VOID_P EQUAL 8 )
-    SET( DEFAULT_BIN_INSTALL "bin64" )
-    SET( DEFAULT_LIB_INSTALL "lib64" )
-  ENDIF( CMAKE_SIZEOF_VOID_P EQUAL 8 )
-ENDIF( WIN32 )
-
-# Install directories.
-INSTALL( TARGETS ${PROJECT_NAME}
-         LIBRARY DESTINATION ${DEFAULT_LIB_INSTALL} COMPONENT ${PROJECT_NAME}_cpack_runtime
-         RUNTIME DESTINATION ${DEFAULT_BIN_INSTALL} COMPONENT ${PROJECT_NAME}_cpack_runtime
-         ARCHIVE DESTINATION ${DEFAULT_LIB_INSTALL} COMPONENT ${PROJECT_NAME}_cpack_libraries)
-
-#INCLUDE ( ${${PROJECT_NAME}_SOURCE_DIR}/${PROJECT_NAME}CPack.cmake)
+# library
+add_subdirectory(src)

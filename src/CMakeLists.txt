@@ -3,13 +3,20 @@ include_directories( "${CMAKE_SOURCE_DIR}/include" )
 
 
 # All cpp files for DEMO
-FILE(GLOB DEMO_SRCS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
-   "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp"
+SET(DEMO_SRCS
+        "${CMAKE_CURRENT_SOURCE_DIR}/main.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/UbitrackBaseConnector.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/UbitrackSingleCameraConnector.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/UbitrackVisualizer.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/UbitrackViewControl.cpp"
 )
 
 # All header files for DEMO
-FILE(GLOB DEMO_HEADERS RELATIVE "${CMAKE_SOURCE_DIR}/include"
-   "basic_facade_demo/*.h"  
+SET(DEMO_HEADERS
+        "${CMAKE_SOURCE_DIR}/include/basic_facade_demo/UbitrackBaseConnector.h"
+        "${CMAKE_SOURCE_DIR}/include/basic_facade_demo/UbitrackSingleCameraConnector.h"
+        "${CMAKE_SOURCE_DIR}/include/basic_facade_demo/UbitrackVisualizer.h"
+        "${CMAKE_SOURCE_DIR}/include/basic_facade_demo/UbitrackViewControl.h"
 )
 
 ADD_EXECUTABLE(${PROJECT_NAME} ${DEMO_SRCS} ${DEMO_HEADERS})

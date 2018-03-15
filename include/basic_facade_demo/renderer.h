@@ -17,8 +17,9 @@
 
 
 #include <utFacade/BasicFacadeTypes.h>
-#include "basic_facade_demo/shader.hpp"
-#include  "basic_facade_demo/texture.hpp"
+#include "basic_facade_demo/shader.h"
+#include "basic_facade_demo/texture.h"
+
 /*
  * The following things need to be considered:
  * - Stereo (side-by-side) rendering
@@ -70,6 +71,7 @@ protected:
 	glm::mat4 m_projection_left;
 
 	void setup_shader();
+
 	std::shared_ptr<Ubitrack::Facade::BasicImageMeasurement > m_camera_left_image;
 	bool m_bTextureLeftInitialized;
 	unsigned int m_pow2WidthLeft;

@@ -13,16 +13,17 @@
 #define Sleep(x) usleep((x)*1000)
 #endif
 
-#include <stdlib.h>
-#include <signal.h>
+#include <cstdlib>
+#include <csignal>
 #include <iostream>
 #include <functional>
 #include <vector>
 
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
 
-
+// open3d includes
+#include <Core/Core.h>
+#include <IO/IO.h>
+#include <Visualization/Visualization.h>
 
 #ifdef _WIN32
 #include <conio.h>
@@ -31,9 +32,8 @@
 
 #include <utFacade/BasicFacade.h>
 
-#include "basic_facade_demo/utconnector.h"
-#include "basic_facade_demo/glfwwindow.h"
-#include "basic_facade_demo/renderer.h"
+#include "basic_facade_demo/UbitrackSingleCameraConnector.h"
+#include "basic_facade_demo/UbitrackVisualizer.h"
 
 // logging
 #include <log4cpp/OstreamAppender.hh>
@@ -109,39 +109,37 @@ int main(int ac, char** av) {
 	log4cpp::Category::getRoot().setPriority( log4cpp::Priority::INFO ); // default: INFO
 	log4cpp::Category::getInstance( "Ubitrack.Events" ).setPriority( log4cpp::Priority::NOTICE ); // default: NOTICE
 
+    three::UbitrackVisualizer visualizer;
 
 	LOG4CPP_INFO( logger, "Starting SimpleAR demo" );
 	try
 	{
 		// initialize Ubitrack logging
 		Facade::initUbitrackLogging("log4cpp.conf");
+		// initialize Open3D Verbosity Level
+		three::SetVerbosityLevel(three::VerbosityLevel::VerboseAlways);
+
 
 		// configure ubitrack
 		LOG4CPP_INFO( logger, "Initialize Connector." );
-		UTSimpleARConnector connector( sComponentsPath.c_str() );
+		UbitrackSingleCameraConnector connector( sComponentsPath );
 
 		LOG4CPP_INFO( logger, "Instantiating dataflow network from " << sUtqlFile << "..." );
-		if (!connector.initialize( sUtqlFile.c_str() )) {
+		if (!connector.initialize( sUtqlFile )) {
 			LOG4CPP_ERROR( logger, "Unable to load dataflow." );
 			return 1;
 		};
 
-		// initialize GLFW
-		LOG4CPP_INFO( logger, "Initialize GLFW" );
-		glfwInit();
+        std::string window_name = "Basic Facade Demo";
+        int width = 640;
+        int height = 480;
+        int left = 50;
+        int top = 50;
 
-		LOG4CPP_INFO( logger, "Create OpenGL Window." );
-		Window* window = new Window( 1280, 480, "Basic Facade Demo");
-
-		// initialize GLEW
-		LOG4CPP_INFO( logger, "Initialize GLEW" );
-		glewExperimental = GL_TRUE;
-		glewInit();
-
-		// create renderer class
-		Renderer* renderer = new Renderer();
-
-		Sleep(100);
+        if (!visualizer.CreateWindow(window_name, width, height, left, top)) {
+            three::PrintWarning("[UbitrackVisualizer] Failed creating OpenGL window.\n");
+            return 1;
+        }
 
 		LOG4CPP_INFO( logger, "Starting dataflow" );
 		connector.start();
@@ -150,83 +148,92 @@ int main(int ac, char** av) {
 		TimestampT ts = connector.now();
 
 		// retrieve camera left intrinsics information
-		glm::mat3 intrinsics_left;
-		glm::ivec2 resolution_left;
+		Eigen::Matrix3d intrinsics_left;
+		Eigen::Vector2i resolution_left;
 		connector.camera_left_get_intrinsics(ts, intrinsics_left, resolution_left);
 
 		// store camera left intrinsics information
-		renderer->set_intrinsics_left(intrinsics_left, resolution_left);
+//		renderer->set_intrinsics_left(intrinsics_left, resolution_left);
 
 		// some "global" variables to use during the rendering loop
 		std::shared_ptr<Facade::BasicImageMeasurement > cam_img_left;
 
-		// begin opengl initialization
-		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+        //testing open3d
+        auto mesh = three::CreateMeshSphere(0.05);
+        visualizer.AddGeometry(mesh);
 
-		// Enable depth test
-		glEnable(GL_DEPTH_TEST);
-		// Accept fragment if it closer to the camera than the former one
-		glDepthFunc(GL_LESS); 
 
-		//// GL: disable backface culling
-		glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
-		glDisable( GL_CULL_FACE );
-		glPixelStorei( GL_PACK_ALIGNMENT,   1 );
-		glPixelStorei( GL_UNPACK_ALIGNMENT, 1 );
+//		// begin opengl initialization
+//		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+//
+//		// Enable depth test
+//		glEnable(GL_DEPTH_TEST);
+//		// Accept fragment if it closer to the camera than the former one
+//		glDepthFunc(GL_LESS);
+//
+//		//// GL: disable backface culling
+//		glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+//		glDisable( GL_CULL_FACE );
+//		glPixelStorei( GL_PACK_ALIGNMENT,   1 );
+//		glPixelStorei( GL_UNPACK_ALIGNMENT, 1 );
+//
+//		glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+//		//glEnable( GL_BLEND );
+//
+//		// GL: misc stuff
+//		glShadeModel( GL_SMOOTH );
+//		glEnable( GL_NORMALIZE );
+//
+//		// //GL: light parameters
+//		GLfloat light_pos[] = { 1.0f, 1.0f, 1.0f, 0.0f };
+//		GLfloat light_amb[] = { 0.2f, 0.2f, 0.2f, 1.0f };
+//		GLfloat light_dif[] = { 0.9f, 0.9f, 0.9f, 1.0f };
+//
+//		//GL: enable lighting
+//		glLightfv( GL_LIGHT0, GL_POSITION, light_pos );
+//		glLightfv( GL_LIGHT0, GL_AMBIENT,  light_amb );
+//		glLightfv( GL_LIGHT0, GL_DIFFUSE,  light_dif );
+//		glEnable( GL_LIGHTING );
+//		glEnable( GL_LIGHT0 );
 
-		glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
-		//glEnable( GL_BLEND );
+        visualizer.Run();
+        visualizer.DestroyWindow();
 
-		// GL: misc stuff
-		glShadeModel( GL_SMOOTH );
-		glEnable( GL_NORMALIZE );
 
-		// //GL: light parameters
-		GLfloat light_pos[] = { 1.0f, 1.0f, 1.0f, 0.0f };
-		GLfloat light_amb[] = { 0.2f, 0.2f, 0.2f, 1.0f };
-		GLfloat light_dif[] = { 0.9f, 0.9f, 0.9f, 1.0f };
-
-		//GL: enable lighting
-		glLightfv( GL_LIGHT0, GL_POSITION, light_pos );
-		glLightfv( GL_LIGHT0, GL_AMBIENT,  light_amb );
-		glLightfv( GL_LIGHT0, GL_DIFFUSE,  light_dif );
-		glEnable( GL_LIGHTING );
-		glEnable( GL_LIGHT0 );
-
-		while(!window->windowShouldClose())
-		{
-
-			ts = connector.wait_for_frame();
-
-			// transfer camera_left_image to renderer (only reference, not copied)
-			connector.camera_left_get_current_image(cam_img_left);
-			renderer->set_camera_left_image(cam_img_left);
-
-			// receive camera pose
-			glm::mat4 cam_pose_left;
-
-			connector.camera_left_get_pose(ts, cam_pose_left);
-			renderer->set_camera_left_pose(cam_pose_left);
-
-			// update model based on tracking data
-
-			// think about stereo-rendering here ..
-
-			//integrate IPSI
-
-			// initialize rendering
-			renderer->pre_render(window);
-
-			// all processing per frame goes here.
-			renderer->render(window, ts);
-
-			// finalize rendering
-			renderer->post_render(window);
-
-			// trigger event processing
-			glfwPollEvents();
-
-		}
+//		while(!window->windowShouldClose())
+//		{
+//
+//			ts = connector.wait_for_frame();
+//
+//			// transfer camera_left_image to renderer (only reference, not copied)
+//			connector.camera_left_get_current_image(cam_img_left);
+//			renderer->set_camera_left_image(cam_img_left);
+//
+//			// receive camera pose
+//			glm::mat4 cam_pose_left;
+//
+//			connector.camera_left_get_pose(ts, cam_pose_left);
+//			renderer->set_camera_left_pose(cam_pose_left);
+//
+//			// update model based on tracking data
+//
+//			// think about stereo-rendering here ..
+//
+//			//integrate IPSI
+//
+//			// initialize rendering
+//			renderer->pre_render(window);
+//
+//			// all processing per frame goes here.
+//			renderer->render(window, ts);
+//
+//			// finalize rendering
+//			renderer->post_render(window);
+//
+//			// trigger event processing
+//			glfwPollEvents();
+//
+//		}
 
 		LOG4CPP_INFO( logger, "Stopping dataflow..." );
 		connector.stop();
@@ -245,8 +252,6 @@ int main(int ac, char** av) {
 	}
 
 	LOG4CPP_INFO( logger, "basic_facade_demo terminating." );
-
-	glfwTerminate();
 
 
 

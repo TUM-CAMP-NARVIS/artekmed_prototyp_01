@@ -59,7 +59,7 @@ bool UTBaseConnector::stop() {
 }
 
 void UTBaseConnector::set_new_frame(unsigned long long int ts) {
-	tbb::interface5::unique_lock<tbb::mutex> ul( m_waitMutex );
+	std::unique_lock<std::mutex> ul( m_waitMutex );
 	m_lastTimestamp = ts;
 	m_haveNewFrame = true;
 	m_waitCondition.notify_one();
@@ -71,7 +71,7 @@ unsigned long long int UTBaseConnector::wait_for_frame() {
 	// alternatively, we could only query the m_haveNewFrame variable (polling)
 	unsigned long long int ts(0);
 	while (!m_haveNewFrame) {
-		tbb::interface5::unique_lock<tbb::mutex> ul( m_waitMutex );
+		std::unique_lock<std::mutex> ul( m_waitMutex );
 		m_waitCondition.wait( ul );
 		ts = m_lastTimestamp;
 	}
@@ -79,7 +79,7 @@ unsigned long long int UTBaseConnector::wait_for_frame() {
 	// reset haveNewFrame immediately to prepare for the next frame
 	// maybe this should be done in a seperate method ??
 	{
-		tbb::interface5::unique_lock<tbb::mutex> ul( m_waitMutex );
+		std::unique_lock<std::mutex> ul( m_waitMutex );
 		m_haveNewFrame = false;
 	}
 	return ts;
@@ -89,16 +89,14 @@ unsigned long long int UTBaseConnector::wait_for_frame() {
 
 UTSimpleARConnector::UTSimpleARConnector(const std::string& _components_path)
 	: UTBaseConnector(_components_path)
-    , m_pushsink_camera_image_left(NULL)
-    , m_pullsink_camera_intrinsics_left(NULL)
-	, m_pullsink_camera_resolution_left(NULL)
-    , m_pullsink_camera_pose_left(NULL)
-    , m_pullsink_camera_image_depth_left(NULL)
-	, m_pullsink_camera_intrinsics_right(NULL)
-	, m_pullsink_camera_resolution_right(NULL)
-	, m_pullsink_camera_image_depth_right(NULL)
-	, m_pullsink_camera_image_right(NULL)
-	, m_pullsink_left2right_pose(NULL)
+    , m_pushsink_camera_image_left(nullptr)
+    , m_pullsink_camera_intrinsics_left(nullptr)
+	, m_pullsink_camera_resolution_left(nullptr)
+    , m_pullsink_camera_pose_left(nullptr)
+	, m_pullsink_camera_intrinsics_right(nullptr)
+	, m_pullsink_camera_resolution_right(nullptr)
+	, m_pullsink_camera_image_right(nullptr)
+	, m_pullsink_left2right_pose(nullptr)
 {}
 
 UTSimpleARConnector::~UTSimpleARConnector()
@@ -109,55 +107,45 @@ bool UTSimpleARConnector::initialize(const std::string& _utql_filename)
 	bool ret = UTBaseConnector::initialize(_utql_filename);
 
 	// create sinks/sources
-	if (m_pullsink_left2right_pose != NULL)
+	if (m_pullsink_left2right_pose != nullptr)
 		delete m_pullsink_left2right_pose;
 	m_pullsink_left2right_pose = m_utFacade.getPullSink<Facade::BasicPoseMeasurement>("left2right_transformation");
 	
-	if (m_pushsink_camera_image_left != NULL) {
+	if (m_pushsink_camera_image_left != nullptr) {
 		delete m_pushsink_camera_image_left;
 	}
 	m_pushsink_camera_image_left = m_utFacade.getPushSink<Facade::BasicImageMeasurement>("camera_image_left");
 
-	if(m_pullsink_camera_image_right !=NULL)
+	if(m_pullsink_camera_image_right != nullptr)
 		delete m_pullsink_camera_image_right;
 	m_pullsink_camera_image_right = m_utFacade.getPullSink<Facade::BasicImageMeasurement>("camera_image_right");
 
 	
-	if(m_pullsink_camera_image_depth_right !=NULL)
-		delete m_pullsink_camera_image_depth_right;
-	m_pullsink_camera_image_depth_right = m_utFacade.getPullSink<Facade::BasicImageMeasurement>("depth_camera_right");
-
-
-	if (m_pullsink_camera_intrinsics_right != NULL) {
+	if (m_pullsink_camera_intrinsics_right != nullptr) {
 		delete m_pullsink_camera_intrinsics_right;
 	}
 	m_pullsink_camera_intrinsics_right = m_utFacade.getPullSink<Facade::BasicMatrixMeasurement< 3, 3 > >("camera_intrinsics_right");
 
-	if (m_pullsink_camera_resolution_right != NULL) {
+	if (m_pullsink_camera_resolution_right != nullptr) {
 		delete m_pullsink_camera_resolution_right;
 	}
 	m_pullsink_camera_resolution_right = m_utFacade.getPullSink<Facade::BasicVectorMeasurement< 2 > >("camera_resolution_right");
 
 
-	if (m_pullsink_camera_intrinsics_left != NULL) {
+	if (m_pullsink_camera_intrinsics_left != nullptr) {
 		delete m_pullsink_camera_intrinsics_left;
 	}
 	m_pullsink_camera_intrinsics_left = m_utFacade.getPullSink<Facade::BasicMatrixMeasurement< 3, 3 > >("camera_intrinsics_left");
 
-	if (m_pullsink_camera_resolution_left != NULL) {
+	if (m_pullsink_camera_resolution_left != nullptr) {
 		delete m_pullsink_camera_resolution_left;
 	}
 	m_pullsink_camera_resolution_left = m_utFacade.getPullSink<Facade::BasicVectorMeasurement< 2 > >("camera_resolution_left");
 
-	if (m_pullsink_camera_pose_left != NULL) {
+	if (m_pullsink_camera_pose_left != nullptr) {
 		delete m_pullsink_camera_pose_left;
 	}
 	m_pullsink_camera_pose_left = m_utFacade.getPullSink<Facade::BasicPoseMeasurement>("camera_pose_left");
-	if(m_pullsink_camera_image_depth_left != NULL)
-	{
-		delete m_pullsink_camera_image_depth_left;
-	}
-	m_pullsink_camera_image_depth_left= m_utFacade.getPullSink<Facade::BasicImageMeasurement>("depth_camera_left");
 
 	if (m_pushsink_camera_image_left) {
 		m_pushsink_camera_image_left->registerCallback(std::bind(&UTSimpleARConnector::receive_camera_left_image, this, std::placeholders::_1));
@@ -174,27 +162,25 @@ bool UTSimpleARConnector::teardown()
 
 
 	// delete sinks/sources
-	if (m_pushsink_camera_image_left != NULL) {
+	if (m_pushsink_camera_image_left != nullptr) {
 		delete m_pushsink_camera_image_left;
 	}
-	if (m_pullsink_camera_image_right != NULL) {
+	if (m_pullsink_camera_image_right != nullptr) {
 		delete m_pullsink_camera_image_right;
 	}
-	if (m_pullsink_camera_intrinsics_left != NULL) {
+	if (m_pullsink_camera_intrinsics_left != nullptr) {
 		delete m_pullsink_camera_intrinsics_left;
 	}
 
-	if (m_pullsink_camera_resolution_left != NULL) {
+	if (m_pullsink_camera_resolution_left != nullptr) {
 		delete m_pullsink_camera_resolution_left;
 	}
 
-	if (m_pullsink_camera_pose_left != NULL) {
+	if (m_pullsink_camera_pose_left != nullptr) {
 		delete m_pullsink_camera_pose_left;
 	}
-	if(m_pullsink_camera_image_depth_left !=NULL)
-		delete m_pullsink_camera_image_depth_left;
 
-	if (m_pullsink_left2right_pose != NULL) {
+	if (m_pullsink_left2right_pose != nullptr) {
 		delete m_pullsink_left2right_pose;
 	}
 
@@ -269,48 +255,14 @@ bool UTSimpleARConnector::camera_left_get_intrinsics(const TimestampT ts, glm::m
 bool UTSimpleARConnector::camera_left_get_current_image(std::shared_ptr<Facade::BasicImageMeasurement >& img)
 {
 	// we need locking here to prevent concurrent access to m_current_camera_left_image (when receiving new frame)
-	tbb::interface5::unique_lock<tbb::mutex> ul( m_textureAccessMutex );
+	std::unique_lock<std::mutex> ul( m_textureAccessMutex );
 	img = m_current_camera_left_image;
 	return true;
 }
-bool UTSimpleARConnector::camera_depth_get_current_image_left(const TimestampT ts, std::shared_ptr<Facade::BasicImageMeasurement> & img)
-{
-	if (m_pullsink_camera_image_depth_left == NULL) {
-		LOG4CPP_ERROR(logger, "pullsink depth left is not connected");
-		return false;
-	}
-	try{
-		std::shared_ptr<Facade::BasicImageMeasurement> m_image= m_pullsink_camera_image_depth_left->get(ts);
-		img= m_image;
-	}
-	catch(std::exception & e)
-	{
-		LOG4CPP_ERROR(logger, "error pulling camera image left: " << e.what());
-		return false;
-	}
-	return true;
 
-}
-bool UTSimpleARConnector::camera_depth_get_current_image_right(const TimestampT ts, std::shared_ptr<Facade::BasicImageMeasurement> & img)
-{
-	if (m_pullsink_camera_image_depth_right == NULL) {
-		LOG4CPP_ERROR(logger, "pullsink depth right is not connected");
-		return false;
-	}
-	try{
-		std::shared_ptr<Facade::BasicImageMeasurement> m_image= m_pullsink_camera_image_depth_right->get(ts);
-		img= m_image;
-	}
-	catch(std::exception & e)
-	{
-		LOG4CPP_ERROR(logger, "error pulling camera depth right: " << e.what());
-		return false;
-	}
-	return true;
-}
 bool UTSimpleARConnector::camera_get_current_image_right(const TimestampT ts, std::shared_ptr<Facade::BasicImageMeasurement> & img)
 {
-	if (m_pullsink_camera_image_right == NULL) {
+	if (m_pullsink_camera_image_right == nullptr) {
 		LOG4CPP_ERROR(logger, "pullsink camera right is not connected");
 		return false;
 	}
@@ -327,7 +279,7 @@ bool UTSimpleARConnector::camera_get_current_image_right(const TimestampT ts, st
 }
 bool UTSimpleARConnector::left2right_get_pose(const TimestampT ts, glm::mat4& pose) 
 {
-	if (m_pullsink_left2right_pose == NULL) {
+	if (m_pullsink_left2right_pose == nullptr) {
 		LOG4CPP_ERROR(logger, "pullsink is not connected");
 		return false;
 	}
@@ -369,7 +321,7 @@ bool UTSimpleARConnector::left2right_get_pose(const TimestampT ts, glm::mat4& po
 
 bool UTSimpleARConnector::camera_left_get_pose(const TimestampT ts, glm::mat4& pose) 
 {
-	if (m_pullsink_camera_pose_left == NULL) {
+	if (m_pullsink_camera_pose_left == nullptr) {
 		LOG4CPP_ERROR(logger, "pullsink is not connected");
 		return false;
 	}
@@ -451,7 +403,7 @@ void UTSimpleARConnector::receive_camera_left_image(std::shared_ptr<Facade::Basi
 	//LDEBUG << "Image received for timestamp: " << image->time();
 	// store image reference for upload
 	{
-		tbb::interface5::unique_lock<tbb::mutex> ul( m_textureAccessMutex );
+		std::unique_lock<std::mutex> ul( m_textureAccessMutex );
 		m_current_camera_left_image = image;
 	}
 	// notify renderer that new frame is available

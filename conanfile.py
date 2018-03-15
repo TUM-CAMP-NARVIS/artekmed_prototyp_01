@@ -20,24 +20,28 @@ class UbitrackCoreConan(ConanFile):
     requires = (
         "ubitrack/%s@ubitrack/stable" % version,
         "ubitrack_tools_trackman/1.0@ubitrack/stable",
+        "eigen/[>=3.3.4]@camposs/stable",
+        "open3d/0.1.0@camposs/stable",
        )
 
     # all sources are deployed with the package
     exports_sources = "cmake/*", "include/*", "config/*", "src/*", "CMakeLists.txt"
 
     def configure(self):
-        self.options['ubitrack']:with_default_camera=True
-        self.options['ubitrack']:with_haptic_calibration=True
-        if self.sett
+        self.options['ubitrack'].with_default_camera=True
+        self.options['ubitrack'].with_haptic_calibration=True
+        if self.settings.os == "Windows":
+            self.options['ubitrack'].with_camera_flycapture=True
+
 
     def imports(self):
-        self.copy(src="bin",pattern="*.dll", dst="./bin") # Copies all dll files from packages bin folder to my "bin" folder
-        self.copy(src="lib",pattern="*.dll", dst="./bin") # Copies all dll files from packages bin folder to my "bin" folder
-        self.copy(src="lib",pattern="*.dylib*", dst="./lib") # Copies all dylib files from packages lib folder to my "lib" folder
-        self.copy(src="lib",pattern="*.so*", dst="./lib") # Copies all so files from packages lib folder to my "lib" folder
-        self.copy(src="bin",pattern="ut*", dst="./bin") # Copies all applications
-        self.copy(src="bin",pattern="log4cpp.conf", dst="./") # copy a logging config template
-        self.copy(src="share/Ubitrack", ,pattern="*.*", dst="./share/Ubitrack") # copy all shared ubitrack files 
+        self.copy(src="bin", pattern="*.dll", dst="./bin") # Copies all dll files from packages bin folder to my "bin" folder
+        self.copy(src="lib", pattern="*.dll", dst="./bin") # Copies all dll files from packages bin folder to my "bin" folder
+        self.copy(src="lib", pattern="*.dylib*", dst="./lib") # Copies all dylib files from packages lib folder to my "lib" folder
+        self.copy(src="lib", pattern="*.so*", dst="./lib") # Copies all so files from packages lib folder to my "lib" folder
+        self.copy(src="bin", pattern="ut*", dst="./bin") # Copies all applications
+        self.copy(src="bin", pattern="log4cpp.conf", dst="./") # copy a logging config template
+        self.copy(src="share/Ubitrack", pattern="*.*", dst="./share/Ubitrack") # copy all shared ubitrack files 
        
     def build(self):
         cmake = CMake(self)

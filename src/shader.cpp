@@ -11,7 +11,7 @@ using namespace std;
 
 #include <GL/glew.h>
 
-#include "basic_facade_demo/shader.hpp"
+#include "basic_facade_demo/shader.h"
 
 GLuint LoadShaders(const char * vertex_file_path,const char * fragment_file_path){
 

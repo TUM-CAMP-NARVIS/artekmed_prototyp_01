@@ -33,7 +33,7 @@
 #include <utFacade/BasicFacade.h>
 
 #include "basic_facade_demo/UbitrackSingleCameraConnector.h"
-#include "basic_facade_demo/UbitrackVisualizer.h"
+#include "basic_facade_demo/UbitrackSingleCameraVisualizer.h"
 
 // logging
 #include <log4cpp/OstreamAppender.hh>
@@ -109,9 +109,10 @@ int main(int ac, char** av) {
 	log4cpp::Category::getRoot().setPriority( log4cpp::Priority::INFO ); // default: INFO
 	log4cpp::Category::getInstance( "Ubitrack.Events" ).setPriority( log4cpp::Priority::NOTICE ); // default: NOTICE
 
-    three::UbitrackVisualizer visualizer;
+    three::UbitrackSingleCameraVisualizer visualizer;
 
-	LOG4CPP_INFO( logger, "Starting SimpleAR demo" );
+
+	LOG4CPP_INFO( logger, "Starting Basic Facade Demo demo" );
 	try
 	{
 		// initialize Ubitrack logging
@@ -120,19 +121,9 @@ int main(int ac, char** av) {
 		three::SetVerbosityLevel(three::VerbosityLevel::VerboseAlways);
 
 
-		// configure ubitrack
-		LOG4CPP_INFO( logger, "Initialize Connector." );
-		UbitrackSingleCameraConnector connector( sComponentsPath );
-
-		LOG4CPP_INFO( logger, "Instantiating dataflow network from " << sUtqlFile << "..." );
-		if (!connector.initialize( sUtqlFile )) {
-			LOG4CPP_ERROR( logger, "Unable to load dataflow." );
-			return 1;
-		};
-
         std::string window_name = "Basic Facade Demo";
-        int width = 640;
-        int height = 480;
+        int width = 1024;
+        int height = 768;
         int left = 50;
         int top = 50;
 
@@ -141,22 +132,23 @@ int main(int ac, char** av) {
             return 1;
         }
 
-		LOG4CPP_INFO( logger, "Starting dataflow" );
-		connector.start();
+		// configure ubitrack
+		LOG4CPP_INFO( logger, "Initialize Connector." );
+		std::shared_ptr<UbitrackSingleCameraConnector> connector = std::make_shared<UbitrackSingleCameraConnector>( sComponentsPath );
 
-		// load initial renderer (static) configuration
-		TimestampT ts = connector.now();
+		LOG4CPP_INFO( logger, "Instantiating dataflow network from " << sUtqlFile << "..." );
+		if (!connector->initialize( sUtqlFile )) {
+			LOG4CPP_ERROR( logger, "Unable to load dataflow." );
+			return 1;
+		};
 
-		// retrieve camera left intrinsics information
-		Eigen::Matrix3d intrinsics_left;
-		Eigen::Vector2i resolution_left;
-		connector.camera_left_get_intrinsics(ts, intrinsics_left, resolution_left);
+        LOG4CPP_INFO(logger, "Setup Connector for Visualizer.");
+        // must be done after window is created to ensure opengl context
+        visualizer.SetUbitrackConnector(connector);
 
-		// store camera left intrinsics information
-//		renderer->set_intrinsics_left(intrinsics_left, resolution_left);
 
-		// some "global" variables to use during the rendering loop
-		std::shared_ptr<Facade::BasicImageMeasurement > cam_img_left;
+        LOG4CPP_INFO( logger, "Starting dataflow" );
+		connector->start();
 
         //testing open3d
         auto mesh = three::CreateMeshSphere(0.05);
@@ -236,12 +228,12 @@ int main(int ac, char** av) {
 //		}
 
 		LOG4CPP_INFO( logger, "Stopping dataflow..." );
-		connector.stop();
+		connector->stop();
 
 
 		// this should be executed also if execptions happen above .. restructure try/catch block
 		LOG4CPP_INFO( logger, "Finished, cleaning up..." );
-		connector.teardown();
+		connector->teardown();
 	}
 	catch( std::exception& e )
 	{

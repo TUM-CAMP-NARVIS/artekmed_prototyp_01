@@ -8,14 +8,17 @@ SET(DEMO_SRCS
         "${CMAKE_CURRENT_SOURCE_DIR}/UbitrackBaseConnector.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/UbitrackSingleCameraConnector.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/UbitrackVisualizer.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/UbitrackSingleCameraVisualizer.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/UbitrackViewControl.cpp"
 )
+
 
 # All header files for DEMO
 SET(DEMO_HEADERS
         "${CMAKE_SOURCE_DIR}/include/basic_facade_demo/UbitrackBaseConnector.h"
         "${CMAKE_SOURCE_DIR}/include/basic_facade_demo/UbitrackSingleCameraConnector.h"
         "${CMAKE_SOURCE_DIR}/include/basic_facade_demo/UbitrackVisualizer.h"
+        "${CMAKE_SOURCE_DIR}/include/basic_facade_demo/UbitrackSingleCameraVisualizer.h"
         "${CMAKE_SOURCE_DIR}/include/basic_facade_demo/UbitrackViewControl.h"
 )
 

@@ -26,123 +26,20 @@ UbitrackVisualizer::~UbitrackVisualizer()
 void UbitrackVisualizer::PrintVisualizerHelp()
 {
     Visualizer::PrintVisualizerHelp();
-    PrintInfo("  -- Animation control --\n");
-    PrintInfo("    Ctrl + F     : Enter freeview (editing) mode.\n");
-    PrintInfo("    Ctrl + W     : Enter preview mode.\n");
-    PrintInfo("    Ctrl + P     : Enter animation mode and play animation from beginning.\n");
-    PrintInfo("    Ctrl + R     : Enter animation mode, play animation, and record screen.\n");
-    PrintInfo("    Ctrl + G     : Enter animation mode, play animation, and record depth.\n");
-    PrintInfo("    Ctrl + S     : Save the camera path into a json file.\n");
-    PrintInfo("\n");
-    PrintInfo("    -- In free view mode --\n");
-    PrintInfo("    Ctrl + <-/-> : Go backward/forward a keyframe.\n");
-    PrintInfo("    Ctrl + Wheel : Same as Ctrl + <-/->.\n");
-    PrintInfo("    Ctrl + [/]   : Go to the first/last keyframe.\n");
-    PrintInfo("    Ctrl + +/-   : Increase/decrease interval between keyframes.\n");
-    PrintInfo("    Ctrl + L     : Turn on/off camera path as a loop.\n");
-    PrintInfo("    Ctrl + A     : Add a keyframe right after the current keyframe.\n");
-    PrintInfo("    Ctrl + U     : Update the current keyframe.\n");
-    PrintInfo("    Ctrl + D     : Delete the current keyframe.\n");
-    PrintInfo("    Ctrl + N     : Add 360 spin right after the current keyframe.\n");
-    PrintInfo("    Ctrl + E     : Erase the entire camera path.\n");
-    PrintInfo("\n");
-    PrintInfo("    -- In preview mode --\n");
-    PrintInfo("    Ctrl + <-/-> : Go backward/forward a frame.\n");
-    PrintInfo("    Ctrl + Wheel : Same as Ctrl + <-/->.\n");
-    PrintInfo("    Ctrl + [/]   : Go to beginning/end of the camera path.\n");
+    PrintInfo("    -- AR Mode --\n");
+    PrintInfo("    XXX : Do something.\n");
     PrintInfo("\n");
 }
 
 void UbitrackVisualizer::UpdateWindowTitle()
 {
-    if (window_ != NULL) {
+    if (window_ != nullptr) {
         auto &view_control = (UbitrackViewControl &)
                 (*view_control_ptr_);
         std::string new_window_title = window_name_ + " - " +
                 view_control.GetStatusString();
         glfwSetWindowTitle(window_, new_window_title.c_str());
     }
-}
-
-void UbitrackVisualizer::Play(bool recording/* = false*/,
-        bool recording_depth/* = false*/,
-        bool close_window_when_animation_ends/* = false*/)
-{
-    auto &view_control = (UbitrackViewControl &)(*view_control_ptr_);
-    if (view_control.NumOfFrames() == 0) {
-        PrintInfo("Abort playing due to empty trajectory.\n");
-        return;
-    }
-    view_control.SetAnimationMode(
-            UbitrackViewControl::AnimationMode::PlayMode);
-    is_redraw_required_ = true;
-    UpdateWindowTitle();
-    recording_file_index_ = 0;
-    ResetConsoleProgress(view_control.NumOfFrames(), "Play animation: ");
-    auto trajectory_ptr = std::make_shared<PinholeCameraTrajectory>();
-    bool recording_trajectory = view_control.IsValidPinholeCameraTrajectory();
-    if (recording) {
-        if (recording_depth) {
-            filesystem::MakeDirectoryHierarchy(recording_depth_basedir_);
-        } else {
-            filesystem::MakeDirectoryHierarchy(recording_image_basedir_);
-        }
-    }
-    RegisterAnimationCallback(
-            [=](Visualizer *vis) {
-              // The lambda function captures no references to avoid dangling
-              // references
-              auto &view_control =
-                      (UbitrackViewControl &)(*view_control_ptr_);
-              std::this_thread::sleep_for(std::chrono::milliseconds(10));
-              recording_file_index_++;
-              if (recording) {
-                  if (recording_trajectory) {
-                      Eigen::Matrix4d extrinsic;
-                      view_control.ConvertToPinholeCameraParameters(
-                              trajectory_ptr->intrinsic_, extrinsic);
-                      trajectory_ptr->extrinsic_.push_back(extrinsic);
-                  }
-                  char buffer[DEFAULT_IO_BUFFER_SIZE];
-                  if (recording_depth) {
-                      sprintf(buffer,
-                              recording_depth_filename_format_.c_str(),
-                              recording_file_index_);
-                      CaptureDepthImage(recording_depth_basedir_ +
-                              std::string(buffer), false);
-                  } else {
-                      sprintf(buffer,
-                              recording_image_filename_format_.c_str(),
-                              recording_file_index_);
-                      CaptureScreenImage(recording_image_basedir_ +
-                              std::string(buffer), false);
-                  }
-              }
-              view_control.Step(1.0);
-              AdvanceConsoleProgress();
-              if (view_control.IsPlayingEnd(recording_file_index_)) {
-                  view_control.SetAnimationMode(
-                          UbitrackViewControl::
-                          AnimationMode::FreeMode);
-                  RegisterAnimationCallback(nullptr);
-                  if (recording && recording_trajectory) {
-                      if (recording_depth) {
-                          WriteIJsonConvertible(recording_depth_basedir_ +
-                                          recording_depth_trajectory_filename_,
-                                  *trajectory_ptr);
-                      } else {
-                          WriteIJsonConvertible(recording_image_basedir_ +
-                                          recording_image_trajectory_filename_,
-                                  *trajectory_ptr);
-                      }
-                  }
-                  if (close_window_when_animation_ends) {
-                      Close();
-                  }
-              }
-              UpdateWindowTitle();
-              return false;
-            });
 }
 
 bool UbitrackVisualizer::InitViewControl()
@@ -157,83 +54,65 @@ void UbitrackVisualizer::KeyPressCallback(GLFWwindow *window,
         int key, int scancode, int action, int mods)
 {
     auto &view_control = (UbitrackViewControl &)(*view_control_ptr_);
-    if (action == GLFW_RELEASE || view_control.IsPlaying()) {
+    if (action == GLFW_RELEASE) {
         return;
     }
 
     if (mods & GLFW_MOD_CONTROL) {
         switch (key) {
         case GLFW_KEY_F:
-            view_control.SetAnimationMode(
-                    UbitrackViewControl::AnimationMode::FreeMode);
-            PrintDebug("[Visualizer] Enter freeview (editing) mode.\n");
+            PrintDebug("[Visualizer] unhandled keypress.\n");
             break;
         case GLFW_KEY_W:
-            view_control.SetAnimationMode(
-                    UbitrackViewControl::AnimationMode::PreviewMode);
-            PrintDebug("[Visualizer] Enter preview mode.\n");
+            PrintDebug("[Visualizer] unhandled keypress.\n");
             break;
         case GLFW_KEY_P:
-            Play(false);
+            PrintDebug("[Visualizer] unhandled keypress.\n");
             break;
         case GLFW_KEY_R:
-            Play(true, false);
+            PrintDebug("[Visualizer] unhandled keypress.\n");
             break;
         case GLFW_KEY_G:
-            Play(true, true);
+            PrintDebug("[Visualizer] unhandled keypress.\n");
             break;
         case GLFW_KEY_S:
-            view_control.CaptureTrajectory();
+            PrintDebug("[Visualizer] unhandled keypress.\n");
             break;
         case GLFW_KEY_LEFT:
-            view_control.Step(-1.0);
+            PrintDebug("[Visualizer] unhandled keypress.\n");
             break;
         case GLFW_KEY_RIGHT:
-            view_control.Step(1.0);
+            PrintDebug("[Visualizer] unhandled keypress.\n");
             break;
         case GLFW_KEY_LEFT_BRACKET:
-            view_control.GoToFirst();
+            PrintDebug("[Visualizer] unhandled keypress.\n");
             break;
         case GLFW_KEY_RIGHT_BRACKET:
-            view_control.GoToLast();
+            PrintDebug("[Visualizer] unhandled keypress.\n");
             break;
         case GLFW_KEY_EQUAL:
-            view_control.ChangeTrajectoryInterval(1);
-            PrintDebug("[Visualizer] Trajectory interval set to %d.\n",
-                    view_control.GetTrajectoryInterval());
+            PrintDebug("[Visualizer] unhandled keypress.\n");
             break;
         case GLFW_KEY_MINUS:
-            view_control.ChangeTrajectoryInterval(-1);
-            PrintDebug("[Visualizer] Trajectory interval set to %d.\n",
-                    view_control.GetTrajectoryInterval());
+            PrintDebug("[Visualizer] unhandled keypress.\n");
             break;
         case GLFW_KEY_L:
-            view_control.ToggleTrajectoryLoop();
+            PrintDebug("[Visualizer] unhandled keypress.\n");
             break;
         case GLFW_KEY_A:
-            view_control.AddKeyFrame();
-            PrintDebug("[Visualizer] Insert key frame; %d remaining.\n",
-                    view_control.NumOfKeyFrames());
+            PrintDebug("[Visualizer] unhandled keypress.\n");
             break;
         case GLFW_KEY_U:
-            view_control.UpdateKeyFrame();
-            PrintDebug("[Visualizer] Update key frame; %d remaining.\n",
-                    view_control.NumOfKeyFrames());
+            PrintDebug("[Visualizer] unhandled keypress.\n");
             break;
         case GLFW_KEY_D:
-            view_control.DeleteKeyFrame();
-            PrintDebug("[Visualizer] Delete last key frame; %d remaining.\n",
-                    view_control.NumOfKeyFrames());
+            PrintDebug("[Visualizer] unhandled keypress.\n");
             break;
         case GLFW_KEY_N:
-            view_control.AddSpinKeyFrames();
-            PrintDebug("[Visualizer] Insert spin key frames; %d remaining.\n",
-                    view_control.NumOfKeyFrames());
+            PrintDebug("[Visualizer] unhandled keypress.\n");
             break;
         case GLFW_KEY_E:
-            view_control.ClearAllKeyFrames();
-            PrintDebug("[Visualizer] Clear key frames; %d remaining.\n",
-                    view_control.NumOfKeyFrames());
+            PrintDebug("[Visualizer] unhandled keypress.\n");
             break;
         default:
             Visualizer::KeyPressCallback(window, key, scancode, action, mods);
@@ -250,39 +129,21 @@ void UbitrackVisualizer::MouseMoveCallback(GLFWwindow* window,
         double x, double y)
 {
     auto &view_control = (UbitrackViewControl &)(*view_control_ptr_);
-    if (view_control.IsPreviewing()) {
-    } else if (view_control.IsPlaying()) {
-    } else {
-        Visualizer::MouseMoveCallback(window, x, y);
-    }
+    Visualizer::MouseMoveCallback(window, x, y);
 }
 
 void UbitrackVisualizer::MouseScrollCallback(GLFWwindow* window,
         double x, double y)
 {
     auto &view_control = (UbitrackViewControl &)(*view_control_ptr_);
-    if (view_control.IsPreviewing()) {
-        if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS ||
-                glfwGetKey(window, GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS) {
-            view_control.Step(y);
-            is_redraw_required_ = true;
-            UpdateWindowTitle();
-        }
-    } else if (view_control.IsPlaying()) {
-    } else {
-        Visualizer::MouseScrollCallback(window, x, y);
-    }
+    Visualizer::MouseScrollCallback(window, x, y);
 }
 
 void UbitrackVisualizer::MouseButtonCallback(GLFWwindow* window,
         int button, int action, int mods)
 {
     auto &view_control = (UbitrackViewControl &)(*view_control_ptr_);
-    if (view_control.IsPreviewing()) {
-    } else if (view_control.IsPlaying()) {
-    } else {
-        Visualizer::MouseButtonCallback(window, button, action, mods);
-    }
+    Visualizer::MouseButtonCallback(window, button, action, mods);
 }
 
 }	// namespace three

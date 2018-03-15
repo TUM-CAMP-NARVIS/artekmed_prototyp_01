@@ -18,6 +18,19 @@ UbitrackBaseConnector::UbitrackBaseConnector(const std::string& _components_path
 {
 }
 
+TimestampT UbitrackBaseConnector::now() {
+    return m_utFacade->now();
+}
+
+bool UbitrackBaseConnector::isRunning() {
+    return m_dataflowRunning;
+}
+
+bool UbitrackBaseConnector::isLoaded() {
+    return m_dataflowLoaded;
+}
+
+
 
 bool UbitrackBaseConnector::initialize(const std::string& _utql_filename) {
     // needs to catch exceptions ..
@@ -83,10 +96,10 @@ void UbitrackBaseConnector::set_new_frame(unsigned long long int ts) {
 }
 
 
-unsigned long long int UbitrackBaseConnector::wait_for_frame() {
+TimestampT UbitrackBaseConnector::wait_for_frame() {
     // find a way to exit here in case we want to stop
     // alternatively, we could only query the m_haveNewFrame variable (polling)
-    unsigned long long int ts(0);
+    TimestampT ts(0);
     while (!m_haveNewFrame) {
         std::unique_lock<std::mutex> ul( m_waitMutex );
         m_waitCondition.wait( ul );
@@ -100,4 +113,25 @@ unsigned long long int UbitrackBaseConnector::wait_for_frame() {
         m_haveNewFrame = false;
     }
     return ts;
+}
+
+unsigned int UbitrackBaseConnector::wait_for_frame_timeout(unsigned int timeout_ms, TimestampT& ts) {
+    auto timeout = std::chrono::milliseconds(timeout_ms);
+
+    std::unique_lock<std::mutex> ul( m_waitMutex );
+    if(m_waitCondition.wait_for( ul , timeout) == std::cv_status::no_timeout) {
+        if (m_haveNewFrame) {
+            ts = m_lastTimestamp;
+            m_haveNewFrame = false;
+            return 0;
+        } else {
+            // no new frame
+            ts = 0;
+            return 1;
+        }
+    } else {
+        // timeout
+        ts = 0;
+        return 2;
+    }
 }

@@ -76,6 +76,7 @@ bool UbitrackSingleCameraConnector::camera_left_get_intrinsics(const TimestampT 
         }
         m_intr->get(v_intr);
 
+        // ubitrack stores row-major and eigen by default column-major
         intrinsics = Eigen::Matrix3d(v_intr.data());
 
         std::vector<double> v_res(2);

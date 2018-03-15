@@ -9,7 +9,7 @@
 #include <vector>
 #include <condition_variable>
 #include <mutex>
-
+#include <chrono>
 
 
 // include Ubitrack BasicFacade
@@ -24,10 +24,11 @@ public:
     virtual ~UbitrackBaseConnector() = default;
 
     /*
-     * waits for an image to be pushed (left-eye) and returns its timestamp
+     * waits for an image to be pushed and returns its timestamp
      */
     TimestampT wait_for_frame();
-
+    // returns 0 on success, 1 if no frame was received, 2 on timeout
+    unsigned int wait_for_frame_timeout(unsigned int timeout_ms, TimestampT& ts);
 
     /*
      * livecycle management for the utconnector
@@ -39,9 +40,10 @@ public:
     virtual bool start();
     virtual bool stop();
 
-    inline TimestampT now() {
-        return m_utFacade->now();
-    }
+    TimestampT now();
+
+    bool isRunning();
+    bool isLoaded();
 
 protected:
 

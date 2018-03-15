@@ -2,334 +2,136 @@
 // Created by Ulrich Eck on 15.03.18.
 //
 
-
+#include <iostream>
+#include <cmath>
 #include "basic_facade_demo/UbitrackViewControl.h"
 
 #include <IO/ClassIO/IJsonConvertibleIO.h>
 
 namespace three{
 
+void UbitrackViewControl::SetCameraIntrinsics(const Eigen::Matrix3d& intrinsics_, const Eigen::Vector2i&  resolution_)
+{
+    std::cout << "intrinsics: " << intrinsics_ << std::endl;
+    std::cout << "resolution: " << resolution_ << std::endl;
+    camera_intrinsics_ = intrinsics_;
+    camera_resolution_ = resolution_;
+}
+
+void UbitrackViewControl::SetCameraExtrinsics(const Eigen::Matrix4d& view_matrix) {
+    std::cout << "extrinsics: " << view_matrix << std::endl;
+    view_matrix_ = view_matrix.cast<GLfloat>();
+}
+
+// this function hides a non-virtual function - bad design!!
+void UbitrackViewControl::SetViewMatrices(
+        const Eigen::Matrix4d &model_matrix/* = Eigen::Matrix4d::Identity()*/)
+{
+    if (window_height_ <= 0 || window_width_ <= 0) {
+        PrintWarning("[ViewControl] SetViewPoint() failed because window height and width are not set.");
+        return;
+    }
+    glViewport(0, 0, window_width_, window_height_);
+
+    // Perspective projection
+    z_near_ = std::max(0.01 * bounding_box_.GetSize(),
+            distance_ - 3.0 * bounding_box_.GetSize());
+    z_far_ = distance_ + 3.0 * bounding_box_.GetSize();
+
+    projection_matrix_ = ComputeProjectionMatrix(camera_intrinsics_, camera_resolution_, z_near_, z_far_).cast<GLfloat>();
+
+    std::cout << "projection matrix: " << projection_matrix_ << std::endl;
+
+    model_matrix_ = model_matrix.cast<GLfloat>();
+    MVP_matrix_ = projection_matrix_ * view_matrix_ * model_matrix_;
+
+}
+
 void UbitrackViewControl::Reset()
 {
-    if (animation_mode_ == AnimationMode::FreeMode) {
-        ViewControl::Reset();
-    }
+    ViewControl::Reset();
+    // get intrinsics and resolution from ubitrack here
 }
 
 void UbitrackViewControl::ChangeFieldOfView(double step)
 {
-    if (animation_mode_ == AnimationMode::FreeMode) {
-        if (!view_trajectory_.view_status_.empty()) {
-            // Once editing starts, lock ProjectionType.
-            // This is because ProjectionType cannot be easily switched in a
-            // smooth trajectory.
-            if (GetProjectionType() == ProjectionType::Perspective) {
-                double old_fov = field_of_view_;
-                ViewControl::ChangeFieldOfView(step);
-                if (GetProjectionType() == ProjectionType::Orthogonal) {
-                    field_of_view_ = old_fov;
-                }
-            } else {
-                // do nothing, lock as ProjectionType::Orthogonal
-            }
-            SetProjectionParameters();
-        } else {
-            ViewControl::ChangeFieldOfView(step);
-        }
-    }
+    // camera intrinsics are configured
 }
 
 void UbitrackViewControl::Scale(double scale)
 {
-    if (animation_mode_ == AnimationMode::FreeMode) {
-        ViewControl::Scale(scale);
-    }
+    // camera is controlled by tracker
 }
 
 void UbitrackViewControl::Rotate(double x, double y, double xo,
         double yo)
 {
-    if (animation_mode_ == AnimationMode::FreeMode) {
-        ViewControl::Rotate(x, y, xo, yo);
-    }
+    // camera is controlled by tracker
 }
 
 void UbitrackViewControl::Translate(double x, double y, double xo,
         double yo)
 {
-    if (animation_mode_ == AnimationMode::FreeMode) {
-        ViewControl::Translate(x, y, xo, yo);
-    }
+    // camera is controlled by tracker
 }
 
-void UbitrackViewControl::SetAnimationMode(AnimationMode mode)
-{
-    if (mode != AnimationMode::FreeMode && view_trajectory_.view_status_.empty()) {
-        return;
-    }
-    animation_mode_ = mode;
-    switch (mode) {
-    case AnimationMode::PreviewMode:
-    case AnimationMode::PlayMode:
-        view_trajectory_.ComputeInterpolationCoefficients();
-        GoToFirst();
-        break;
-    case AnimationMode::FreeMode:
-    default:
-        break;
-    }
-}
-
-void UbitrackViewControl::AddKeyFrame()
-{
-    if (animation_mode_ == AnimationMode::FreeMode) {
-        ViewParameters current_status;
-        ConvertToViewParameters(current_status);
-        if (view_trajectory_.view_status_.empty()) {
-            view_trajectory_.view_status_.push_back(current_status);
-            current_keyframe_ = 0.0;
-        } else {
-            size_t current_index = CurrentKeyframe();
-            view_trajectory_.view_status_.insert(
-                    view_trajectory_.view_status_.begin() + current_index + 1,
-                    current_status);
-            current_keyframe_ = current_index + 1.0;
-        }
-    }
-}
-
-void UbitrackViewControl::UpdateKeyFrame()
-{
-    if (animation_mode_ == AnimationMode::FreeMode &&
-            !view_trajectory_.view_status_.empty()) {
-        ConvertToViewParameters(
-                view_trajectory_.view_status_[CurrentKeyframe()]);
-    }
-}
-
-void UbitrackViewControl::DeleteKeyFrame()
-{
-    if (animation_mode_ == AnimationMode::FreeMode &&
-            !view_trajectory_.view_status_.empty()) {
-        size_t current_index = CurrentKeyframe();
-        view_trajectory_.view_status_.erase(
-                view_trajectory_.view_status_.begin() + current_index);
-        current_keyframe_ = RegularizeFrameIndex(current_index - 1.0,
-                view_trajectory_.view_status_.size(),
-                view_trajectory_.is_loop_);
-    }
-    SetViewControlFromTrajectory();
-}
-
-void UbitrackViewControl::AddSpinKeyFrames(int num_of_key_frames
-        /* = 20*/)
-{
-    if (animation_mode_ == AnimationMode::FreeMode) {
-        double radian_per_step = M_PI * 2.0 / double(num_of_key_frames);
-        for (int i = 0; i < num_of_key_frames; i++) {
-            ViewControl::Rotate(radian_per_step / ROTATION_RADIAN_PER_PIXEL, 0);
-            AddKeyFrame();
-        }
-    }
-}
 
 std::string UbitrackViewControl::GetStatusString() const
 {
     std::string prefix;
-    switch (animation_mode_) {
-    case AnimationMode::FreeMode:
-        prefix = "Editing ";
-        break;
-    case AnimationMode::PreviewMode:
-        prefix = "Previewing ";
-        break;
-    case AnimationMode::PlayMode:
-        prefix = "Playing ";
-        break;
-    }
+
     char buffer[DEFAULT_IO_BUFFER_SIZE];
-    if (animation_mode_ == AnimationMode::FreeMode) {
-        if (view_trajectory_.view_status_.empty()) {
-            sprintf(buffer, "empty trajectory");
-        } else {
-            sprintf(buffer, "#%u keyframe (%u in total%s)",
-                    (unsigned int)CurrentKeyframe() + 1,
-                    (unsigned int)view_trajectory_.view_status_.size(),
-                    view_trajectory_.is_loop_ ? ", looped" : "");
-        }
-    } else {
-        if (view_trajectory_.view_status_.empty()) {
-            sprintf(buffer, "empty trajectory");
-        } else {
-            sprintf(buffer, "#%u frame (%u in total%s)",
-                    (unsigned int)CurrentFrame() + 1,
-                    (unsigned int)view_trajectory_.NumOfFrames(),
-                    view_trajectory_.is_loop_ ? ", looped" : "");
-        }
-    }
+    sprintf(buffer, "idle");
     return prefix + std::string(buffer);
 }
 
-void UbitrackViewControl::Step(double change)
-{
-    if (view_trajectory_.view_status_.empty()) {
-        return;
-    }
-    if (animation_mode_ == AnimationMode::FreeMode) {
-        current_keyframe_ += change;
-        current_keyframe_ = RegularizeFrameIndex(current_keyframe_,
-                view_trajectory_.view_status_.size(),
-                view_trajectory_.is_loop_);
-    } else {
-        current_frame_ += change;
-        current_frame_ = RegularizeFrameIndex(current_frame_,
-                view_trajectory_.NumOfFrames(), view_trajectory_.is_loop_);
-    }
-    SetViewControlFromTrajectory();
-}
 
-void UbitrackViewControl::GoToFirst()
-{
-    if (view_trajectory_.view_status_.empty()) {
-        return;
-    }
-    if (animation_mode_ == AnimationMode::FreeMode) {
-        current_keyframe_ = 0.0;
-    } else {
-        current_frame_ = 0.0;
-    }
-    SetViewControlFromTrajectory();
-}
+Eigen::Matrix4d UbitrackViewControl::ComputeProjectionMatrix(
+        const Eigen::Matrix3d& intrinsics, const Eigen::Vector2i& resolution,
+        double n, double f) {
 
-void UbitrackViewControl::GoToLast()
-{
-    if (view_trajectory_.view_status_.empty()) {
-        return;
-    }
-    if (animation_mode_ == AnimationMode::FreeMode) {
-        current_keyframe_ = view_trajectory_.view_status_.size() - 1.0;
-    } else {
-        current_frame_ = view_trajectory_.NumOfFrames() - 1.0;
-    }
-    SetViewControlFromTrajectory();
-}
+    double l = 0;
+    double r = (double)resolution(0);
+    double b = 0;
+    double t = (double)resolution(1);
 
-bool UbitrackViewControl::CaptureTrajectory(
-        const std::string &filename/* = ""*/)
-{
-    if (view_trajectory_.view_status_.empty()) {
-        return false;
-    }
-    std::string json_filename = filename;
-    if (json_filename.empty()) {
-        json_filename = "ViewTrajectory_" + GetCurrentTimeStamp() + ".json";
-    }
-    PrintDebug("[Visualizer] Trejactory capture to %s\n", json_filename.c_str());
-    return WriteIJsonConvertible(json_filename, view_trajectory_);
-}
+    Eigen::Matrix4d m2;
+    m2.setZero();
+    m2.topLeftCorner<3,3>() = intrinsics;
 
-bool UbitrackViewControl::LoadTrajectoryFromJsonFile(
-        const std::string &filename)
-{
-    bool success = ReadIJsonConvertible(filename, view_trajectory_);
-    if (success == false) {
-        view_trajectory_.Reset();
-    }
-    current_keyframe_ = 0.0;
-    current_frame_ = 0.0;
-    SetViewControlFromTrajectory();
-    return success;
-}
+    double norm = std::sqrt( m2( 2, 0 )*m2( 2, 0 ) + m2( 2, 1 )*m2( 2, 1 ) + m2( 2, 2 )*m2( 2, 2 ) );
+    double nf = ( -f - n );
+    double add = f * n * norm;
 
-bool UbitrackViewControl::LoadTrajectoryFromCameraTrajectory(
-        const PinholeCameraTrajectory &camera_trajectory)
-{
-    current_keyframe_ = 0.0;
-    current_frame_ = 0.0;
-    view_trajectory_.Reset();
-    if (camera_trajectory.extrinsic_.empty()) {
-        return false;
-    }
-    view_trajectory_.interval_ = ViewTrajectory::INTERVAL_MIN;
-    view_trajectory_.is_loop_ = false;
-    view_trajectory_.view_status_.resize(camera_trajectory.extrinsic_.size());
-    for (size_t i = 0; i < camera_trajectory.extrinsic_.size(); i++) {
-        UbitrackViewControl view_control = *this;
-        if (view_control.ConvertFromPinholeCameraParameters(
-                camera_trajectory.intrinsic_,
-                camera_trajectory.extrinsic_[i]) == false) {
-            view_trajectory_.Reset();
-            return false;
-        }
-        if (view_control.ConvertToViewParameters(
-                view_trajectory_.view_status_[i]) == false) {
-            view_trajectory_.Reset();
-            return false;
-        }
-    }
-    SetViewControlFromTrajectory();
-    return true;
-}
+    // copy 3rd row to 4th row
+    m2.row(3) = m2.row(2);
 
-bool UbitrackViewControl::IsValidPinholeCameraTrajectory() const
-{
-    if (view_trajectory_.view_status_.empty()) {
-        return false;
-    }
-    if (view_trajectory_.view_status_[0].field_of_view_ == FIELD_OF_VIEW_MIN) {
-        return false;
-    }
-    for (const auto &status : view_trajectory_.view_status_) {
-        if (status.field_of_view_ !=
-                view_trajectory_.view_status_[0].field_of_view_) {
-            return false;
-        }
-    }
-    return true;
-}
+    // factor for normalization
+    m2.row(2) *= nf;
 
-double UbitrackViewControl::RegularizeFrameIndex(
-        double current_frame, size_t num_of_frames, bool is_loop)
-{
-    if (num_of_frames == 0) {
-        return 0.0;
-    }
-    double frame_index = current_frame;
-    if (is_loop) {
-        while (int(round(frame_index)) < 0) {
-            frame_index += double(num_of_frames);
-        }
-        while (int(round(frame_index)) >= int(num_of_frames)) {
-            frame_index -= double(num_of_frames);
-        }
-    } else {
-        if (frame_index < 0.0) {
-            frame_index = 0.0;
-        }
-        if (frame_index > num_of_frames - 1.0) {
-            frame_index = num_of_frames - 1.0;
-        }
-    }
-    return frame_index;
-}
+    m2(2,3) += add;
 
-void UbitrackViewControl::SetViewControlFromTrajectory()
-{
-    if (view_trajectory_.view_status_.empty()) {
-        return;
-    }
-    if (animation_mode_ == AnimationMode::FreeMode) {
-        ConvertFromViewParameters(
-                view_trajectory_.view_status_[CurrentKeyframe()]);
-    } else {
-        bool success;
-        ViewParameters status;
-        std::tie(success, status) =
-                view_trajectory_.GetInterpolatedFrame(CurrentFrame());
-        if (success) {
-            ConvertFromViewParameters(status);
-        }
-    }
+    Eigen::Matrix4d ortho;
+    ortho.setIdentity();
+
+    ortho( 0, 0 ) = static_cast< double >( 2.0 ) / ( r - l );
+    ortho( 0, 1 ) = static_cast< double >( 0.0 );
+    ortho( 0, 2 ) = static_cast< double >( 0.0 );
+    ortho( 0, 3 ) = ( r + l ) / ( l - r );
+    ortho( 1, 0 ) = static_cast< double >( 0.0 );
+    ortho( 1, 1 ) = static_cast< double >( 2.0 ) / ( t - b );
+    ortho( 1, 2 ) = static_cast< double >( 0.0 );
+    ortho( 1, 3 ) = ( t + b ) / ( b - t );
+    ortho( 2, 0 ) = static_cast< double >( 0.0 );
+    ortho( 2, 1 ) = static_cast< double >( 0.0 );
+    ortho( 2, 2 ) = static_cast< double >( 2.0 ) / ( n - f );
+    ortho( 2, 3 ) = ( f + n ) / ( n - f );
+    ortho( 3, 0 ) = static_cast< double >( 0.0 );
+    ortho( 3, 1 ) = static_cast< double >( 0.0 );
+    ortho( 3, 2 ) = static_cast< double >( 0.0 );
+    ortho( 3, 3 ) = static_cast< double >( 1.0 );
+
+    return ortho * m2;
 }
 
 }	// namespace three

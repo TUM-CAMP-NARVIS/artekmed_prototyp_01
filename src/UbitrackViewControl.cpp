@@ -2,45 +2,63 @@
 // Created by Ulrich Eck on 15.03.18.
 //
 
-#include <iostream>
+#include <strstream>
 #include <cmath>
+#include <Eigen/Dense>
+
 #include "basic_facade_demo/UbitrackViewControl.h"
 
 #include <IO/ClassIO/IJsonConvertibleIO.h>
 
 namespace three{
 
-void UbitrackViewControl::SetCameraIntrinsics(const Eigen::Matrix3d& intrinsics_, const Eigen::Vector2i&  resolution_)
+void UbitrackViewControl::SetCameraModel(const Eigen::Matrix4d& projection_, const Eigen::Matrix3d& intrinsics_, const Eigen::Vector2i& resolution_)
 {
-    std::cout << "intrinsics: " << intrinsics_ << std::endl;
-    std::cout << "resolution: " << resolution_ << std::endl;
     camera_intrinsics_ = intrinsics_;
     camera_resolution_ = resolution_;
+//    projection_matrix_ = projection_.cast<GLfloat>();
+    camera_intrinsics_available_ = true;
 }
 
 void UbitrackViewControl::SetCameraExtrinsics(const Eigen::Matrix4d& view_matrix) {
-    std::cout << "extrinsics: " << view_matrix << std::endl;
     view_matrix_ = view_matrix.cast<GLfloat>();
 }
 
-// this function hides a non-virtual function - bad design!!
-void UbitrackViewControl::SetViewMatrices(
-        const Eigen::Matrix4d &model_matrix/* = Eigen::Matrix4d::Identity()*/)
+double UbitrackViewControl::GetNear()
 {
+    return 0.001;
+//            std::max(0.01 * bounding_box_.GetSize(),
+//            distance_ - 3.0 * bounding_box_.GetSize());
+}
+
+double UbitrackViewControl::GetFar()
+{
+    return 1000.0;
+//    distance_ + 3.0 * bounding_box_.GetSize();
+}
+
+
+
+void UbitrackViewControl::SetUbitrackViewMatrices()
+{
+    if (!camera_intrinsics_available_) {
+        ViewControl::SetViewMatrices();
+        return;
+    }
+
     if (window_height_ <= 0 || window_width_ <= 0) {
         PrintWarning("[ViewControl] SetViewPoint() failed because window height and width are not set.");
         return;
     }
     glViewport(0, 0, window_width_, window_height_);
 
-    // Perspective projection
-    z_near_ = std::max(0.01 * bounding_box_.GetSize(),
-            distance_ - 3.0 * bounding_box_.GetSize());
-    z_far_ = distance_ + 3.0 * bounding_box_.GetSize();
+    // we track the camera therefore model_matrix is always identity
+    Eigen::Matrix4d model_matrix = Eigen::Matrix4d::Identity();
 
-    projection_matrix_ = ComputeProjectionMatrix(camera_intrinsics_, camera_resolution_, z_near_, z_far_).cast<GLfloat>();
-
-    std::cout << "projection matrix: " << projection_matrix_ << std::endl;
+//    z_near_ = GetNear();
+//    z_far_ = GetFar();
+//
+//    projection_matrix_ = ComputeProjectionMatrix(camera_intrinsics_, camera_resolution_, z_near_, z_far_).cast<GLfloat>();
 
     model_matrix_ = model_matrix.cast<GLfloat>();
     MVP_matrix_ = projection_matrix_ * view_matrix_ * model_matrix_;
@@ -50,7 +68,10 @@ void UbitrackViewControl::SetViewMatrices(
 void UbitrackViewControl::Reset()
 {
     ViewControl::Reset();
-    // get intrinsics and resolution from ubitrack here
+    camera_intrinsics_ = Eigen::Matrix3d::Identity();
+    camera_resolution_ = Eigen::Vector2i::Identity();
+    camera_intrinsics_available_ = false;
+
 }
 
 void UbitrackViewControl::ChangeFieldOfView(double step)
@@ -85,6 +106,19 @@ std::string UbitrackViewControl::GetStatusString() const
     return prefix + std::string(buffer);
 }
 
+void UbitrackViewControl::PrintDebugMatrices() {
+    std::ostrstream s;
+    s << "============ Matrix Debug ============\n";
+    s << "Intrinsics Matrix: \n";
+    s << camera_intrinsics_ << "\n";
+    s << "Extrinsics Matrix: \n";
+    s << view_matrix_ << "\n";
+    s << "Projection Matrix: \n";
+    s << projection_matrix_ << "\n";
+    s << "MVP Matrix: \n";
+    s << MVP_matrix_<< "\n";
+    PrintDebug(s.str());
+}
 
 Eigen::Matrix4d UbitrackViewControl::ComputeProjectionMatrix(
         const Eigen::Matrix3d& intrinsics, const Eigen::Vector2i& resolution,

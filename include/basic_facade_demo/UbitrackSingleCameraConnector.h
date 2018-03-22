@@ -17,7 +17,8 @@ public:
 
     // first camera input
     // naming already reflects future extensions to stereo camera setup
-    bool camera_left_get_intrinsics(TimestampT ts, Eigen::Matrix3d& intrinsics, Eigen::Vector2i& resolution);
+    bool camera_left_get_model(TimestampT ts, double near, double far,
+            Eigen::Matrix4d& projection_matrix, Eigen::Matrix3d& intrinsics_matrix, Eigen::Vector2i& resolution);
     bool camera_left_get_pose(TimestampT ts, Eigen::Matrix4d& pose);
     bool camera_left_get_current_image(std::shared_ptr<Ubitrack::Facade::BasicImageMeasurement >& img);
 
@@ -32,12 +33,11 @@ public:
 
 private:
     std::unique_ptr<Ubitrack::Facade::BasicPushSink< Ubitrack::Facade::BasicImageMeasurement >>            m_pushsink_camera_image_left;
-    std::unique_ptr<Ubitrack::Facade::BasicPullSink< Ubitrack::Facade::BasicMatrixMeasurement< 3, 3 > >>   m_pullsink_camera_intrinsics_left;
-    std::unique_ptr<Ubitrack::Facade::BasicPullSink< Ubitrack::Facade::BasicVectorMeasurement< 2 > >>      m_pullsink_camera_resolution_left;
+    std::unique_ptr<Ubitrack::Facade::BasicPullSink< Ubitrack::Facade::BasicCameraIntrinsicsMeasurement >> m_pullsink_camera_model_left;
     std::unique_ptr<Ubitrack::Facade::BasicPullSink< Ubitrack::Facade::BasicPoseMeasurement >>             m_pullsink_camera_pose_left;
 
     std::mutex m_textureAccessMutex;
-    std::shared_ptr<Ubitrack::Facade::BasicImageMeasurement > m_current_camera_left_image;
+    std::shared_ptr<Ubitrack::Facade::BasicImageMeasurement> m_current_camera_left_image;
 
 };
 

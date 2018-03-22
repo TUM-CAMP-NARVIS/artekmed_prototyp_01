@@ -1,10 +1,41 @@
 
 include_directories( "${CMAKE_SOURCE_DIR}/include" )
 
+# some black magic to automatically create a header file from shader files
+find_program(SHADERENCODER EncodeShader)
+message(STATUS "Open3D Shader Encoder: ${SHADERENCODER}")
+
+file(GLOB SHADER_FILES "GLSL/*.glsl")
+add_custom_command(
+        OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/UbitrackShader.h
+        COMMAND ${SHADERENCODER} UbitrackShader.h
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        DEPENDS ${SHADER_FILES} ${SHADERENCODER}
+)
+foreach(file ${SHADER_FILES})
+    add_custom_command(
+            OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/UbitrackShader.h
+            COMMAND ${SHADERENCODER} UbitrackShader.h ${file}
+            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+            DEPENDS ${SHADER_FILES} ${SHADERENCODER}
+            APPEND
+    )
+endforeach(file)
+add_custom_target(ShaderFileTarget ALL
+        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/UbitrackShader.h)
+set_target_properties(ShaderFileTarget PROPERTIES FOLDER "Custom")
+
+source_group("Source Files\\GLSL" FILES ${SHADER_FILES})
+
+
+
 
 # All cpp files for DEMO
 SET(DEMO_SRCS
         "${CMAKE_CURRENT_SOURCE_DIR}/main.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/UbitrackImage.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/UbitrackImageShader.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/UbitrackImageRenderer.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/UbitrackBaseConnector.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/UbitrackSingleCameraConnector.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/UbitrackVisualizer.cpp"
@@ -15,6 +46,9 @@ SET(DEMO_SRCS
 
 # All header files for DEMO
 SET(DEMO_HEADERS
+        "${CMAKE_SOURCE_DIR}/include/basic_facade_demo/UbitrackImage.h"
+        "${CMAKE_SOURCE_DIR}/include/basic_facade_demo/UbitrackImageShader.h"
+        "${CMAKE_SOURCE_DIR}/include/basic_facade_demo/UbitrackImageRenderer.h"
         "${CMAKE_SOURCE_DIR}/include/basic_facade_demo/UbitrackBaseConnector.h"
         "${CMAKE_SOURCE_DIR}/include/basic_facade_demo/UbitrackSingleCameraConnector.h"
         "${CMAKE_SOURCE_DIR}/include/basic_facade_demo/UbitrackVisualizer.h"
@@ -23,6 +57,7 @@ SET(DEMO_HEADERS
 )
 
 ADD_EXECUTABLE(${PROJECT_NAME} ${DEMO_SRCS} ${DEMO_HEADERS})
+add_dependencies(${PROJECT_NAME} ShaderFileTarget)
 
 TARGET_LINK_LIBRARIES( ${PROJECT_NAME} ${CONAN_LIBS} ${UBITRACK_EXTRA_LIBS} )
 # Apply Target Properties

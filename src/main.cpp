@@ -34,6 +34,7 @@
 
 #include "basic_facade_demo/UbitrackSingleCameraConnector.h"
 #include "basic_facade_demo/UbitrackSingleCameraVisualizer.h"
+#include "basic_facade_demo/UbitrackImage.h"
 
 // logging
 #include <log4cpp/OstreamAppender.hh>
@@ -127,11 +128,6 @@ int main(int ac, char** av) {
         int left = 50;
         int top = 50;
 
-        if (!visualizer.CreateWindow(window_name, width, height, left, top)) {
-            three::PrintWarning("[UbitrackVisualizer] Failed creating OpenGL window.\n");
-            return 1;
-        }
-
 		// configure ubitrack
 		LOG4CPP_INFO( logger, "Initialize Connector." );
 		std::shared_ptr<UbitrackSingleCameraConnector> connector = std::make_shared<UbitrackSingleCameraConnector>( sComponentsPath );
@@ -146,89 +142,23 @@ int main(int ac, char** av) {
         // must be done after window is created to ensure opengl context
         visualizer.SetUbitrackConnector(connector);
 
+        if (!visualizer.CreateWindow(window_name, width, height, left, top)) {
+            three::PrintWarning("[UbitrackVisualizer] Failed creating OpenGL window.\n");
+            return 1;
+        }
 
-        LOG4CPP_INFO( logger, "Starting dataflow" );
-		connector->start();
+
+        // create ubitrack camera imageand add to visualizer
+        auto camera_image = three::CreateEmptyUbitrackImage();
+        visualizer.setCameraImage(camera_image);
 
         //testing open3d
         auto mesh = three::CreateMeshSphere(0.05);
-        visualizer.AddGeometry(mesh);
+//        visualizer.AddGeometry(mesh);
 
-
-//		// begin opengl initialization
-//		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-//
-//		// Enable depth test
-//		glEnable(GL_DEPTH_TEST);
-//		// Accept fragment if it closer to the camera than the former one
-//		glDepthFunc(GL_LESS);
-//
-//		//// GL: disable backface culling
-//		glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
-//		glDisable( GL_CULL_FACE );
-//		glPixelStorei( GL_PACK_ALIGNMENT,   1 );
-//		glPixelStorei( GL_UNPACK_ALIGNMENT, 1 );
-//
-//		glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
-//		//glEnable( GL_BLEND );
-//
-//		// GL: misc stuff
-//		glShadeModel( GL_SMOOTH );
-//		glEnable( GL_NORMALIZE );
-//
-//		// //GL: light parameters
-//		GLfloat light_pos[] = { 1.0f, 1.0f, 1.0f, 0.0f };
-//		GLfloat light_amb[] = { 0.2f, 0.2f, 0.2f, 1.0f };
-//		GLfloat light_dif[] = { 0.9f, 0.9f, 0.9f, 1.0f };
-//
-//		//GL: enable lighting
-//		glLightfv( GL_LIGHT0, GL_POSITION, light_pos );
-//		glLightfv( GL_LIGHT0, GL_AMBIENT,  light_amb );
-//		glLightfv( GL_LIGHT0, GL_DIFFUSE,  light_dif );
-//		glEnable( GL_LIGHTING );
-//		glEnable( GL_LIGHT0 );
 
         visualizer.Run();
         visualizer.DestroyWindow();
-
-
-//		while(!window->windowShouldClose())
-//		{
-//
-//			ts = connector.wait_for_frame();
-//
-//			// transfer camera_left_image to renderer (only reference, not copied)
-//			connector.camera_left_get_current_image(cam_img_left);
-//			renderer->set_camera_left_image(cam_img_left);
-//
-//			// receive camera pose
-//			glm::mat4 cam_pose_left;
-//
-//			connector.camera_left_get_pose(ts, cam_pose_left);
-//			renderer->set_camera_left_pose(cam_pose_left);
-//
-//			// update model based on tracking data
-//
-//			// think about stereo-rendering here ..
-//
-//			//integrate IPSI
-//
-//			// initialize rendering
-//			renderer->pre_render(window);
-//
-//			// all processing per frame goes here.
-//			renderer->render(window, ts);
-//
-//			// finalize rendering
-//			renderer->post_render(window);
-//
-//			// trigger event processing
-//			glfwPollEvents();
-//
-//		}
-
-		LOG4CPP_INFO( logger, "Stopping dataflow..." );
-		connector->stop();
 
 
 		// this should be executed also if execptions happen above .. restructure try/catch block

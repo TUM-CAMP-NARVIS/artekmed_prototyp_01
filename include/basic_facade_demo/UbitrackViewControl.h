@@ -13,13 +13,19 @@ class UbitrackViewControl : public ViewControl
 {
 
 public:
+    UbitrackViewControl()
+            : camera_intrinsics_(Eigen::Matrix3d::Identity())
+            , camera_resolution_(Eigen::Vector2i::Identity())
+            , camera_intrinsics_available_(false) {}
+
     void Reset() override;
 
-    // this overrides a non-virtual function - bad design, maybe add pull request to Open3D to fix it.
-    void SetViewMatrices(
-            const Eigen::Matrix4d &model_matrix = Eigen::Matrix4d::Identity());
+    void SetUbitrackViewMatrices();
 
-    void SetCameraIntrinsics(const Eigen::Matrix3d& intrinsics_, const Eigen::Vector2i&  resolution_);
+    double GetNear();
+    double GetFar();
+
+    void SetCameraModel(const Eigen::Matrix4d& projection_, const Eigen::Matrix3d& intrinsics_, const Eigen::Vector2i& resolution_);
     void SetCameraExtrinsics(const Eigen::Matrix4d& view_matrix);
 
     // these need to be disabled
@@ -30,6 +36,8 @@ public:
 
     std::string GetStatusString() const;
 
+    void PrintDebugMatrices();
+
 
 protected:
 
@@ -38,7 +46,7 @@ protected:
 protected:
     Eigen::Matrix3d camera_intrinsics_;
     Eigen::Vector2i camera_resolution_;
-
+    bool camera_intrinsics_available_;
 
 };
 

@@ -6,6 +6,7 @@
 #define BASIC_FACADE_DEMO_UBITRACKSINGLECAMERAVISUALIZER_H
 
 #include "basic_facade_demo/UbitrackVisualizer.h"
+#include "basic_facade_demo/UbitrackImage.h"
 #include "basic_facade_demo/UbitrackSingleCameraConnector.h"
 
 namespace three {
@@ -22,11 +23,14 @@ public:
 
 public:
     void SetUbitrackConnector(std::shared_ptr<UbitrackSingleCameraConnector>& connector) throw();
+    void setCameraImage(std::shared_ptr<three::UbitrackImage>& camera_image);
 
 protected:
 
-    std::shared_ptr<Ubitrack::Facade::BasicImageMeasurement > ubitrack_camera_image_ptr;
-    std::unique_ptr<Ubitrack::Facade::BasicTextureUpdate> ubitrack_textureupdate_left_ptr;
+    bool InitRenderOption() override;
+    void WindowCloseCallback(GLFWwindow *window) override;
+
+    std::shared_ptr<three::UbitrackImage> ubitrack_camera_image_ptr;
     std::shared_ptr<UbitrackSingleCameraConnector> ubitrack_connector_ptr;
 };
 

@@ -7,30 +7,30 @@
 
 #include <Visualization/Visualizer/Visualizer.h>
 
-#include <utFacade/BasicTextureUpdate.h>
-#include "basic_facade_demo/UbitrackBaseConnector.h"
+#include "basic_facade_demo/UbitrackImage.h"
 
 namespace three {
 
 class UbitrackVisualizer : public Visualizer
 {
 public:
-
-public:
     UbitrackVisualizer();
     ~UbitrackVisualizer() override;
-    UbitrackVisualizer(const UbitrackVisualizer &) =
-    delete;
-    UbitrackVisualizer &operator=(
-            const UbitrackVisualizer &) = delete;
+    UbitrackVisualizer(const UbitrackVisualizer &) = delete;
+    UbitrackVisualizer &operator=(const UbitrackVisualizer &) = delete;
 
 public:
     void PrintVisualizerHelp() override;
 
+    bool AddUbitrackImage(std::shared_ptr<const UbitrackImage> geometry_ptr);
+
 protected:
     void UpdateWindowTitle() override;
+    void Render() override;
 
+    bool InitOpenGL() override;
     bool InitViewControl() override;
+    bool InitRenderOption() override;
     void MouseMoveCallback(GLFWwindow* window, double x, double y) override;
     void MouseScrollCallback(GLFWwindow* window, double x, double y) override;
     void MouseButtonCallback(GLFWwindow* window,
@@ -41,7 +41,5 @@ protected:
 };
 
 }	// namespace three
-
-
 
 #endif //BASIC_FACADE_DEMO_UBITRACKVISUALIZER_H

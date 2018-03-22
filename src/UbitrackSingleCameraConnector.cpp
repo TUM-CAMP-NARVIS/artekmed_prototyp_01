@@ -27,12 +27,8 @@ bool UbitrackSingleCameraConnector::initialize(const std::string& _utql_filename
             m_utFacade->getPushSink<Ubitrack::Facade::BasicImageMeasurement>("camera_image_left")
     );
 
-    m_pullsink_camera_intrinsics_left = std::unique_ptr<Ubitrack::Facade::BasicPullSink< Ubitrack::Facade::BasicMatrixMeasurement< 3, 3 > >>(
-            m_utFacade->getPullSink<Ubitrack::Facade::BasicMatrixMeasurement< 3, 3 > >("camera_intrinsics_left")
-    );
-
-    m_pullsink_camera_resolution_left = std::unique_ptr<Ubitrack::Facade::BasicPullSink< Ubitrack::Facade::BasicVectorMeasurement< 2 > >>(
-            m_utFacade->getPullSink<Ubitrack::Facade::BasicVectorMeasurement< 2 > >("camera_resolution_left")
+    m_pullsink_camera_model_left = std::unique_ptr<Ubitrack::Facade::BasicPullSink< Ubitrack::Facade::BasicCameraIntrinsicsMeasurement >>(
+            m_utFacade->getPullSink<Ubitrack::Facade::BasicCameraIntrinsicsMeasurement >("camera_intrinsics_left")
     );
 
     m_pullsink_camera_pose_left = std::unique_ptr<Ubitrack::Facade::BasicPullSink< Ubitrack::Facade::BasicPoseMeasurement >>(
@@ -53,41 +49,42 @@ bool UbitrackSingleCameraConnector::teardown()
     }
     // deallocate sinks to be sure there is no activity before deallocating the facade
     m_pushsink_camera_image_left.release();
-    m_pullsink_camera_intrinsics_left.release();
-    m_pullsink_camera_resolution_left.release();
+    m_pullsink_camera_model_left.release();
     m_pullsink_camera_pose_left.release();
 
     return UbitrackBaseConnector::teardown();
 }
 
-bool UbitrackSingleCameraConnector::camera_left_get_intrinsics(const TimestampT ts, Eigen::Matrix3d& intrinsics, Eigen::Vector2i& resolution)
+bool UbitrackSingleCameraConnector::camera_left_get_model(TimestampT ts, double near, double far,
+    Eigen::Matrix4d& projection, Eigen::Matrix3d& intrinsics, Eigen::Vector2i& resolution)
 {
-    if ((!m_pullsink_camera_intrinsics_left) || (!m_pullsink_camera_resolution_left)) {
+    if (!m_pullsink_camera_model_left) {
         LOG4CPP_ERROR(logger, "pullsinks are not connected");
         return false;
     }
 
     try {
-        std::vector<double> v_intr(9);
-        std::shared_ptr<Ubitrack::Facade::BasicMatrixMeasurement< 3, 3 > > m_intr = m_pullsink_camera_intrinsics_left->get(ts);
-        if (!m_intr) {
-            LOG4CPP_ERROR(logger, "no measurement for camera intrinsics");
-            return false;
-        }
-        m_intr->get(v_intr);
-
-        // ubitrack stores row-major and eigen by default column-major
-        intrinsics = Eigen::Matrix3d(v_intr.data());
-
-        std::vector<double> v_res(2);
-        std::shared_ptr<Ubitrack::Facade::BasicVectorMeasurement< 2 > > m_res = m_pullsink_camera_resolution_left->get(ts);
-        if (!m_res) {
+        std::shared_ptr<Ubitrack::Facade::BasicCameraIntrinsicsMeasurement > m_model = m_pullsink_camera_model_left->get(ts);
+        if (!m_model) {
             LOG4CPP_ERROR(logger, "no measurement for camera resolution");
             return false;
         }
-        m_res->get(v_res);
+        // retrieve camera resolution
+        std::vector<double> v_res(2);
+        m_model->getResolution(v_res);
         resolution(0) = (int)(v_res.at(0));
         resolution(1) = (int)(v_res.at(1));
+
+        // retrieve intrinscs matrix
+        std::vector<double> v_intr(9);
+        m_model->get(v_intr);
+        intrinsics = Eigen::Matrix3d(v_intr.data());
+
+        // compute projection matrix assuming l=0, t=0, r=width, b=height
+        std::vector<double> v_proj(16);
+        m_model->getOpenGLProjectionMatrix(0, resolution(0), 0, resolution(1), near, far, v_proj);
+        projection = Eigen::Matrix4d(v_proj.data());
+
     } catch( std::exception &e) {
         LOG4CPP_ERROR(logger, "error pulling intrinsics: " << e.what());
         return false;
@@ -132,9 +129,6 @@ bool UbitrackSingleCameraConnector::camera_left_get_pose(const TimestampT ts, Ei
         transform.topLeftCorner<3,3>() = rotation.toRotationMatrix();
         transform.topRightCorner<3,1>() = position;
 
-        //remove
-        std::cout << "Debug pose:" << transform << std::endl;
-
         pose = transform;
 
     } catch( std::exception &e) {
@@ -150,7 +144,7 @@ bool UbitrackSingleCameraConnector::camera_left_get_pose(const TimestampT ts, Ei
 void UbitrackSingleCameraConnector::receive_camera_left_image(std::shared_ptr<Ubitrack::Facade::BasicImageMeasurement>& image)
 {
     {
-        std::unique_lock<std::mutex> ul( m_textureAccessMutex );
+        std::unique_lock<std::mutex> ul(m_textureAccessMutex);
         m_current_camera_left_image = image;
     }
     // notify renderer that new frame is available

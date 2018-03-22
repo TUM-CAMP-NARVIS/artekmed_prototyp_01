@@ -6,6 +6,8 @@
 #include "basic_facade_demo/UbitrackSingleCameraVisualizer.h"
 #include "basic_facade_demo/UbitrackViewControl.h"
 
+#include <log4cpp/Category.hh>
+static log4cpp::Category& logger(log4cpp::Category::getInstance("BasicFacadeExample.UbitrackSingleCameraVisualizer"));
 
 namespace three {
 
@@ -22,27 +24,24 @@ void UbitrackSingleCameraVisualizer::setCameraImage(std::shared_ptr<three::Ubitr
     AddUbitrackImage(camera_image);
 }
 
-bool UbitrackSingleCameraVisualizer::InitRenderOption()
-{
-    // @todo this is a hack to start ubitrack once all setup is done.
-    if(UbitrackVisualizer::InitRenderOption()) {
-        if (ubitrack_connector_ptr) {
-            ubitrack_connector_ptr->start();
-            // initialize GPU related parts of Ubitrack after OpenGL Window and Context was created
-            // must be called after dataflow was started (components notify openclmanager to become active)
-            Ubitrack::Facade::initGPU();
-        }
-        return true;
+bool UbitrackSingleCameraVisualizer::StartUbitrack() {
+    if (ubitrack_connector_ptr) {
+        LOG4CPP_INFO(logger, "Starting Ubitrack Dataflow")
+        ubitrack_connector_ptr->start();
+        // initialize GPU related parts of Ubitrack after OpenGL Window and Context was created
+        // must be called after dataflow was started (components notify openclmanager to become active)
+        Ubitrack::Facade::initGPU();
     }
-    return false;
-
+    return true;
 }
 
-void UbitrackSingleCameraVisualizer::WindowCloseCallback(GLFWwindow *window) {
+bool UbitrackSingleCameraVisualizer::StopUbitrack(){
     if (ubitrack_connector_ptr)
+    LOG4CPP_INFO(logger, "Stopping Ubitrack Dataflow")
         ubitrack_connector_ptr->stop();
-    Visualizer::WindowCloseCallback(window);
+    return true;
 }
+
 
 void UbitrackSingleCameraVisualizer::SetUbitrackConnector(std::shared_ptr<UbitrackSingleCameraConnector>& connector_) throw()
 {
@@ -59,20 +58,20 @@ void UbitrackSingleCameraVisualizer::SetUbitrackConnector(std::shared_ptr<Ubitra
             auto connector = ubitrack_connector_ptr.get();
 
             if (!connector) {
-                PrintWarning("[UbitrackSingleCameraVisualizer] connector not available - removing connector callback.\n");
+                LOG4CPP_ERROR(logger, "connector not available - removing connector callback.");
                 RegisterAnimationCallback(nullptr);
                 return false;
             }
 
             // unregister callback if no dataflow is loaded
             if (!connector->isLoaded()) {
-                PrintWarning("[UbitrackSingleCameraVisualizer] no dataflow loaded - removing connector callback.\n");
+                LOG4CPP_ERROR(logger, "no dataflow loaded - removing connector callback.");
                 RegisterAnimationCallback(nullptr);
                 return false;
             }
 
             if (!connector->isRunning()) {
-              return false;
+              StartUbitrack();
             }
 
             TimestampT ts;
@@ -88,14 +87,14 @@ void UbitrackSingleCameraVisualizer::SetUbitrackConnector(std::shared_ptr<Ubitra
                     view_control->SetCameraModel(projection_left, intrinsics_left, resolution_left);
                     needs_update = true;
                 } else {
-                    PrintWarning("[UbitrackSingleCameraVisualizer] error retrieving intrinsics.\n");
+                    LOG4CPP_WARN(logger, "error retrieving intrinsics.");
                 }
 
                 // transfer camera_left_image to opengl texture
                 if (connector->camera_left_get_current_image(ubitrack_camera_image_ptr->ubitrack_image_ptr)) {
                     needs_update = true;
                 } else {
-                    PrintWarning("[UbitrackSingleCameraVisualizer] error retrieving camera image.\n");
+                    LOG4CPP_WARN(logger, "error retrieving camera image.");
                 }
 
                 Eigen::Matrix4d extrinsics_left;
@@ -103,7 +102,7 @@ void UbitrackSingleCameraVisualizer::SetUbitrackConnector(std::shared_ptr<Ubitra
                     view_control->SetCameraExtrinsics(extrinsics_left);
                     needs_update = true;
                 } else {
-                    PrintWarning("[UbitrackSingleCameraVisualizer] error retrieving extrinsics.\n");
+                    LOG4CPP_WARN(logger, "error retrieving extrinsics.");
                 }
 
                 // things have changed, notify renderer
@@ -111,7 +110,7 @@ void UbitrackSingleCameraVisualizer::SetUbitrackConnector(std::shared_ptr<Ubitra
                 return needs_update;
 
             } else {
-                PrintWarning("[UbitrackSingleCameraVisualizer] no data was received from connector.\n");
+                LOG4CPP_WARN(logger, "no data was received from connector.");
             }
 
           UpdateWindowTitle();

@@ -16,6 +16,9 @@
 #include <basic_facade_demo/UbitrackViewControl.h>
 #include <basic_facade_demo/UbitrackImageRenderer.h>
 
+#include <log4cpp/Category.hh>
+static log4cpp::Category& logger(log4cpp::Category::getInstance("BasicFacadeExample.UbitrackVisualizer"));
+
 namespace three {
 
 UbitrackVisualizer::UbitrackVisualizer()
@@ -25,6 +28,34 @@ UbitrackVisualizer::UbitrackVisualizer()
 UbitrackVisualizer::~UbitrackVisualizer()
 {
 }
+
+bool UbitrackVisualizer::InitOpenGL()
+{
+    // Init GLAD for this context:
+    LOG4CPP_INFO(logger, "Initialize GLAD.");
+    if (!gladLoadGLLoader((GLADloadproc) glfwGetProcAddress))
+    {
+        LOG4CPP_ERROR(logger, "Failed to initialize OpenGL context");
+        return false;
+    }
+
+    // depth test
+    glEnable(GL_DEPTH_TEST);
+    glClearDepth(1.0f);
+
+    // pixel alignment
+    glPixelStorei(GL_PACK_ALIGNMENT, 1);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+    // polygon rendering
+    glEnable(GL_CULL_FACE);
+
+    // glReadPixels always read front buffer
+    glReadBuffer(GL_FRONT);
+
+    return true;
+}
+
 
 void UbitrackVisualizer::PrintVisualizerHelp()
 {
@@ -56,8 +87,7 @@ bool UbitrackVisualizer::AddUbitrackImage(std::shared_ptr<const UbitrackImage> g
     geometry_ptrs_.push_back(geometry_ptr);
     view_control_ptr_->FitInGeometry(*geometry_ptr);
     ResetViewPoint();
-    PrintDebug("Add geometry and update bounding box to %s\n",
-            view_control_ptr_->GetBoundingBox().GetPrintInfo().c_str());
+    LOG4CPP_INFO(logger, "Add geometry and update bounding box to " << view_control_ptr_->GetBoundingBox().GetPrintInfo().c_str());
     return UpdateGeometry();
 }
 
@@ -68,14 +98,6 @@ void UbitrackVisualizer::UpdateWindowTitle()
         std::string new_window_title = window_name_ + " - " + view_control->GetStatusString();
         glfwSetWindowTitle(window_, new_window_title.c_str());
     }
-}
-
-bool UbitrackVisualizer::InitOpenGL()
-{
-    if (Visualizer::InitOpenGL()) {
-        return true;
-    }
-    return false;
 }
 
 bool UbitrackVisualizer::InitViewControl()
@@ -94,6 +116,12 @@ bool UbitrackVisualizer::InitRenderOption()
     return false;
 
 }
+
+void UbitrackVisualizer::WindowCloseCallback(GLFWwindow *window) {
+    StopUbitrack();
+    Visualizer::WindowCloseCallback(window);
+}
+
 
 void UbitrackVisualizer::Render()
 {
@@ -133,58 +161,58 @@ void UbitrackVisualizer::KeyPressCallback(GLFWwindow *window,
     if (mods & GLFW_MOD_CONTROL) {
         switch (key) {
         case GLFW_KEY_F:
-            PrintDebug("[Visualizer] unhandled keypress.\n");
+            LOG4CPP_DEBUG(logger, "unhandled keypress.\n");
             break;
         case GLFW_KEY_W:
-            PrintDebug("[Visualizer] unhandled keypress.\n");
+            LOG4CPP_DEBUG(logger, "unhandled keypress.\n");
             break;
         case GLFW_KEY_P:
-            PrintDebug("[Visualizer] unhandled keypress.\n");
+            LOG4CPP_DEBUG(logger, "unhandled keypress.\n");
             break;
         case GLFW_KEY_R:
-            PrintDebug("[Visualizer] unhandled keypress.\n");
+            LOG4CPP_DEBUG(logger, "unhandled keypress.\n");
             break;
         case GLFW_KEY_G:
-            PrintDebug("[Visualizer] unhandled keypress.\n");
+            LOG4CPP_DEBUG(logger, "unhandled keypress.\n");
             break;
         case GLFW_KEY_S:
-            PrintDebug("[Visualizer] unhandled keypress.\n");
+            LOG4CPP_DEBUG(logger, "unhandled keypress.\n");
             break;
         case GLFW_KEY_LEFT:
-            PrintDebug("[Visualizer] unhandled keypress.\n");
+            LOG4CPP_DEBUG(logger, "unhandled keypress.\n");
             break;
         case GLFW_KEY_RIGHT:
-            PrintDebug("[Visualizer] unhandled keypress.\n");
+            LOG4CPP_DEBUG(logger, "unhandled keypress.\n");
             break;
         case GLFW_KEY_LEFT_BRACKET:
-            PrintDebug("[Visualizer] unhandled keypress.\n");
+            LOG4CPP_DEBUG(logger, "unhandled keypress.\n");
             break;
         case GLFW_KEY_RIGHT_BRACKET:
-            PrintDebug("[Visualizer] unhandled keypress.\n");
+            LOG4CPP_DEBUG(logger, "unhandled keypress.\n");
             break;
         case GLFW_KEY_EQUAL:
-            PrintDebug("[Visualizer] unhandled keypress.\n");
+            LOG4CPP_DEBUG(logger, "unhandled keypress.\n");
             break;
         case GLFW_KEY_MINUS:
-            PrintDebug("[Visualizer] unhandled keypress.\n");
+            LOG4CPP_DEBUG(logger, "unhandled keypress.\n");
             break;
         case GLFW_KEY_L:
-            PrintDebug("[Visualizer] unhandled keypress.\n");
+            LOG4CPP_DEBUG(logger, "unhandled keypress.\n");
             break;
         case GLFW_KEY_A:
-            PrintDebug("[Visualizer] unhandled keypress.\n");
+            LOG4CPP_DEBUG(logger, "unhandled keypress.\n");
             break;
         case GLFW_KEY_U:
-            PrintDebug("[Visualizer] unhandled keypress.\n");
+            LOG4CPP_DEBUG(logger, "unhandled keypress.\n");
             break;
         case GLFW_KEY_D:
             view_control->PrintDebugMatrices();
             break;
         case GLFW_KEY_N:
-            PrintDebug("[Visualizer] unhandled keypress.\n");
+            LOG4CPP_DEBUG(logger, "unhandled keypress.\n");
             break;
         case GLFW_KEY_E:
-            PrintDebug("[Visualizer] unhandled keypress.\n");
+            LOG4CPP_DEBUG(logger, "unhandled keypress.\n");
             break;
         default:
             Visualizer::KeyPressCallback(window, key, scancode, action, mods);

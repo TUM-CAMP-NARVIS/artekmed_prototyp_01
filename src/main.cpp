@@ -19,6 +19,9 @@
 #include <functional>
 #include <vector>
 
+#include <glad/glad.h>
+// hack to disable glew ..
+#define __glew_h__
 
 // open3d includes
 #include <Core/Core.h>

@@ -5,6 +5,10 @@
 #ifndef BASIC_FACADE_DEMO_UBITRACKVISUALIZER_H
 #define BASIC_FACADE_DEMO_UBITRACKVISUALIZER_H
 
+#include <glad/glad.h>
+// hack to disable glew ...
+#define __glew_h__
+
 #include <Visualization/Visualizer/Visualizer.h>
 
 #include "basic_facade_demo/UbitrackImage.h"
@@ -28,9 +32,15 @@ protected:
     void UpdateWindowTitle() override;
     void Render() override;
 
+    virtual bool StartUbitrack() = 0;
+    virtual bool StopUbitrack() = 0;
+
     bool InitOpenGL() override;
     bool InitViewControl() override;
     bool InitRenderOption() override;
+
+    void WindowCloseCallback(GLFWwindow *window) override;
+
     void MouseMoveCallback(GLFWwindow* window, double x, double y) override;
     void MouseScrollCallback(GLFWwindow* window, double x, double y) override;
     void MouseButtonCallback(GLFWwindow* window,

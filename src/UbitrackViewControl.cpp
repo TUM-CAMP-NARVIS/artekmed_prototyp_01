@@ -10,6 +10,9 @@
 
 #include <IO/ClassIO/IJsonConvertibleIO.h>
 
+#include <log4cpp/Category.hh>
+static log4cpp::Category& logger(log4cpp::Category::getInstance("BasicFacadeExample.UbitrackViewControl"));
+
 namespace three{
 
 void UbitrackViewControl::SetCameraModel(const Eigen::Matrix4d& projection_, const Eigen::Matrix3d& intrinsics_, const Eigen::Vector2i& resolution_)
@@ -47,7 +50,7 @@ void UbitrackViewControl::SetUbitrackViewMatrices()
     }
 
     if (window_height_ <= 0 || window_width_ <= 0) {
-        PrintWarning("[ViewControl] SetViewPoint() failed because window height and width are not set.");
+        LOG4CPP_ERROR(logger, "SetViewPoint() failed because window height and width are not set.");
         return;
     }
     glViewport(0, 0, window_width_, window_height_);
@@ -117,7 +120,7 @@ void UbitrackViewControl::PrintDebugMatrices() {
     s << projection_matrix_ << "\n";
     s << "MVP Matrix: \n";
     s << MVP_matrix_<< "\n";
-    PrintDebug(s.str());
+    LOG4CPP_DEBUG(logger, s.str());
 }
 
 Eigen::Matrix4d UbitrackViewControl::ComputeProjectionMatrix(

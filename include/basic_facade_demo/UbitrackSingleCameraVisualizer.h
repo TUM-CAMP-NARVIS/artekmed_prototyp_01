@@ -27,8 +27,8 @@ public:
 
 protected:
 
-    bool InitRenderOption() override;
-    void WindowCloseCallback(GLFWwindow *window) override;
+    bool StartUbitrack() override;
+    bool StopUbitrack() override;
 
     std::shared_ptr<three::UbitrackImage> ubitrack_camera_image_ptr;
     std::shared_ptr<UbitrackSingleCameraConnector> ubitrack_connector_ptr;

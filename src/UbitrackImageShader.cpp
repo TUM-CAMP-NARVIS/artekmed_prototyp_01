@@ -13,6 +13,9 @@
 
 #include "basic_facade_demo/UbitrackImage.h"
 
+#include <log4cpp/Category.hh>
+static log4cpp::Category& logger(log4cpp::Category::getInstance("BasicFacadeExample.UbitrackImageShader"));
+
 namespace three{
 
 namespace glsl {
@@ -20,7 +23,7 @@ namespace glsl {
 bool UbitrackImageShader::Compile()
 {
     if (CompileShaders(UbitrackImageVertexShader, NULL, UbitrackImageFragmentShader) == false) {
-        PrintShaderWarning("Compiling shaders failed.");
+        LOG4CPP_ERROR(logger, "Compiling shaders failed.");
         return false;
     }
     vertex_position_ = glGetAttribLocation(program_, "vertex_position");
@@ -50,7 +53,7 @@ bool UbitrackImageShader::BindGeometry(const Geometry &geometry,
     }
 
     if ((!ubitrack_textureupdate_ptr) || (!ubitrack_textureupdate_ptr->isInitialized())) {
-        PrintShaderWarning("TextureUpdate instance is not initialized.");
+        LOG4CPP_ERROR(logger, "TextureUpdate instance is not initialized.");
         return false;
     }
 
@@ -65,7 +68,7 @@ bool UbitrackImageShader::BindGeometry(const Geometry &geometry,
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
                 GL_LINEAR_MIPMAP_LINEAR);
-        glGenerateMipmap(GL_TEXTURE_2D);
+//        glGenerateMipmap(GL_TEXTURE_2D);
     }
 
     bound_ = true;
@@ -85,7 +88,7 @@ bool UbitrackImageShader::BindGeometryOnce(const Geometry &geometry,
 
     // Prepare data to be passed to GPU
     if (PrepareBinding(geometry, option, view) == false) {
-        PrintShaderWarning("Binding failed when preparing data.");
+        LOG4CPP_ERROR(logger, "Binding failed when preparing data.");
         return false;
     }
 
@@ -133,7 +136,7 @@ bool UbitrackImageShader::RenderGeometry(const Geometry &geometry,
         const RenderOption &option, const ViewControl &view)
 {
     if (PrepareRendering(geometry, option, view) == false) {
-        PrintShaderWarning("Rendering failed during preparation.");
+        LOG4CPP_ERROR(logger, "Rendering failed during preparation.");
         return false;
     }
 
@@ -185,13 +188,13 @@ bool ImageShaderForUbitrackImage::PrepareRendering(const Geometry &geometry,
         const RenderOption &option,const ViewControl &view)
 {
     if (geometry.GetGeometryType() != Geometry::GeometryType::Image) {
-        PrintShaderWarning("Rendering type is not Image.");
+        LOG4CPP_ERROR(logger, "Rendering type is not Image.");
         return false;
     }
 
     auto ubitrackimage = dynamic_cast<const UbitrackImage&>(geometry);
     if ((!ubitrack_textureupdate_ptr) || (!ubitrack_textureupdate_ptr->isInitialized())) {
-        PrintShaderWarning("TextureUpdate is not initializesd.");
+        LOG4CPP_ERROR(logger, "TextureUpdate is not initializesd.");
         return false;
     }
 
@@ -235,7 +238,7 @@ bool ImageShaderForUbitrackImage::PrepareBinding(const Geometry &geometry,
         const RenderOption &option, const ViewControl &view)
 {
     if (geometry.GetGeometryType() != Geometry::GeometryType::Image) {
-        PrintShaderWarning("Rendering type is not Image.");
+        LOG4CPP_ERROR(logger, "Rendering type is not Image.");
         return false;
     }
 
@@ -243,7 +246,7 @@ bool ImageShaderForUbitrackImage::PrepareBinding(const Geometry &geometry,
 
     auto ubitrackimage = dynamic_cast<const UbitrackImage&>(geometry);
     if (!ubitrackimage.HasData()) {
-        PrintShaderWarning("Binding failed with empty image.");
+        LOG4CPP_ERROR(logger, "Binding failed with empty image.");
         return false;
     }
 

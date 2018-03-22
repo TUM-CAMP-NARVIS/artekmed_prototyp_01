@@ -29,6 +29,8 @@ class UbitrackCoreConan(ConanFile):
     exports_sources = "cmake/*", "include/*", "config/*", "src/*", "CMakeLists.txt"
 
     def configure(self):
+        self.options['open3d'].opengl_extension_wrapper = "glad"
+        self.options['ubitrack_vision'].opengl_extension_wrapper = "glad"
         self.options['ubitrack'].with_default_camera=True
         self.options['ubitrack'].with_haptic_calibration=True
         if self.settings.os == "Windows":

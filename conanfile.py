@@ -35,6 +35,7 @@ class UbitrackCoreConan(ConanFile):
         self.options['ubitrack'].with_haptic_calibration=True
         if self.settings.os == "Windows":
             self.options['ubitrack'].with_camera_flycapture=True
+        self.options["open3d"].shared = True
 
 
     def imports(self):

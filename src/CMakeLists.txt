@@ -2,7 +2,7 @@
 include_directories( "${CMAKE_SOURCE_DIR}/include" )
 
 # some black magic to automatically create a header file from shader files
-find_program(SHADERENCODER EncodeShader)
+find_program(SHADERENCODER EncodeShader PATHS ${CONAN_OPEN3D_ROOT}/bin)
 message(STATUS "Open3D Shader Encoder: ${SHADERENCODER}")
 
 file(GLOB SHADER_FILES "GLSL/*.glsl")

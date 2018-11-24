@@ -9,7 +9,7 @@
 
 #include "basic_facade_demo/UbitrackImageShader.h"
 
-namespace three {
+namespace open3d {
 namespace glsl {
 
 class UbitrackImageRenderer: public GeometryRenderer {
@@ -25,5 +25,5 @@ protected:
     ImageShaderForUbitrackImage image_shader_;
 };
 
-}} // three::glsl
+}} // open3d::glsl
 #endif //BASIC_FACADE_DEMO_UBITRACKIMAGERENDERER_H

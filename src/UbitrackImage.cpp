@@ -4,7 +4,7 @@
 
 #include "basic_facade_demo/UbitrackImage.h"
 
-namespace three {
+namespace open3d {
 
 void UbitrackImage::Clear()
 {
@@ -34,4 +34,4 @@ std::shared_ptr<UbitrackImage> CreateEmptyUbitrackImage()
     return image;
 }
 
-}	// namespace three
+}	// namespace open3d

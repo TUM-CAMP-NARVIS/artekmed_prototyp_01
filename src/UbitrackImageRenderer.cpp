@@ -4,7 +4,7 @@
 
 #include "basic_facade_demo/UbitrackImageRenderer.h"
 
-namespace three {
+namespace open3d {
 namespace glsl {
 
 bool UbitrackImageRenderer::Render(const RenderOption &option, const ViewControl &view)
@@ -29,4 +29,4 @@ bool UbitrackImageRenderer::UpdateGeometry()
     return true;
 }
 
-}} // namespace three::glsl
+}} // namespace open3d::glsl

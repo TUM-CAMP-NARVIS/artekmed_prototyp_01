@@ -19,9 +19,7 @@
 #include <functional>
 #include <vector>
 
-#include <glad/glad.h>
-// hack to disable glew ..
-#define __glew_h__
+#include <GL/glew.h>
 
 // open3d includes
 #include <Core/Core.h>
@@ -113,7 +111,7 @@ int main(int ac, char** av) {
 	log4cpp::Category::getRoot().setPriority( log4cpp::Priority::INFO ); // default: INFO
 	log4cpp::Category::getInstance( "Ubitrack.Events" ).setPriority( log4cpp::Priority::NOTICE ); // default: NOTICE
 
-    three::UbitrackSingleCameraVisualizer visualizer;
+    open3d::UbitrackSingleCameraVisualizer visualizer;
 
 
 	LOG4CPP_INFO( logger, "Starting Basic Facade Demo demo" );
@@ -122,7 +120,7 @@ int main(int ac, char** av) {
 		// initialize Ubitrack logging
 		Facade::initUbitrackLogging("log4cpp.conf");
 		// initialize Open3D Verbosity Level
-		three::SetVerbosityLevel(three::VerbosityLevel::VerboseAlways);
+		open3d::SetVerbosityLevel(open3d::VerbosityLevel::VerboseAlways);
 
 
         std::string window_name = "Basic Facade Demo";
@@ -145,23 +143,23 @@ int main(int ac, char** av) {
         // must be done after window is created to ensure opengl context
         visualizer.SetUbitrackConnector(connector);
 
-        if (!visualizer.CreateWindow(window_name, width, height, left, top)) {
-            three::PrintWarning("[UbitrackVisualizer] Failed creating OpenGL window.\n");
+        if (!visualizer.CreateVisualizerWindow(window_name, width, height, left, top)) {
+            open3d::PrintWarning("[UbitrackVisualizer] Failed creating OpenGL window.\n");
             return 1;
         }
 
 
         // create ubitrack camera imageand add to visualizer
-        auto camera_image = three::CreateEmptyUbitrackImage();
+        auto camera_image = open3d::CreateEmptyUbitrackImage();
         visualizer.setCameraImage(camera_image);
 
         //testing open3d
-        auto mesh = three::CreateMeshSphere(0.05);
+        auto mesh = open3d::CreateMeshSphere(0.05);
 //        visualizer.AddGeometry(mesh);
 
 
         visualizer.Run();
-        visualizer.DestroyWindow();
+        visualizer.DestroyVisualizerWindow();
 
 
 		// this should be executed also if execptions happen above .. restructure try/catch block

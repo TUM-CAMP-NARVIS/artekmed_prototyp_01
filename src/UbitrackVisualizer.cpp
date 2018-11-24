@@ -19,7 +19,7 @@
 #include <log4cpp/Category.hh>
 static log4cpp::Category& logger(log4cpp::Category::getInstance("BasicFacadeExample.UbitrackVisualizer"));
 
-namespace three {
+namespace open3d {
 
 UbitrackVisualizer::UbitrackVisualizer()
 {
@@ -32,10 +32,9 @@ UbitrackVisualizer::~UbitrackVisualizer()
 bool UbitrackVisualizer::InitOpenGL()
 {
     // Init GLAD for this context:
-    LOG4CPP_INFO(logger, "Initialize GLAD.");
-    if (!gladLoadGLLoader((GLADloadproc) glfwGetProcAddress))
-    {
-        LOG4CPP_ERROR(logger, "Failed to initialize OpenGL context");
+    LOG4CPP_INFO(logger, "Initialize GLEW.");
+    if (glewInit() != GLEW_OK) {
+        LOG4CPP_ERROR(logger, "Failed to initialize GLEW.");
         return false;
     }
 
@@ -246,4 +245,4 @@ void UbitrackVisualizer::MouseButtonCallback(GLFWwindow* window,
     Visualizer::MouseButtonCallback(window, button, action, mods);
 }
 
-}	// namespace three
+}	// namespace open3d

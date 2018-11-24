@@ -11,11 +11,11 @@
 #include <utFacade/BasicTextureUpdate.h>
 
 
-namespace three {
+namespace open3d {
 
 namespace glsl {
 
-class UbitrackImageShader : public ShaderWrapper
+class UbitrackImageShader : public glsl::ShaderWrapper
 {
 public:
     ~UbitrackImageShader() override { Release(); }
@@ -78,9 +78,9 @@ protected:
             const RenderOption &option, const ViewControl &view) final;
 };
 
-}	// namespace three::glsl
+}	// namespace glsl
 
-}	// namespace three
+}	// namespace open3d
 
 
 #endif //BASIC_FACADE_DEMO_UBITRACKVIDEOBACKGROUNDSHADER_H

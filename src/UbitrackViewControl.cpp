@@ -13,7 +13,7 @@
 #include <log4cpp/Category.hh>
 static log4cpp::Category& logger(log4cpp::Category::getInstance("BasicFacadeExample.UbitrackViewControl"));
 
-namespace three{
+namespace open3d{
 
 void UbitrackViewControl::SetCameraModel(const Eigen::Matrix4d& projection_, const Eigen::Matrix3d& intrinsics_, const Eigen::Vector2i& resolution_)
 {
@@ -171,4 +171,4 @@ Eigen::Matrix4d UbitrackViewControl::ComputeProjectionMatrix(
     return ortho * m2;
 }
 
-}	// namespace three
+}	// namespace open3d

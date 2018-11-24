@@ -7,7 +7,7 @@
 
 #include <Visualization/Visualizer/ViewControl.h>
 
-namespace three {
+namespace open3d {
 
 class UbitrackViewControl : public ViewControl
 {
@@ -50,7 +50,7 @@ protected:
 
 };
 
-}	// namespace three
+}	// namespace open3d
 
 
 #endif //BASIC_FACADE_DEMO_UBITRACKVIEWCONTROL_H

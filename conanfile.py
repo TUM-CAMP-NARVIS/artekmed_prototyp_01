@@ -22,15 +22,14 @@ class UbitrackCoreConan(ConanFile):
         "ubitrack_component_vision_aruco/%s@ubitrack/stable" % version,
         "ubitrack_tools_trackman/1.0@ubitrack/stable",
         "eigen/[>=3.3.4]@camposs/stable",
-        "open3d/0.1.0@camposs/stable",
+        "open3d/0.4.0@camposs/stable",
        )
 
     # all sources are deployed with the package
     exports_sources = "cmake/*", "include/*", "config/*", "src/*", "CMakeLists.txt"
 
     def configure(self):
-        self.options['open3d'].opengl_extension_wrapper = "glad"
-        self.options['ubitrack_vision'].opengl_extension_wrapper = "glad"
+        self.options['ubitrack_vision'].opengl_extension_wrapper = "glew"
         self.options['ubitrack'].with_default_camera=True
         self.options['ubitrack'].with_haptic_calibration=True
         if self.settings.os == "Windows":

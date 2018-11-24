@@ -9,7 +9,7 @@
 #include <log4cpp/Category.hh>
 static log4cpp::Category& logger(log4cpp::Category::getInstance("BasicFacadeExample.UbitrackSingleCameraVisualizer"));
 
-namespace three {
+namespace open3d {
 
 UbitrackSingleCameraVisualizer::UbitrackSingleCameraVisualizer()
 {
@@ -19,7 +19,7 @@ UbitrackSingleCameraVisualizer::~UbitrackSingleCameraVisualizer()
 {
 }
 
-void UbitrackSingleCameraVisualizer::setCameraImage(std::shared_ptr<three::UbitrackImage>& camera_image) {
+void UbitrackSingleCameraVisualizer::setCameraImage(std::shared_ptr<open3d::UbitrackImage>& camera_image) {
     ubitrack_camera_image_ptr = camera_image;
     AddUbitrackImage(camera_image);
 }
@@ -51,7 +51,7 @@ void UbitrackSingleCameraVisualizer::SetUbitrackConnector(std::shared_ptr<Ubitra
     ubitrack_connector_ptr = connector_;
 
     RegisterAnimationCallback(
-        [=](three::Visualizer *vis) {
+        [=](open3d::Visualizer *vis) {
             // The lambda function captures no references to avoid dangling
             // references
             auto view_control = dynamic_cast<UbitrackViewControl*>(view_control_ptr_.get());
@@ -119,4 +119,4 @@ void UbitrackSingleCameraVisualizer::SetUbitrackConnector(std::shared_ptr<Ubitra
 }
 
 
-} // three
+} // open3d

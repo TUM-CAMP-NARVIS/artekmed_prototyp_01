@@ -16,7 +16,7 @@
 #include <log4cpp/Category.hh>
 static log4cpp::Category& logger(log4cpp::Category::getInstance("BasicFacadeExample.UbitrackImageShader"));
 
-namespace three{
+namespace open3d{
 
 namespace glsl {
 
@@ -260,4 +260,4 @@ bool ImageShaderForUbitrackImage::PrepareBinding(const Geometry &geometry,
 
 }	// namespace glsl
 
-}	// namespace three
+}	// namespace open3d

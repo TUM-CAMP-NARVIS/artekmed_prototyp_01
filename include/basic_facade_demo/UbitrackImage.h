@@ -16,7 +16,7 @@
 #include <utFacade/BasicFacadeTypes.h>
 
 
-namespace three {
+namespace open3d {
 
 class UbitrackImage: public Geometry2D {
 public:
@@ -47,6 +47,6 @@ public:
 std::shared_ptr<UbitrackImage> CreateEmptyUbitrackImage();
 
 
-} // three
+} // open3d
 
 #endif //BASIC_FACADE_DEMO_UBITRACKVIDEOBACKGROUND_H

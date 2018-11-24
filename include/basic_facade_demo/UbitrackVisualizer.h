@@ -5,15 +5,13 @@
 #ifndef BASIC_FACADE_DEMO_UBITRACKVISUALIZER_H
 #define BASIC_FACADE_DEMO_UBITRACKVISUALIZER_H
 
-#include <glad/glad.h>
-// hack to disable glew ...
-#define __glew_h__
+#include <GL/glew.h>
 
 #include <Visualization/Visualizer/Visualizer.h>
 
 #include "basic_facade_demo/UbitrackImage.h"
 
-namespace three {
+namespace open3d {
 
 class UbitrackVisualizer : public Visualizer
 {
@@ -50,6 +48,6 @@ protected:
 
 };
 
-}	// namespace three
+}	// namespace open3d
 
 #endif //BASIC_FACADE_DEMO_UBITRACKVISUALIZER_H

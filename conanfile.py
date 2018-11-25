@@ -32,8 +32,8 @@ class UbitrackCoreConan(ConanFile):
         self.options['ubitrack_vision'].opengl_extension_wrapper = "glew"
         self.options['ubitrack'].with_default_camera=True
         self.options['ubitrack'].with_haptic_calibration=True
-        if self.settings.os == "Windows":
-            self.options['ubitrack'].with_camera_flycapture=True
+        # if self.settings.os == "Windows":
+        #     self.options['ubitrack'].with_camera_flycapture=True
 
 
     def imports(self):

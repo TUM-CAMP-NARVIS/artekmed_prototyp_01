@@ -55,7 +55,7 @@ bool UbitrackSingleCameraConnector::teardown()
     return UbitrackBaseConnector::teardown();
 }
 
-bool UbitrackSingleCameraConnector::camera_left_get_model(TimestampT ts, double near, double far,
+bool UbitrackSingleCameraConnector::camera_left_get_model(TimestampT ts, double n, double f,
     Eigen::Matrix4d& projection, Eigen::Matrix3d& intrinsics, Eigen::Vector2i& resolution)
 {
     if (!m_pullsink_camera_model_left) {
@@ -82,7 +82,9 @@ bool UbitrackSingleCameraConnector::camera_left_get_model(TimestampT ts, double 
 
         // compute projection matrix assuming l=0, t=0, r=width, b=height
         std::vector<double> v_proj(16);
-        m_model->getOpenGLProjectionMatrix(0, resolution(0), 0, resolution(1), near, far, v_proj);
+		double right = resolution(0);
+		double top = resolution(1);
+        m_model->getOpenGLProjectionMatrix(0., right, 0., top, n, f, v_proj);
         projection = Eigen::Matrix4d(v_proj.data());
 
     } catch( std::exception &e) {

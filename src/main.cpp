@@ -185,7 +185,7 @@ int main(int ac, char** av) {
 
         //testing open3d
         auto mesh = open3d::CreateMeshSphere(0.05);
-//        visualizer.AddGeometry(mesh);
+        visualizer.AddGeometry(mesh);
 
 
         visualizer.Run();

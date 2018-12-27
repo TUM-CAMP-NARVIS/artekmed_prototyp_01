@@ -3,28 +3,28 @@
 //
 
 
-#include "basic_facade_demo/UbitrackSingleCameraVisualizer.h"
-#include "basic_facade_demo/UbitrackViewControl.h"
+#include "artekmed/UbitrackPointCloudVisualizer.h"
+#include "artekmed/UbitrackViewControl.h"
 
 #include <log4cpp/Category.hh>
-static log4cpp::Category& logger(log4cpp::Category::getInstance("BasicFacadeExample.UbitrackSingleCameraVisualizer"));
+static log4cpp::Category& logger(log4cpp::Category::getInstance("ArtekmedP1.UbitrackPointCloudVisualizer"));
 
 namespace open3d {
 
-UbitrackSingleCameraVisualizer::UbitrackSingleCameraVisualizer()
+UbitrackPointCloudVisualizer::UbitrackPointCloudVisualizer()
 {
 }
 
-UbitrackSingleCameraVisualizer::~UbitrackSingleCameraVisualizer()
+UbitrackPointCloudVisualizer::~UbitrackPointCloudVisualizer()
 {
 }
 
-void UbitrackSingleCameraVisualizer::setCameraImage(std::shared_ptr<open3d::UbitrackImage>& camera_image) {
-    ubitrack_camera_image_ptr = camera_image;
-    AddUbitrackImage(camera_image);
+void UbitrackPointCloudVisualizer::setPointCloud(std::shared_ptr<open3d::PointCloud>& point_cloud) {
+    ubitrack_camera01_pointcloud_ptr = point_cloud;
+    AddGeometry(point_cloud);
 }
 
-bool UbitrackSingleCameraVisualizer::StartUbitrack() {
+bool UbitrackPointCloudVisualizer::StartUbitrack() {
     if (ubitrack_connector_ptr) {
         LOG4CPP_INFO(logger, "Starting Ubitrack Dataflow")
         ubitrack_connector_ptr->start();
@@ -35,7 +35,7 @@ bool UbitrackSingleCameraVisualizer::StartUbitrack() {
     return true;
 }
 
-bool UbitrackSingleCameraVisualizer::StopUbitrack(){
+bool UbitrackPointCloudVisualizer::StopUbitrack(){
     if (ubitrack_connector_ptr)
     LOG4CPP_INFO(logger, "Stopping Ubitrack Dataflow")
         ubitrack_connector_ptr->stop();
@@ -43,7 +43,7 @@ bool UbitrackSingleCameraVisualizer::StopUbitrack(){
 }
 
 
-void UbitrackSingleCameraVisualizer::SetUbitrackConnector(std::shared_ptr<UbitrackSingleCameraConnector>& connector_) throw()
+void UbitrackPointCloudVisualizer::SetUbitrackConnector(std::shared_ptr<UbitrackPointCloudConnector>& connector_) throw()
 {
 //    if (!is_initialized_)
 //        throw std::runtime_error("Visualizer must be initialized before setting up the connector");
@@ -74,35 +74,18 @@ void UbitrackSingleCameraVisualizer::SetUbitrackConnector(std::shared_ptr<Ubitra
               StartUbitrack();
             }
 
-            TimestampT ts;
+            Ubitrack::Measurement::Timestamp ts;
             if (!connector->wait_for_frame_timeout(1000, ts)) {
                 bool needs_update = false;
 
-                // retrieve camera left intrinsics information
-                Eigen::Matrix3d intrinsics_left;
-                Eigen::Matrix4d projection_left;
-                Eigen::Vector2i resolution_left;
-                if(connector->camera_left_get_model(ts, view_control->GetNear(), view_control->GetFar(),
-                        projection_left, intrinsics_left, resolution_left)) {
-                    view_control->SetCameraModel(projection_left, intrinsics_left, resolution_left);
-                    needs_update = true;
-                } else {
-                    LOG4CPP_WARN(logger, "error retrieving intrinsics.");
-                }
-
                 // transfer camera_left_image to opengl texture
-                if (connector->camera_left_get_current_image(ubitrack_camera_image_ptr->ubitrack_image_ptr)) {
-                    needs_update = true;
-                } else {
-                    LOG4CPP_WARN(logger, "error retrieving camera image.");
-                }
-
-                Eigen::Matrix4d extrinsics_left;
-                if(connector->camera_left_get_pose(ts, extrinsics_left)){
-                    view_control->SetCameraExtrinsics(extrinsics_left);
-                    needs_update = true;
-                } else {
-                    LOG4CPP_WARN(logger, "error retrieving extrinsics.");
+                if (ubitrack_camera01_pointcloud_ptr) {
+                    if (connector->camera01_get_pointcloud(ts, ubitrack_camera01_pointcloud_ptr)) {
+                        view_control->FitInGeometry(*ubitrack_camera01_pointcloud_ptr);
+                        needs_update = true;
+                    } else {
+                        LOG4CPP_WARN(logger, "error retrieving camera image.");
+                    }
                 }
 
                 // things have changed, notify renderer

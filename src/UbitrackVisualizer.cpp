@@ -3,7 +3,7 @@
 //
 
 
-#include "basic_facade_demo/UbitrackVisualizer.h"
+#include "artekmed/UbitrackVisualizer.h"
 
 #include <thread>
 
@@ -13,11 +13,11 @@
 #include <IO/ClassIO/IJsonConvertibleIO.h>
 
 #include <utFacade/BasicFacade.h>
-#include <basic_facade_demo/UbitrackViewControl.h>
-#include <basic_facade_demo/UbitrackImageRenderer.h>
+#include <artekmed/UbitrackViewControl.h>
+#include <artekmed/UbitrackImageRenderer.h>
 
 #include <log4cpp/Category.hh>
-static log4cpp::Category& logger(log4cpp::Category::getInstance("BasicFacadeExample.UbitrackVisualizer"));
+static log4cpp::Category& logger(log4cpp::Category::getInstance("ArtekmedP1.UbitrackVisualizer"));
 
 namespace open3d {
 
@@ -94,7 +94,7 @@ void UbitrackVisualizer::UpdateWindowTitle()
 {
     if (window_ != nullptr) {
         auto view_control = dynamic_cast<UbitrackViewControl*>(view_control_ptr_.get());
-        std::string new_window_title = window_name_ + " - " + view_control->GetStatusString();
+        std::string new_window_title = window_name_;
         glfwSetWindowTitle(window_, new_window_title.c_str());
     }
 }
@@ -127,7 +127,7 @@ void UbitrackVisualizer::Render()
     glfwMakeContextCurrent(window_);
 
     auto view_control = dynamic_cast<UbitrackViewControl*>(view_control_ptr_.get());
-    view_control->SetUbitrackViewMatrices();
+    view_control->SetViewMatrices();
 
     glEnable(GL_MULTISAMPLE);
     glDisable(GL_BLEND);
@@ -152,76 +152,7 @@ void UbitrackVisualizer::Render()
 void UbitrackVisualizer::KeyPressCallback(GLFWwindow *window,
         int key, int scancode, int action, int mods)
 {
-    auto view_control = dynamic_cast<UbitrackViewControl*>(view_control_ptr_.get());
-    if (action == GLFW_RELEASE) {
-        return;
-    }
-
-    if (mods & GLFW_MOD_CONTROL) {
-        switch (key) {
-        case GLFW_KEY_F:
-            LOG4CPP_DEBUG(logger, "unhandled keypress.\n");
-            break;
-        case GLFW_KEY_W:
-            LOG4CPP_DEBUG(logger, "unhandled keypress.\n");
-            break;
-        case GLFW_KEY_P:
-            LOG4CPP_DEBUG(logger, "unhandled keypress.\n");
-            break;
-        case GLFW_KEY_R:
-            LOG4CPP_DEBUG(logger, "unhandled keypress.\n");
-            break;
-        case GLFW_KEY_G:
-            LOG4CPP_DEBUG(logger, "unhandled keypress.\n");
-            break;
-        case GLFW_KEY_S:
-            LOG4CPP_DEBUG(logger, "unhandled keypress.\n");
-            break;
-        case GLFW_KEY_LEFT:
-            LOG4CPP_DEBUG(logger, "unhandled keypress.\n");
-            break;
-        case GLFW_KEY_RIGHT:
-            LOG4CPP_DEBUG(logger, "unhandled keypress.\n");
-            break;
-        case GLFW_KEY_LEFT_BRACKET:
-            LOG4CPP_DEBUG(logger, "unhandled keypress.\n");
-            break;
-        case GLFW_KEY_RIGHT_BRACKET:
-            LOG4CPP_DEBUG(logger, "unhandled keypress.\n");
-            break;
-        case GLFW_KEY_EQUAL:
-            LOG4CPP_DEBUG(logger, "unhandled keypress.\n");
-            break;
-        case GLFW_KEY_MINUS:
-            LOG4CPP_DEBUG(logger, "unhandled keypress.\n");
-            break;
-        case GLFW_KEY_L:
-            LOG4CPP_DEBUG(logger, "unhandled keypress.\n");
-            break;
-        case GLFW_KEY_A:
-            LOG4CPP_DEBUG(logger, "unhandled keypress.\n");
-            break;
-        case GLFW_KEY_U:
-            LOG4CPP_DEBUG(logger, "unhandled keypress.\n");
-            break;
-        case GLFW_KEY_D:
-            view_control->PrintDebugMatrices();
-            break;
-        case GLFW_KEY_N:
-            LOG4CPP_DEBUG(logger, "unhandled keypress.\n");
-            break;
-        case GLFW_KEY_E:
-            LOG4CPP_DEBUG(logger, "unhandled keypress.\n");
-            break;
-        default:
-            Visualizer::KeyPressCallback(window, key, scancode, action, mods);
-            break;
-        }
-        is_redraw_required_ = true;
-        UpdateWindowTitle();
-    } else {
-        Visualizer::KeyPressCallback(window, key, scancode, action, mods);
-    }
+    Visualizer::KeyPressCallback(window, key, scancode, action, mods);
 }
 
 void UbitrackVisualizer::MouseMoveCallback(GLFWwindow* window,

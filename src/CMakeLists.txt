@@ -1,4 +1,4 @@
-set(UBITRACK_APPLICATION_NAME basic_facade_demo)
+set(UBITRACK_APPLICATION_NAME artekmed_p1)
 
 
 
@@ -37,22 +37,22 @@ set(UBITRACK_SRCS
   "${CMAKE_CURRENT_SOURCE_DIR}/UbitrackImageShader.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/UbitrackImageRenderer.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/UbitrackBaseConnector.cpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/UbitrackSingleCameraConnector.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/UbitrackPointCloudConnector.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/UbitrackVisualizer.cpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/UbitrackSingleCameraVisualizer.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/UbitrackPointCloudVisualizer.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/UbitrackViewControl.cpp"
 )
 
 # All header files
 set(UBITRACK_HEADERS
-  "${CMAKE_SOURCE_DIR}/include/basic_facade_demo/UbitrackImage.h"
-  "${CMAKE_SOURCE_DIR}/include/basic_facade_demo/UbitrackImageShader.h"
-  "${CMAKE_SOURCE_DIR}/include/basic_facade_demo/UbitrackImageRenderer.h"
-  "${CMAKE_SOURCE_DIR}/include/basic_facade_demo/UbitrackBaseConnector.h"
-  "${CMAKE_SOURCE_DIR}/include/basic_facade_demo/UbitrackSingleCameraConnector.h"
-  "${CMAKE_SOURCE_DIR}/include/basic_facade_demo/UbitrackVisualizer.h"
-  "${CMAKE_SOURCE_DIR}/include/basic_facade_demo/UbitrackSingleCameraVisualizer.h"
-  "${CMAKE_SOURCE_DIR}/include/basic_facade_demo/UbitrackViewControl.h"
+  "${CMAKE_SOURCE_DIR}/include/artekmed/UbitrackImage.h"
+  "${CMAKE_SOURCE_DIR}/include/artekmed/UbitrackImageShader.h"
+  "${CMAKE_SOURCE_DIR}/include/artekmed/UbitrackImageRenderer.h"
+  "${CMAKE_SOURCE_DIR}/include/artekmed/UbitrackBaseConnector.h"
+  "${CMAKE_SOURCE_DIR}/include/artekmed/UbitrackPointCloudConnector.h"
+  "${CMAKE_SOURCE_DIR}/include/artekmed/UbitrackVisualizer.h"
+  "${CMAKE_SOURCE_DIR}/include/artekmed/UbitrackPointCloudVisualizer.h"
+  "${CMAKE_SOURCE_DIR}/include/artekmed/UbitrackViewControl.h"
 )
 
 if(MSVC)

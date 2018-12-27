@@ -2,7 +2,7 @@
 // Created by Ulrich Eck on 18.03.18.
 //
 
-#include "basic_facade_demo/UbitrackImage.h"
+#include "artekmed/UbitrackImage.h"
 
 namespace open3d {
 
@@ -24,7 +24,7 @@ Eigen::Vector2d UbitrackImage::GetMinBound() const
 Eigen::Vector2d UbitrackImage::GetMaxBound() const
 {
     if (ubitrack_image_ptr)
-        return Eigen::Vector2d(ubitrack_image_ptr->getDimX(), ubitrack_image_ptr->getDimY());
+        return Eigen::Vector2d(ubitrack_image_ptr->width(), ubitrack_image_ptr->height());
     return Eigen::Vector2d(0., 0.);
 }
 

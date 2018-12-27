@@ -2,12 +2,12 @@
 // Created by Ulrich Eck on 18.03.18.
 //
 
-#ifndef BASIC_FACADE_DEMO_UBITRACKIMAGERENDERER_H
-#define BASIC_FACADE_DEMO_UBITRACKIMAGERENDERER_H
+#ifndef ARTEKMED_UBITRACKIMAGERENDERER_H
+#define ARTEKMED_UBITRACKIMAGERENDERER_H
 
 #include <Visualization/Shader/GeometryRenderer.h>
 
-#include "basic_facade_demo/UbitrackImageShader.h"
+#include "artekmed/UbitrackImageShader.h"
 
 namespace open3d {
 namespace glsl {
@@ -26,4 +26,4 @@ protected:
 };
 
 }} // open3d::glsl
-#endif //BASIC_FACADE_DEMO_UBITRACKIMAGERENDERER_H
+#endif //ARTEKMED_UBITRACKIMAGERENDERER_H

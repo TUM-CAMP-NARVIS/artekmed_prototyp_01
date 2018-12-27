@@ -2,7 +2,7 @@
 // Created by Ulrich Eck on 18.03.18.
 //
 
-#include "basic_facade_demo/UbitrackImageRenderer.h"
+#include "artekmed/UbitrackImageRenderer.h"
 
 namespace open3d {
 namespace glsl {

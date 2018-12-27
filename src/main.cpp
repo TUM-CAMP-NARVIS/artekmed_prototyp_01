@@ -63,9 +63,9 @@
 
 #include <utFacade/BasicFacade.h>
 
-#include "basic_facade_demo/UbitrackSingleCameraConnector.h"
-#include "basic_facade_demo/UbitrackSingleCameraVisualizer.h"
-#include "basic_facade_demo/UbitrackImage.h"
+#include "artekmed/UbitrackPointCloudConnector.h"
+#include "artekmed/UbitrackPointCloudVisualizer.h"
+#include "artekmed/UbitrackImage.h"
 
 // logging
 #include <log4cpp/OstreamAppender.hh>
@@ -80,7 +80,7 @@
 
 using namespace Ubitrack;
 
-static log4cpp::Category& logger( log4cpp::Category::getInstance( "BasicFacadeExample.Main" ) );
+static log4cpp::Category& logger( log4cpp::Category::getInstance( "ArtekmedP1.Main" ) );
 
 int main(int ac, char** av) {
 
@@ -141,7 +141,7 @@ int main(int ac, char** av) {
 	log4cpp::Category::getRoot().setPriority( log4cpp::Priority::INFO ); // default: INFO
 	log4cpp::Category::getInstance( "Ubitrack.Events" ).setPriority( log4cpp::Priority::NOTICE ); // default: NOTICE
 
-    open3d::UbitrackSingleCameraVisualizer visualizer;
+    open3d::UbitrackPointCloudVisualizer visualizer;
 
 
 	LOG4CPP_INFO( logger, "Starting Basic Facade Demo demo" );
@@ -153,7 +153,7 @@ int main(int ac, char** av) {
 		open3d::SetVerbosityLevel(open3d::VerbosityLevel::VerboseAlways);
 
 
-        std::string window_name = "Basic Facade Demo";
+        std::string window_name = "ARTEKMED: Pointcloud Viewer";
         int width = 1024;
         int height = 768;
         int left = 50;
@@ -161,7 +161,7 @@ int main(int ac, char** av) {
 
 		// configure ubitrack
 		LOG4CPP_INFO( logger, "Initialize Connector." );
-		std::shared_ptr<UbitrackSingleCameraConnector> connector = std::make_shared<UbitrackSingleCameraConnector>( sComponentsPath );
+		std::shared_ptr<UbitrackPointCloudConnector> connector = std::make_shared<UbitrackPointCloudConnector>( sComponentsPath );
 
 		LOG4CPP_INFO( logger, "Instantiating dataflow network from " << sUtqlFile << "..." );
 		if (!connector->initialize( sUtqlFile )) {
@@ -180,13 +180,11 @@ int main(int ac, char** av) {
 
 
         // create ubitrack camera imageand add to visualizer
-        auto camera_image = open3d::CreateEmptyUbitrackImage();
-        visualizer.setCameraImage(camera_image);
+        auto point_cloud = std::make_shared<open3d::PointCloud>();
+        visualizer.setPointCloud(point_cloud);
 
-        //testing open3d
-        auto mesh = open3d::CreateMeshSphere(0.05);
-        visualizer.AddGeometry(mesh);
-
+        auto origin = open3d::CreateMeshCoordinateFrame(0.1);
+        visualizer.AddGeometry(origin);
 
         visualizer.Run();
         visualizer.DestroyVisualizerWindow();
@@ -204,7 +202,7 @@ int main(int ac, char** av) {
 		LOG4CPP_ERROR( logger, "unkown error occured" );
 	}
 
-	LOG4CPP_INFO( logger, "basic_facade_demo terminating." );
+	LOG4CPP_INFO( logger, "artekmed terminating." );
 
 
 

@@ -2,13 +2,13 @@
 // Created by Ulrich Eck on 18.03.18.
 //
 
-#ifndef BASIC_FACADE_DEMO_UBITRACKVIDEOBACKGROUNDSHADER_H
-#define BASIC_FACADE_DEMO_UBITRACKVIDEOBACKGROUNDSHADER_H
+#ifndef ARTEKMED_UBITRACKVIDEOBACKGROUNDSHADER_H
+#define ARTEKMED_UBITRACKVIDEOBACKGROUNDSHADER_H
 
-#include "basic_facade_demo/UbitrackImage.h"
+#include "artekmed/UbitrackImage.h"
 #include <Visualization/Shader/ShaderWrapper.h>
 
-#include <utFacade/BasicTextureUpdate.h>
+#include <utVision/TextureUpdate.h>
 
 
 namespace open3d {
@@ -62,7 +62,7 @@ protected:
 
     bool bound_once_;
 
-    std::unique_ptr<Ubitrack::Facade::BasicTextureUpdate> ubitrack_textureupdate_ptr;
+    std::unique_ptr<Ubitrack::Vision::TextureUpdate> ubitrack_textureupdate_ptr;
 
 };
 
@@ -83,4 +83,4 @@ protected:
 }	// namespace open3d
 
 
-#endif //BASIC_FACADE_DEMO_UBITRACKVIDEOBACKGROUNDSHADER_H
+#endif //ARTEKMED_UBITRACKVIDEOBACKGROUNDSHADER_H

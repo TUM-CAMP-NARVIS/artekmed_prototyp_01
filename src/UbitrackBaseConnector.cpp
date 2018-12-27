@@ -2,15 +2,15 @@
 // Created by Ulrich Eck on 15.03.18.
 //
 
-#include "basic_facade_demo/UbitrackBaseConnector.h"
+#include "artekmed/UbitrackBaseConnector.h"
 
 #include <log4cpp/Category.hh>
-static log4cpp::Category& logger(log4cpp::Category::getInstance("BasicFacadeExample.UbitrackBaseConnector"));
+static log4cpp::Category& logger(log4cpp::Category::getInstance("ArtekmedP1.UbitrackBaseConnector"));
 
 // implementation of UbitrackBaseConnector
 
 UbitrackBaseConnector::UbitrackBaseConnector(const std::string& _components_path)
-        : m_utFacade(new Ubitrack::Facade::BasicFacade(_components_path.c_str()) )
+        : m_utFacade(new Ubitrack::Facade::AdvancedFacade(_components_path.c_str()) )
         , m_haveNewFrame( false )
         , m_lastTimestamp( 0 )
         , m_dataflowLoaded( false )
@@ -18,8 +18,8 @@ UbitrackBaseConnector::UbitrackBaseConnector(const std::string& _components_path
 {
 }
 
-TimestampT UbitrackBaseConnector::now() {
-    return m_utFacade->now();
+Ubitrack::Measurement::Timestamp UbitrackBaseConnector::now() {
+    return Ubitrack::Measurement::now();
 }
 
 bool UbitrackBaseConnector::isRunning() {
@@ -33,18 +33,17 @@ bool UbitrackBaseConnector::isLoaded() {
 
 
 bool UbitrackBaseConnector::initialize(const std::string& _utql_filename) {
-    // needs to catch exceptions ..
-    m_utFacade->loadDataflow( _utql_filename.c_str(), true );
-    if (m_utFacade->getLastError() != 0) {
-        LOG4CPP_ERROR(logger, "Error while loading dataflow: " << m_utFacade->getLastError());
+    try{
+        m_utFacade->loadDataflow( _utql_filename.c_str(), true );
+    } catch (Ubitrack::Util::Exception &e) {
+        LOG4CPP_ERROR(logger, "Error while loading dataflow: " << e.what());
         return false;
-    };
+    }
     m_dataflowLoaded = true;
     return true;
 }
 
 bool UbitrackBaseConnector::teardown() {
-    // needs to catch exceptions ..
     if (m_dataflowRunning) {
         if (!stop()){
             return false;
@@ -52,24 +51,25 @@ bool UbitrackBaseConnector::teardown() {
     }
 
     if (m_dataflowLoaded) {
-        m_utFacade->clearDataflow();
-        if (m_utFacade->getLastError() != 0) {
-            LOG4CPP_ERROR(logger, "Error while clearing dataflow: " << m_utFacade->getLastError());
+        try{
+            m_utFacade->clearDataflow();
+        } catch (Ubitrack::Util::Exception &e) {
+            LOG4CPP_ERROR(logger, "Error while clearing dataflow: " << e.what());
             return false;
-        };
+        }
         m_dataflowLoaded = false;
     }
     return true;
 }
 
 bool UbitrackBaseConnector::start() {
-    // needs to catch exceptions ..
     if (m_dataflowLoaded) {
-        m_utFacade->startDataflow();
-        if (m_utFacade->getLastError() != 0) {
-            LOG4CPP_ERROR(logger, "Error while starting dataflow: " << m_utFacade->getLastError());
+        try{
+            m_utFacade->startDataflow();
+        } catch (Ubitrack::Util::Exception &e) {
+            LOG4CPP_ERROR(logger, "Error while starting dataflow: " << e.what());
             return false;
-        };
+        }
         m_dataflowRunning = true;
     }
     return true;
@@ -78,17 +78,18 @@ bool UbitrackBaseConnector::start() {
 bool UbitrackBaseConnector::stop() {
     // needs to catch exceptions ..
     if (m_dataflowRunning) {
-        m_utFacade->stopDataflow();
-        if (m_utFacade->getLastError() != 0) {
-            LOG4CPP_ERROR(logger, "Error while stopping dataflow: " << m_utFacade->getLastError());
+        try{
+            m_utFacade->stopDataflow();
+        } catch (Ubitrack::Util::Exception &e) {
+            LOG4CPP_ERROR(logger, "Error while stopping dataflow: " << e.what());
             return false;
-        };
+        }
         m_dataflowRunning = false;
     }
     return true;
 }
 
-void UbitrackBaseConnector::set_new_frame(unsigned long long int ts) {
+void UbitrackBaseConnector::set_new_frame(Ubitrack::Measurement::Timestamp ts) {
     std::unique_lock<std::mutex> ul( m_waitMutex );
     m_lastTimestamp = ts;
     m_haveNewFrame = true;
@@ -96,10 +97,10 @@ void UbitrackBaseConnector::set_new_frame(unsigned long long int ts) {
 }
 
 
-TimestampT UbitrackBaseConnector::wait_for_frame() {
+Ubitrack::Measurement::Timestamp UbitrackBaseConnector::wait_for_frame() {
     // find a way to exit here in case we want to stop
     // alternatively, we could only query the m_haveNewFrame variable (polling)
-    TimestampT ts(0);
+    Ubitrack::Measurement::Timestamp ts(0);
     while (!m_haveNewFrame) {
         std::unique_lock<std::mutex> ul( m_waitMutex );
         m_waitCondition.wait( ul );
@@ -115,7 +116,7 @@ TimestampT UbitrackBaseConnector::wait_for_frame() {
     return ts;
 }
 
-unsigned int UbitrackBaseConnector::wait_for_frame_timeout(unsigned int timeout_ms, TimestampT& ts) {
+unsigned int UbitrackBaseConnector::wait_for_frame_timeout(unsigned int timeout_ms, Ubitrack::Measurement::Timestamp& ts) {
     auto timeout = std::chrono::milliseconds(timeout_ms);
 
     std::unique_lock<std::mutex> ul( m_waitMutex );

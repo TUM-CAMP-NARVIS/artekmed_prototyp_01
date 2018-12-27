@@ -2,14 +2,14 @@
 // Created by Ulrich Eck on 15.03.18.
 //
 
-#ifndef BASIC_FACADE_DEMO_UBITRACKVISUALIZER_H
-#define BASIC_FACADE_DEMO_UBITRACKVISUALIZER_H
+#ifndef ARTEKMED_UBITRACKVISUALIZER_H
+#define ARTEKMED_UBITRACKVISUALIZER_H
 
 #include <GL/glew.h>
 
 #include <Visualization/Visualizer/Visualizer.h>
 
-#include "basic_facade_demo/UbitrackImage.h"
+#include "artekmed/UbitrackImage.h"
 
 namespace open3d {
 
@@ -50,4 +50,4 @@ protected:
 
 }	// namespace open3d
 
-#endif //BASIC_FACADE_DEMO_UBITRACKVISUALIZER_H
+#endif //ARTEKMED_UBITRACKVISUALIZER_H

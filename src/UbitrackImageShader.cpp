@@ -2,7 +2,7 @@
 // Created by Ulrich Eck on 18.03.18.
 //
 
-#include "basic_facade_demo/UbitrackImageShader.h"
+#include "artekmed/UbitrackImageShader.h"
 
 // is generated automatically during build
 #include "UbitrackShader.h"
@@ -11,10 +11,10 @@
 
 #include <Visualization/Utility/ColorMap.h>
 
-#include "basic_facade_demo/UbitrackImage.h"
+#include "artekmed/UbitrackImage.h"
 
 #include <log4cpp/Category.hh>
-static log4cpp::Category& logger(log4cpp::Category::getInstance("BasicFacadeExample.UbitrackImageShader"));
+static log4cpp::Category& logger(log4cpp::Category::getInstance("ArtekmedP1.UbitrackImageShader"));
 
 namespace open3d{
 
@@ -103,12 +103,12 @@ bool UbitrackImageShader::BindGeometryOnce(const Geometry &geometry,
     };
 
     auto ubitrackimage = dynamic_cast<const UbitrackImage&>(geometry);
-    int width = ubitrackimage.ubitrack_image_ptr->getDimX();
-    int height = ubitrackimage.ubitrack_image_ptr->getDimY();
-    unsigned int origin = ubitrackimage.ubitrack_image_ptr->getOrigin();
-    float tx = float( width ) / ubitrack_textureupdate_ptr->getPow2Width();
-    float ty0 = origin ? float( height ) / ubitrack_textureupdate_ptr->getPow2Height() : 0;
-    float ty1 = origin ? 0 : float( height ) / ubitrack_textureupdate_ptr->getPow2Height();
+    int width = ubitrackimage.ubitrack_image_ptr->width();
+    int height = ubitrackimage.ubitrack_image_ptr->height();
+    unsigned int origin = ubitrackimage.ubitrack_image_ptr->origin();
+    float tx = float( width ) / ubitrack_textureupdate_ptr->pow2width();
+    float ty0 = origin ? float( height ) / ubitrack_textureupdate_ptr->pow2height() : 0;
+    float ty1 = origin ? 0 : float( height ) / ubitrack_textureupdate_ptr->pow2height();
 
     const GLfloat vertex_UV_buffer_data[12] = {
             0.0f, ty1, // lb
@@ -145,7 +145,7 @@ bool UbitrackImageShader::RenderGeometry(const Geometry &geometry,
 
     // texture update
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, ubitrack_textureupdate_ptr->getTextureId());
+    glBindTexture(GL_TEXTURE_2D, ubitrack_textureupdate_ptr->textureId());
     glUniform1i(image_texture_, 0);
 
     glEnableVertexAttribArray(vertex_position_);
@@ -198,8 +198,8 @@ bool ImageShaderForUbitrackImage::PrepareRendering(const Geometry &geometry,
         return false;
     }
 
-    int width = ubitrackimage.ubitrack_image_ptr->getDimX();
-    int height = ubitrackimage.ubitrack_image_ptr->getDimY();
+    int width = ubitrackimage.ubitrack_image_ptr->width();
+    int height = ubitrackimage.ubitrack_image_ptr->height();
 
     GLfloat ratio_x, ratio_y;
     switch (option.image_stretch_option_) {
@@ -242,7 +242,7 @@ bool ImageShaderForUbitrackImage::PrepareBinding(const Geometry &geometry,
         return false;
     }
 
-    ubitrack_textureupdate_ptr = std::unique_ptr<Ubitrack::Facade::BasicTextureUpdate>(new Ubitrack::Facade::BasicTextureUpdate());
+    ubitrack_textureupdate_ptr = std::unique_ptr<Ubitrack::Vision::TextureUpdate>(new Ubitrack::Vision::TextureUpdate());
 
     auto ubitrackimage = dynamic_cast<const UbitrackImage&>(geometry);
     if (!ubitrackimage.HasData()) {

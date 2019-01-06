@@ -16,14 +16,14 @@ class UbitrackPointCloudVisualizer : public UbitrackVisualizer
 public:
     UbitrackPointCloudVisualizer();
     ~UbitrackPointCloudVisualizer() override;
-    UbitrackPointCloudVisualizer(const UbitrackPointCloudVisualizer &) =
-    delete;
-    UbitrackPointCloudVisualizer &operator=(
-            const UbitrackPointCloudVisualizer &) = delete;
+    UbitrackPointCloudVisualizer(const UbitrackPointCloudVisualizer &) = delete;
+    UbitrackPointCloudVisualizer &operator=(const UbitrackPointCloudVisualizer &) = delete;
 
 public:
     void SetUbitrackConnector(std::shared_ptr<UbitrackPointCloudConnector>& connector) throw();
-    void setPointCloud(std::shared_ptr<open3d::PointCloud>& point_cloud);
+    void setPointCloud1(std::shared_ptr<open3d::PointCloud>& point_cloud);
+    void setPointCloud2(std::shared_ptr<open3d::PointCloud>& point_cloud);
+    void setPointCloud3(std::shared_ptr<open3d::PointCloud>& point_cloud);
 
 protected:
 
@@ -31,6 +31,8 @@ protected:
     bool StopUbitrack() override;
 
     std::shared_ptr<open3d::PointCloud> ubitrack_camera01_pointcloud_ptr;
+    std::shared_ptr<open3d::PointCloud> ubitrack_camera02_pointcloud_ptr;
+    std::shared_ptr<open3d::PointCloud> ubitrack_camera03_pointcloud_ptr;
     std::shared_ptr<UbitrackPointCloudConnector> ubitrack_connector_ptr;
 };
 

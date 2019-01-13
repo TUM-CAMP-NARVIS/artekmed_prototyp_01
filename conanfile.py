@@ -22,6 +22,7 @@ class UbitrackCoreConan(ConanFile):
         "ubitrack_component_vision_aruco/%s@ubitrack/stable" % version,
         "ubitrack_device_camera_zed/%s@ubitrack/stable" % version,
         "ubitrack_device_camera_realsense/%s@ubitrack/stable" % version,
+        "ubitrack_device_comm_videostream/%s@ubitrack/stable" % version,
         "ubitrack_tools_trackman/1.0@ubitrack/stable",
         "eigen/[>=3.3.4]@camposs/stable",
         "open3d/0.4.0@camposs/stable",

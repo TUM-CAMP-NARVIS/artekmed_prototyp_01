@@ -36,6 +36,10 @@ public:
     // handlers for push sinks
     void receive_camera01_image(const Ubitrack::Measurement::ImageMeasurement& img);
 
+    bool have_camera01() {return m_have_camera01;}
+    bool have_camera02() {return m_have_camera02;}
+    bool have_camera03() {return m_have_camera03;}
+
 private:
     boost::shared_ptr<Ubitrack::Components::ApplicationPushSinkVisionImage>    m_pushsink_camera01_image;
     boost::shared_ptr<Ubitrack::Components::ApplicationPullSinkPositionList>   m_pullsink_camera01_pointcloud;
@@ -50,6 +54,9 @@ private:
 
     std::mutex m_textureAccessMutex;
     Ubitrack::Measurement::ImageMeasurement m_current_camera01_image;
+    bool m_have_camera01;
+    bool m_have_camera02;
+    bool m_have_camera03;
 
 };
 

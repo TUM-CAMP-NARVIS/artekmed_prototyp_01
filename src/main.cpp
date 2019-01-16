@@ -179,15 +179,21 @@ int main(int ac, char** av) {
         }
 
 
-        // create ubitrack camera imageand add to visualizer
-        auto point_cloud1 = std::make_shared<open3d::PointCloud>();
-        visualizer.setPointCloud1(point_cloud1);
+        if (connector->have_camera01()) {
+			// create ubitrack camera imageand add to visualizer
+			auto point_cloud1 = std::make_shared<open3d::PointCloud>();
+			visualizer.setPointCloud1(point_cloud1);
+        }
 
-		auto point_cloud2 = std::make_shared<open3d::PointCloud>();
-		visualizer.setPointCloud2(point_cloud2);
+		if (connector->have_camera02()) {
+			auto point_cloud2 = std::make_shared<open3d::PointCloud>();
+			visualizer.setPointCloud2(point_cloud2);
+		}
 
-		auto point_cloud3 = std::make_shared<open3d::PointCloud>();
-		visualizer.setPointCloud3(point_cloud3);
+		if (connector->have_camera03()) {
+			auto point_cloud3 = std::make_shared<open3d::PointCloud>();
+			visualizer.setPointCloud3(point_cloud3);
+		}
 
 		auto origin = open3d::CreateMeshCoordinateFrame(0.1);
         visualizer.AddGeometry(origin);

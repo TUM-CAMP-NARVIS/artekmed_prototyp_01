@@ -16,9 +16,6 @@ static log4cpp::Category& logger(log4cpp::Category::getInstance("ArtekmedP1.Ubit
 
 UbitrackPointCloudConnector::UbitrackPointCloudConnector(const std::string& _components_path)
         : UbitrackBaseConnector(_components_path)
-        , m_have_camera01(false)
-        , m_have_camera02(false)
-        , m_have_camera03(false)
 {}
 
 bool UbitrackPointCloudConnector::initialize(const std::string& _utql_filename)
@@ -28,35 +25,123 @@ bool UbitrackPointCloudConnector::initialize(const std::string& _utql_filename)
     }
 
     // create sinks/sources
+    // Camera1
     try {
         m_pushsink_camera01_image = m_utFacade->componentByName<Ubitrack::Components::ApplicationPushSinkVisionImage>("camera01_image");
-        m_pullsink_camera01_pointcloud = m_utFacade->componentByName<Ubitrack::Components::ApplicationPullSinkPositionList>("camera01_pointcloud");
-        m_have_camera01 = true;
     } catch (std::exception &e) {
         LOG4CPP_ERROR(logger, e.what());
-        m_have_camera01 = false;
+        m_pushsink_camera01_image.reset();
+    }
+    try{
+        m_pullsink_camera01_depth = m_utFacade->componentByName<Ubitrack::Components::ApplicationPullSinkVisionImage>("camera01_depth");
+    } catch (std::exception &e) {
+        LOG4CPP_ERROR(logger, e.what());
+        m_pullsink_camera01_depth.reset();
+    }
+    try {
+        m_pullsink_camera01_pointcloud = m_utFacade->componentByName<Ubitrack::Components::ApplicationPullSinkPositionList>("camera01_pointcloud");
+    } catch (std::exception &e) {
+        LOG4CPP_ERROR(logger, e.what());
+        m_pullsink_camera01_pointcloud.reset();
+    }
+    try{
+        m_pullsink_camera01_pose = m_utFacade->componentByName<Ubitrack::Components::ApplicationPullSinkPose>("camera01_pose");
+    } catch (std::exception &e) {
+        LOG4CPP_ERROR(logger, e.what());
+        m_pullsink_camera01_pose.reset();
+    }
+    try{
+        m_pullsink_camera01_image_model = m_utFacade->componentByName<Ubitrack::Components::ApplicationPullSinkCameraIntrinsics>("camera01_image_model");
+    } catch (std::exception &e) {
+        LOG4CPP_ERROR(logger, e.what());
+        m_pullsink_camera01_image_model.reset();
+    }
+    try{
+        m_pullsink_camera01_depth_model = m_utFacade->componentByName<Ubitrack::Components::ApplicationPullSinkCameraIntrinsics>("camera01_depth_model");
+    } catch (std::exception &e) {
+        LOG4CPP_ERROR(logger, e.what());
+        m_pullsink_camera01_depth_model.reset();
     }
 
+
+    // Camera2
     try{
         m_pullsink_camera02_image = m_utFacade->componentByName<Ubitrack::Components::ApplicationPullSinkVisionImage>("camera02_image");
-        m_pullsink_camera02_pointcloud = m_utFacade->componentByName<Ubitrack::Components::ApplicationPullSinkPositionList>("camera02_pointcloud");
-        m_pullsink_camera02_pose = m_utFacade->componentByName<Ubitrack::Components::ApplicationPullSinkPose>("camera02_pose");
-        m_have_camera02 = true;
     } catch (std::exception &e) {
         LOG4CPP_ERROR(logger, e.what());
-        m_have_camera02 = false;
+        m_pullsink_camera02_image.reset();
+    }
+    try{
+        m_pullsink_camera02_depth = m_utFacade->componentByName<Ubitrack::Components::ApplicationPullSinkVisionImage>("camera02_depth");
+    } catch (std::exception &e) {
+        LOG4CPP_ERROR(logger, e.what());
+        m_pullsink_camera02_depth.reset();
+    }
+    try{
+        m_pullsink_camera02_pointcloud = m_utFacade->componentByName<Ubitrack::Components::ApplicationPullSinkPositionList>("camera02_pointcloud");
+    } catch (std::exception &e) {
+        LOG4CPP_ERROR(logger, e.what());
+        m_pullsink_camera02_pointcloud.reset();
+    }
+    try{
+        m_pullsink_camera02_pose = m_utFacade->componentByName<Ubitrack::Components::ApplicationPullSinkPose>("camera02_pose");
+    } catch (std::exception &e) {
+        LOG4CPP_ERROR(logger, e.what());
+        m_pullsink_camera02_pose.reset();
+    }
+    try{
+        m_pullsink_camera02_image_model = m_utFacade->componentByName<Ubitrack::Components::ApplicationPullSinkCameraIntrinsics>("camera02_image_model");
+    } catch (std::exception &e) {
+        LOG4CPP_ERROR(logger, e.what());
+        m_pullsink_camera02_image_model.reset();
+    }
+    try{
+        m_pullsink_camera02_depth_model = m_utFacade->componentByName<Ubitrack::Components::ApplicationPullSinkCameraIntrinsics>("camera02_depth_model");
+    } catch (std::exception &e) {
+        LOG4CPP_ERROR(logger, e.what());
+        m_pullsink_camera02_depth_model.reset();
     }
 
+
+    // Camera3
     try {
         m_pullsink_camera03_image = m_utFacade->componentByName<Ubitrack::Components::ApplicationPullSinkVisionImage>("camera03_image");
-        m_pullsink_camera03_pointcloud = m_utFacade->componentByName<Ubitrack::Components::ApplicationPullSinkPositionList>("camera03_pointcloud");
-        m_pullsink_camera03_pose = m_utFacade->componentByName<Ubitrack::Components::ApplicationPullSinkPose>("camera03_pose");
-        m_have_camera03 = true;
     } catch (std::exception &e) {
         LOG4CPP_ERROR(logger, e.what());
-        m_have_camera03 = false;
+        m_pullsink_camera03_image.reset();
+    }
+    try {
+        m_pullsink_camera03_depth = m_utFacade->componentByName<Ubitrack::Components::ApplicationPullSinkVisionImage>("camera03_depth");
+    } catch (std::exception &e) {
+        LOG4CPP_ERROR(logger, e.what());
+        m_pullsink_camera03_depth.reset();
+    }
+    try {
+        m_pullsink_camera03_pointcloud = m_utFacade->componentByName<Ubitrack::Components::ApplicationPullSinkPositionList>("camera03_pointcloud");
+    } catch (std::exception &e) {
+        LOG4CPP_ERROR(logger, e.what());
+        m_pullsink_camera03_pointcloud.reset();
+    }
+    try {
+        m_pullsink_camera03_pose = m_utFacade->componentByName<Ubitrack::Components::ApplicationPullSinkPose>("camera03_pose");
+    } catch (std::exception &e) {
+        LOG4CPP_ERROR(logger, e.what());
+        m_pullsink_camera03_pose.reset();
+    }
+    try{
+        m_pullsink_camera03_image_model = m_utFacade->componentByName<Ubitrack::Components::ApplicationPullSinkCameraIntrinsics>("camera03_image_model");
+    } catch (std::exception &e) {
+        LOG4CPP_ERROR(logger, e.what());
+        m_pullsink_camera03_image_model.reset();
+    }
+    try{
+        m_pullsink_camera03_depth_model = m_utFacade->componentByName<Ubitrack::Components::ApplicationPullSinkCameraIntrinsics>("camera03_depth_model");
+    } catch (std::exception &e) {
+        LOG4CPP_ERROR(logger, e.what());
+        m_pullsink_camera03_depth_model.reset();
     }
 
+    // Push handler callback
     if (m_pushsink_camera01_image) {
         m_pushsink_camera01_image->setCallback(boost::bind( &UbitrackPointCloudConnector::receive_camera01_image, this, _1 ));
     }
@@ -71,15 +156,25 @@ bool UbitrackPointCloudConnector::teardown()
     }
     // deallocate sinks to be sure there is no activity before deallocating the facade
     m_pushsink_camera01_image.reset();
+    m_pullsink_camera01_depth.reset();
     m_pullsink_camera01_pointcloud.reset();
+    m_pullsink_camera01_pose.reset();
+    m_pullsink_camera01_image_model.reset();
+    m_pullsink_camera01_depth_model.reset();
 
     m_pullsink_camera02_image.reset();
+    m_pullsink_camera02_depth.reset();
     m_pullsink_camera02_pointcloud.reset();
     m_pullsink_camera02_pose.reset();
+    m_pullsink_camera02_image_model.reset();
+    m_pullsink_camera02_depth_model.reset();
 
     m_pullsink_camera03_image.reset();
+    m_pullsink_camera03_depth.reset();
     m_pullsink_camera03_pointcloud.reset();
     m_pullsink_camera03_pose.reset();
+    m_pullsink_camera03_image_model.reset();
+    m_pullsink_camera03_depth_model.reset();
 
     return UbitrackBaseConnector::teardown();
 }

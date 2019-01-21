@@ -36,28 +36,34 @@ public:
     // handlers for push sinks
     void receive_camera01_image(const Ubitrack::Measurement::ImageMeasurement& img);
 
-    bool have_camera01() {return m_have_camera01;}
-    bool have_camera02() {return m_have_camera02;}
-    bool have_camera03() {return m_have_camera03;}
+    bool have_camera01() {return ((m_pushsink_camera01_image) && (m_pullsink_camera01_depth) & (m_pullsink_camera01_pose) && (m_pullsink_camera01_image_model) && (m_pullsink_camera01_depth_model));}
+    bool have_camera02() {return ((m_pullsink_camera02_image) && (m_pullsink_camera02_depth) & (m_pullsink_camera02_pose) && (m_pullsink_camera02_image_model) && (m_pullsink_camera02_depth_model));}
+    bool have_camera03() {return ((m_pullsink_camera03_image) && (m_pullsink_camera03_depth) & (m_pullsink_camera03_pose) && (m_pullsink_camera03_image_model) && (m_pullsink_camera03_depth_model));}
 
 private:
     boost::shared_ptr<Ubitrack::Components::ApplicationPushSinkVisionImage>    m_pushsink_camera01_image;
+    boost::shared_ptr<Ubitrack::Components::ApplicationPullSinkVisionImage>    m_pullsink_camera01_depth;
     boost::shared_ptr<Ubitrack::Components::ApplicationPullSinkPositionList>   m_pullsink_camera01_pointcloud;
+    boost::shared_ptr<Ubitrack::Components::ApplicationPullSinkPose>           m_pullsink_camera01_pose;
+    boost::shared_ptr<Ubitrack::Components::ApplicationPullSinkCameraIntrinsics> m_pullsink_camera01_image_model;
+    boost::shared_ptr<Ubitrack::Components::ApplicationPullSinkCameraIntrinsics> m_pullsink_camera01_depth_model;
 
     boost::shared_ptr<Ubitrack::Components::ApplicationPullSinkVisionImage>    m_pullsink_camera02_image;
+    boost::shared_ptr<Ubitrack::Components::ApplicationPullSinkVisionImage>    m_pullsink_camera02_depth;
     boost::shared_ptr<Ubitrack::Components::ApplicationPullSinkPositionList>   m_pullsink_camera02_pointcloud;
     boost::shared_ptr<Ubitrack::Components::ApplicationPullSinkPose>           m_pullsink_camera02_pose;
+    boost::shared_ptr<Ubitrack::Components::ApplicationPullSinkCameraIntrinsics> m_pullsink_camera02_image_model;
+    boost::shared_ptr<Ubitrack::Components::ApplicationPullSinkCameraIntrinsics> m_pullsink_camera02_depth_model;
 
     boost::shared_ptr<Ubitrack::Components::ApplicationPullSinkVisionImage>    m_pullsink_camera03_image;
+    boost::shared_ptr<Ubitrack::Components::ApplicationPullSinkVisionImage>    m_pullsink_camera03_depth;
     boost::shared_ptr<Ubitrack::Components::ApplicationPullSinkPositionList>   m_pullsink_camera03_pointcloud;
     boost::shared_ptr<Ubitrack::Components::ApplicationPullSinkPose>           m_pullsink_camera03_pose;
+    boost::shared_ptr<Ubitrack::Components::ApplicationPullSinkCameraIntrinsics> m_pullsink_camera03_image_model;
+    boost::shared_ptr<Ubitrack::Components::ApplicationPullSinkCameraIntrinsics> m_pullsink_camera03_depth_model;
 
     std::mutex m_textureAccessMutex;
     Ubitrack::Measurement::ImageMeasurement m_current_camera01_image;
-    bool m_have_camera01;
-    bool m_have_camera02;
-    bool m_have_camera03;
-
 };
 
 #endif //ARTEKMED_UBITRACKSINGLECAMERACONNECTOR_H

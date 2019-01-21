@@ -25,7 +25,7 @@ class UbitrackCoreConan(ConanFile):
         "ubitrack_device_comm_videostream/%s@ubitrack/stable" % version,
         "ubitrack_tools_trackman/1.0@ubitrack/stable",
         "eigen/[>=3.3.4]@camposs/stable",
-        "open3d/0.4.0@camposs/stable",
+        "open3d/0.5.0@camposs/stable",
        )
 
     # all sources are deployed with the package

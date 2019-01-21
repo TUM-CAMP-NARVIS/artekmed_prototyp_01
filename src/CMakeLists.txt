@@ -33,6 +33,7 @@ source_group("Source Files\\GLSL" FILES ${SHADER_FILES})
 # All cpp files
 set(UBITRACK_SRCS
   "${CMAKE_CURRENT_SOURCE_DIR}/main.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/PointCloudProcessing.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/UbitrackImage.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/UbitrackImageShader.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/UbitrackImageRenderer.cpp"
@@ -45,6 +46,7 @@ set(UBITRACK_SRCS
 
 # All header files
 set(UBITRACK_HEADERS
+  "${CMAKE_SOURCE_DIR}/include/artekmed/PointCloudProcessing.h"
   "${CMAKE_SOURCE_DIR}/include/artekmed/UbitrackImage.h"
   "${CMAKE_SOURCE_DIR}/include/artekmed/UbitrackImageShader.h"
   "${CMAKE_SOURCE_DIR}/include/artekmed/UbitrackImageRenderer.h"

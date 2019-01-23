@@ -56,12 +56,6 @@ bool UbitrackPointCloudConnector::initialize(const std::string& _utql_filename)
         LOG4CPP_ERROR(logger, e.what());
         m_pullsink_camera01_image_model.reset();
     }
-    try{
-        m_pullsink_camera01_depth_model = m_utFacade->componentByName<Ubitrack::Components::ApplicationPullSinkCameraIntrinsics>("camera01_depth_model");
-    } catch (std::exception &e) {
-        LOG4CPP_ERROR(logger, e.what());
-        m_pullsink_camera01_depth_model.reset();
-    }
 
 
     // Camera2
@@ -101,7 +95,7 @@ bool UbitrackPointCloudConnector::initialize(const std::string& _utql_filename)
         LOG4CPP_ERROR(logger, e.what());
         m_pullsink_camera02_depth_model.reset();
     }
-
+    // m_pullsink_camera02_dept2color
 
     // Camera3
     try {
@@ -140,6 +134,7 @@ bool UbitrackPointCloudConnector::initialize(const std::string& _utql_filename)
         LOG4CPP_ERROR(logger, e.what());
         m_pullsink_camera03_depth_model.reset();
     }
+    //m_pullsink_camera03_dept2color
 
     // Push handler callback
     if (m_pushsink_camera01_image) {
@@ -160,12 +155,12 @@ bool UbitrackPointCloudConnector::teardown()
     m_pullsink_camera01_pointcloud.reset();
     m_pullsink_camera01_pose.reset();
     m_pullsink_camera01_image_model.reset();
-    m_pullsink_camera01_depth_model.reset();
 
     m_pullsink_camera02_image.reset();
     m_pullsink_camera02_depth.reset();
     m_pullsink_camera02_pointcloud.reset();
     m_pullsink_camera02_pose.reset();
+    m_pullsink_camera02_dept2color.reset();
     m_pullsink_camera02_image_model.reset();
     m_pullsink_camera02_depth_model.reset();
 
@@ -173,6 +168,7 @@ bool UbitrackPointCloudConnector::teardown()
     m_pullsink_camera03_depth.reset();
     m_pullsink_camera03_pointcloud.reset();
     m_pullsink_camera03_pose.reset();
+    m_pullsink_camera03_dept2color.reset();
     m_pullsink_camera03_image_model.reset();
     m_pullsink_camera03_depth_model.reset();
 
@@ -181,13 +177,14 @@ bool UbitrackPointCloudConnector::teardown()
 
 bool UbitrackPointCloudConnector::camera01_get_pointcloud(Ubitrack::Measurement::Timestamp ts, std::shared_ptr<open3d::PointCloud>& cloud)
 {
-    if (!m_have_camera01) {
+    if (!have_camera01()) {
         return false;
     }
     // we need locking here to prevent concurrent access to m_current_camera01_image (when receiving new frame)
     std::unique_lock<std::mutex> ul( m_textureAccessMutex );
 
     try {
+        Ubitrack::Measurement::ImageMeasurement depth_image = m_pullsink_camera01_depth->get(ts);
         Ubitrack::Measurement::PositionList vec3_measurement = m_pullsink_camera01_pointcloud->get(ts);
 
         if ((vec3_measurement) && (!vec3_measurement->empty())) {
@@ -258,7 +255,7 @@ bool UbitrackPointCloudConnector::camera01_get_pointcloud(Ubitrack::Measurement:
 
 bool UbitrackPointCloudConnector::camera02_get_pointcloud(Ubitrack::Measurement::Timestamp ts, std::shared_ptr<open3d::PointCloud>& cloud)
 {
-    if (!m_have_camera02) {
+    if (!have_camera02()) {
         return false;
     }
     // we need locking here to prevent concurrent access to m_current_camera01_image (when receiving new frame)
@@ -337,7 +334,7 @@ bool UbitrackPointCloudConnector::camera02_get_pointcloud(Ubitrack::Measurement:
 
 bool UbitrackPointCloudConnector::camera03_get_pointcloud(Ubitrack::Measurement::Timestamp ts, std::shared_ptr<open3d::PointCloud>& cloud)
 {
-    if (!m_have_camera03) {
+    if (!have_camera03()) {
         return false;
     }
     // we need locking here to prevent concurrent access to m_current_camera01_image (when receiving new frame)

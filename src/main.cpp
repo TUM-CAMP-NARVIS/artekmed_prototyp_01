@@ -126,7 +126,7 @@ int main(int ac, char** av) {
 	catch( std::exception& e )
 	{
 		std::cerr << "Error parsing command line parameters : " << e.what() << std::endl;
-		std::cerr << "Try basicfacade_example --help for help" << std::endl;
+		std::cerr << "Try <executablename> --help for help" << std::endl;
 		return 1;
 	}		
 
@@ -160,7 +160,7 @@ int main(int ac, char** av) {
         int top = 50;
 
 		// configure ubitrack
-		LOG4CPP_INFO( logger, "Initialize Connector." );
+		LOG4CPP_INFO( logger, "Initialize Connector (" << sComponentsPath << ")." );
 		std::shared_ptr<UbitrackPointCloudConnector> connector = std::make_shared<UbitrackPointCloudConnector>( sComponentsPath );
 
 		LOG4CPP_INFO( logger, "Instantiating dataflow network from " << sUtqlFile << "..." );

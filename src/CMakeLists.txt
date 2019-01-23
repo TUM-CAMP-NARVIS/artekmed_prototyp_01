@@ -46,6 +46,7 @@ set(UBITRACK_SRCS
 
 # All header files
 set(UBITRACK_HEADERS
+  "${CMAKE_SOURCE_DIR}/include/artekmed/EigenWrapper.h"
   "${CMAKE_SOURCE_DIR}/include/artekmed/PointCloudProcessing.h"
   "${CMAKE_SOURCE_DIR}/include/artekmed/UbitrackHelpers.h"
   "${CMAKE_SOURCE_DIR}/include/artekmed/UbitrackImage.h"

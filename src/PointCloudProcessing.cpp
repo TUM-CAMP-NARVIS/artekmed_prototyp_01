@@ -4,47 +4,49 @@
 
 #include "artekmed/PointCloudProcessing.h"
 
-/**
 void buildPointCloud(
         const cv::Mat& depth_img_rect,
-        const cv::Mat& intr_rect_ir,
-        open3d::PointCloud& cloud)
+        const Eigen::Matrix3d& intr_rect_ir,
+        open3d::PointCloud& cloud,
+        double depth_scale_factor)
 {
-    int w = depth_img_rect.cols;
-    int h = depth_img_rect.rows;
+    unsigned int w = depth_img_rect.cols;
+    unsigned int h = depth_img_rect.rows;
 
-    double cx = intr_rect_ir.at<double>(0,2);
-    double cy = intr_rect_ir.at<double>(1,2);
-    double fx_inv = 1.0 / intr_rect_ir.at<double>(0,0);
-    double fy_inv = 1.0 / intr_rect_ir.at<double>(1,1);
+    double cx = intr_rect_ir(0,2);
+    double cy = intr_rect_ir(1,2);
+    double fx_inv = 1.0 / intr_rect_ir(0,0);
+    double fy_inv = 1.0 / intr_rect_ir(1,1);
 
-    cloud.resize(w*h);
+    unsigned int num_valid_pixels = w*h;
+
+    auto &points = cloud.points_;
+    auto &colors = cloud.colors_;
+    points.resize(num_valid_pixels);
+    colors.resize(num_valid_pixels);
 
     for (int u = 0; u < w; ++u)
         for (int v = 0; v < h; ++v)
         {
             uint16_t z = depth_img_rect.at<uint16_t>(v, u);
-            PointT& pt = cloud.points[v*w + u];
+            auto& pt = points[v*w + u];
 
             if (z != 0)
             {
-                double z_metric = z * 0.001;
+                double z_metric = z * depth_scale_factor;
 
-                pt.x = z_metric * ((u - cx) * fx_inv);
-                pt.y = z_metric * ((v - cy) * fy_inv);
-                pt.z = z_metric;
+                pt(0) = z_metric * ((u - cx) * fx_inv);
+                pt(1) = z_metric * ((v - cy) * fy_inv);
+                pt(2) = z_metric;
             }
             else
             {
-                pt.x = pt.y = pt.z = std::numeric_limits<float>::quiet_NaN();
+                pt(0) = pt(1) = pt(2) = 0.; //std::numeric_limits<float>::quiet_NaN();
             }
         }
-
-    cloud.width = w;
-    cloud.height = h;
-    cloud.is_dense = true;
 }
 
+/**
 void buildPointCloud(
         const cv::Mat& depth_img_rect_reg,
         const cv::Mat& rgb_img_rect,

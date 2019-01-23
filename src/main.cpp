@@ -195,7 +195,7 @@ int main(int ac, char** av) {
 //			visualizer.setPointCloud3(point_cloud3);
 //		}
 
-		auto origin = open3d::CreateMeshCoordinateFrame(0.1);
+		auto origin = open3d::CreateMeshCoordinateFrame(2.);
         visualizer.AddGeometry(origin);
 
 		visualizer.Run();

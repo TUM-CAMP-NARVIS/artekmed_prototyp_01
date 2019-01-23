@@ -28,6 +28,7 @@ public:
     bool camera02_get_pointcloud(Ubitrack::Measurement::Timestamp ts, std::shared_ptr<open3d::PointCloud>& cloud);
     bool camera03_get_pointcloud(Ubitrack::Measurement::Timestamp ts, std::shared_ptr<open3d::PointCloud>& cloud);
 
+    bool camera01_get_pose(Ubitrack::Measurement::Timestamp ts, Eigen::Matrix4d& transform);
     bool camera02_get_pose(Ubitrack::Measurement::Timestamp ts, Eigen::Matrix4d& transform);
     bool camera03_get_pose(Ubitrack::Measurement::Timestamp ts, Eigen::Matrix4d& transform);
 

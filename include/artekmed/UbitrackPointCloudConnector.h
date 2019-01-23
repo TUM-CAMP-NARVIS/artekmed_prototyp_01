@@ -28,6 +28,9 @@ public:
     bool camera02_get_pointcloud(Ubitrack::Measurement::Timestamp ts, std::shared_ptr<open3d::PointCloud>& cloud);
     bool camera03_get_pointcloud(Ubitrack::Measurement::Timestamp ts, std::shared_ptr<open3d::PointCloud>& cloud);
 
+    bool camera02_get_pose(Ubitrack::Measurement::Timestamp ts, Eigen::Matrix4d& transform);
+    bool camera03_get_pose(Ubitrack::Measurement::Timestamp ts, Eigen::Matrix4d& transform);
+
     // private api (still needs to be public unless we declare friend classes, which is considered to be bad practice.)
     // extend methods to connnect/disconnect sinks
     bool initialize(const std::string& _utql_filename) override;
@@ -36,9 +39,9 @@ public:
     // handlers for push sinks
     void receive_camera01_image(const Ubitrack::Measurement::ImageMeasurement& img);
 
-    bool have_camera01() {return ((m_pushsink_camera01_image) && (m_pullsink_camera01_depth || m_pullsink_camera01_pointcloud) && (m_pullsink_camera01_pose) && (m_pullsink_camera01_image_model));}
-    bool have_camera02() {return ((m_pullsink_camera02_image) && (m_pullsink_camera02_depth || m_pullsink_camera02_pointcloud) && (m_pullsink_camera02_pose) && (m_pullsink_camera02_image_model) && (m_pullsink_camera02_depth_model));}
-    bool have_camera03() {return ((m_pullsink_camera03_image) && (m_pullsink_camera03_depth || m_pullsink_camera03_pointcloud) && (m_pullsink_camera03_pose) && (m_pullsink_camera03_image_model) && (m_pullsink_camera03_depth_model));}
+    bool have_camera01() {return ((m_pushsink_camera01_image) && (m_pullsink_camera01_depth) && (m_pullsink_camera01_pose) && (m_pullsink_camera01_image_model));}
+    bool have_camera02() {return ((m_pullsink_camera02_image) && (m_pullsink_camera02_depth) && (m_pullsink_camera02_pose) && (m_pullsink_camera02_image_model) && (m_pullsink_camera02_depth_model) && (m_pullsink_camera02_depth2color));}
+    bool have_camera03() {return ((m_pullsink_camera03_image) && (m_pullsink_camera03_depth) && (m_pullsink_camera03_pose) && (m_pullsink_camera03_image_model) && (m_pullsink_camera03_depth_model) && (m_pullsink_camera03_depth2color));}
 
 private:
     boost::shared_ptr<Ubitrack::Components::ApplicationPushSinkVisionImage>    m_pushsink_camera01_image;
@@ -51,7 +54,7 @@ private:
     boost::shared_ptr<Ubitrack::Components::ApplicationPullSinkVisionImage>    m_pullsink_camera02_depth;
     boost::shared_ptr<Ubitrack::Components::ApplicationPullSinkPositionList>   m_pullsink_camera02_pointcloud;
     boost::shared_ptr<Ubitrack::Components::ApplicationPullSinkPose>           m_pullsink_camera02_pose;
-    boost::shared_ptr<Ubitrack::Components::ApplicationPullSinkPose>           m_pullsink_camera02_dept2color;
+    boost::shared_ptr<Ubitrack::Components::ApplicationPullSinkPose>           m_pullsink_camera02_depth2color;
     boost::shared_ptr<Ubitrack::Components::ApplicationPullSinkCameraIntrinsics> m_pullsink_camera02_image_model;
     boost::shared_ptr<Ubitrack::Components::ApplicationPullSinkCameraIntrinsics> m_pullsink_camera02_depth_model;
 
@@ -59,7 +62,7 @@ private:
     boost::shared_ptr<Ubitrack::Components::ApplicationPullSinkVisionImage>    m_pullsink_camera03_depth;
     boost::shared_ptr<Ubitrack::Components::ApplicationPullSinkPositionList>   m_pullsink_camera03_pointcloud;
     boost::shared_ptr<Ubitrack::Components::ApplicationPullSinkPose>           m_pullsink_camera03_pose;
-    boost::shared_ptr<Ubitrack::Components::ApplicationPullSinkPose>           m_pullsink_camera03_dept2color;
+    boost::shared_ptr<Ubitrack::Components::ApplicationPullSinkPose>           m_pullsink_camera03_depth2color;
     boost::shared_ptr<Ubitrack::Components::ApplicationPullSinkCameraIntrinsics> m_pullsink_camera03_image_model;
     boost::shared_ptr<Ubitrack::Components::ApplicationPullSinkCameraIntrinsics> m_pullsink_camera03_depth_model;
 

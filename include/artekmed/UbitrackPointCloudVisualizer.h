@@ -33,6 +33,10 @@ protected:
     std::shared_ptr<open3d::PointCloud> ubitrack_camera01_pointcloud_ptr;
     std::shared_ptr<open3d::PointCloud> ubitrack_camera02_pointcloud_ptr;
     std::shared_ptr<open3d::PointCloud> ubitrack_camera03_pointcloud_ptr;
+
+    std::shared_ptr<open3d::Geometry3D> ubitrack_camera02_pose_ptr;
+    std::shared_ptr<open3d::Geometry3D> ubitrack_camera03_pose_ptr;
+
     std::shared_ptr<UbitrackPointCloudConnector> ubitrack_connector_ptr;
 };
 

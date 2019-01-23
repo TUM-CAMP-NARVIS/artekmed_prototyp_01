@@ -47,6 +47,7 @@ set(UBITRACK_SRCS
 # All header files
 set(UBITRACK_HEADERS
   "${CMAKE_SOURCE_DIR}/include/artekmed/PointCloudProcessing.h"
+  "${CMAKE_SOURCE_DIR}/include/artekmed/UbitrackHelpers.h"
   "${CMAKE_SOURCE_DIR}/include/artekmed/UbitrackImage.h"
   "${CMAKE_SOURCE_DIR}/include/artekmed/UbitrackImageShader.h"
   "${CMAKE_SOURCE_DIR}/include/artekmed/UbitrackImageRenderer.h"
@@ -55,7 +56,7 @@ set(UBITRACK_HEADERS
   "${CMAKE_SOURCE_DIR}/include/artekmed/UbitrackVisualizer.h"
   "${CMAKE_SOURCE_DIR}/include/artekmed/UbitrackPointCloudVisualizer.h"
   "${CMAKE_SOURCE_DIR}/include/artekmed/UbitrackViewControl.h"
-)
+        ../include/artekmed/UbitrackHelpers.h)
 
 if(MSVC)
   set(UBITRACK_COMPILE_DEFINITIONS ${UBITRACK_COMPILE_DEFINITIONS} "BOOST_ALL_DYN_LINK")

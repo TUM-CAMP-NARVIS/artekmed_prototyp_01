@@ -95,7 +95,13 @@ bool UbitrackPointCloudConnector::initialize(const std::string& _utql_filename)
         LOG4CPP_ERROR(logger, e.what());
         m_pullsink_camera02_depth_model.reset();
     }
-    // m_pullsink_camera02_dept2color
+    try{
+        m_pullsink_camera02_depth2color = m_utFacade->componentByName<Ubitrack::Components::ApplicationPullSinkPose>("camera02_depth2color");
+    } catch (std::exception &e) {
+        LOG4CPP_ERROR(logger, e.what());
+        m_pullsink_camera02_depth2color.reset();
+    }
+
 
     // Camera3
     try {
@@ -134,7 +140,12 @@ bool UbitrackPointCloudConnector::initialize(const std::string& _utql_filename)
         LOG4CPP_ERROR(logger, e.what());
         m_pullsink_camera03_depth_model.reset();
     }
-    //m_pullsink_camera03_dept2color
+    try{
+        m_pullsink_camera03_depth2color = m_utFacade->componentByName<Ubitrack::Components::ApplicationPullSinkPose>("camera03_depth2color");
+    } catch (std::exception &e) {
+        LOG4CPP_ERROR(logger, e.what());
+        m_pullsink_camera03_depth2color.reset();
+    }
 
     // Push handler callback
     if (m_pushsink_camera01_image) {
@@ -160,7 +171,6 @@ bool UbitrackPointCloudConnector::teardown()
     m_pullsink_camera02_depth.reset();
     m_pullsink_camera02_pointcloud.reset();
     m_pullsink_camera02_pose.reset();
-    m_pullsink_camera02_dept2color.reset();
     m_pullsink_camera02_image_model.reset();
     m_pullsink_camera02_depth_model.reset();
 
@@ -168,7 +178,6 @@ bool UbitrackPointCloudConnector::teardown()
     m_pullsink_camera03_depth.reset();
     m_pullsink_camera03_pointcloud.reset();
     m_pullsink_camera03_pose.reset();
-    m_pullsink_camera03_dept2color.reset();
     m_pullsink_camera03_image_model.reset();
     m_pullsink_camera03_depth_model.reset();
 
@@ -180,12 +189,34 @@ bool UbitrackPointCloudConnector::camera01_get_pointcloud(Ubitrack::Measurement:
     if (!have_camera01()) {
         return false;
     }
+
     // we need locking here to prevent concurrent access to m_current_camera01_image (when receiving new frame)
     std::unique_lock<std::mutex> ul( m_textureAccessMutex );
 
     try {
         Ubitrack::Measurement::ImageMeasurement depth_image = m_pullsink_camera01_depth->get(ts);
         Ubitrack::Measurement::PositionList vec3_measurement = m_pullsink_camera01_pointcloud->get(ts);
+        Ubitrack::Measurement::ImageMeasurement depth_measurement = m_pullsink_camera01_depth->get(ts);
+
+        auto depth_img = depth_measurement->Mat();
+        auto color_img = m_current_camera01_image->Mat();
+
+        auto num_pixels_color = m_current_camera01_image->width() * m_current_camera01_image->height();
+        auto num_pixels_depth = depth_measurement->width() * depth_measurement->height();
+
+        if (num_pixels_color != num_pixels_depth) {
+            LOG4CPP_ERROR(logger, "Color and Depth image for ZED Camera must have the same size!")
+            return false;
+        }
+
+        Ubitrack::Measurement::CameraIntrinsics image_model = m_pullsink_camera01_image_model->get(ts);
+        Ubitrack::Measurement::Pose camera_pose = m_pullsink_camera01_pose->get(ts);
+
+
+
+
+
+
 
         if ((vec3_measurement) && (!vec3_measurement->empty())) {
 
@@ -248,6 +279,43 @@ bool UbitrackPointCloudConnector::camera01_get_pointcloud(Ubitrack::Measurement:
         }
     } catch (std::exception &e) {
         LOG4CPP_WARN(logger, "error retrieving measurement for camera01: " << e.what());
+        return false;
+    }
+
+    return true;
+}
+
+bool UbitrackPointCloudConnector::camera02_get_pose(Ubitrack::Measurement::Timestamp ts, Eigen::Matrix4d &transform) {
+    try {
+        Ubitrack::Measurement::Pose cam2_pose = m_pullsink_camera02_pose->get(ts);
+
+        if (cam2_pose) {
+            Ubitrack::Math::Quaternion rot = cam2_pose->rotation();
+            Ubitrack::Math::Vector3d trans = cam2_pose->translation();
+
+            // ubitrack: rw, rx, ry, rz
+            // eigen: x, y, z, w
+            Eigen::Quaternion<double> rotation(rot.w(), rot.x(), rot.y(), rot.z());
+
+            Eigen::Vector3d position;
+            position(0) = trans(0);
+            position(1) = trans(1);
+            position(2) = trans(2);
+
+            Eigen::Matrix4d t;
+            t.setIdentity();
+            t.topLeftCorner<3,3>() = rotation.toRotationMatrix();
+            t.topRightCorner<3,1>() = position;
+
+            transform = t;
+
+        } else {
+            LOG4CPP_WARN(logger, "Error getting camera2 pose");
+            return false;
+        }
+
+    } catch (std::exception &e) {
+        LOG4CPP_WARN(logger, "error retrieving pose for camera02: " << e.what());
         return false;
     }
     return true;
@@ -329,6 +397,47 @@ bool UbitrackPointCloudConnector::camera02_get_pointcloud(Ubitrack::Measurement:
         return false;
     }
 
+//    Eigen::Matrix4d transform;
+//    if (camera02_get_pose(ts, transform)) {
+//        cloud->Transform(transform);
+//    }
+
+    return true;
+}
+
+bool UbitrackPointCloudConnector::camera03_get_pose(Ubitrack::Measurement::Timestamp ts, Eigen::Matrix4d &transform) {
+    try {
+        Ubitrack::Measurement::Pose cam3_pose = m_pullsink_camera03_pose->get(ts);
+
+        if (cam3_pose) {
+            Ubitrack::Math::Quaternion rot = cam3_pose->rotation();
+            Ubitrack::Math::Vector3d trans = cam3_pose->translation();
+
+            // ubitrack: rw, rx, ry, rz
+            // eigen: x, y, z, w
+            Eigen::Quaternion<double> rotation(rot.w(), rot.x(), rot.y(), rot.z());
+
+            Eigen::Vector3d position;
+            position(0) = trans(0);
+            position(1) = trans(1);
+            position(2) = trans(2);
+
+            Eigen::Matrix4d t;
+            t.setIdentity();
+            t.topLeftCorner<3,3>() = rotation.toRotationMatrix();
+            t.topRightCorner<3,1>() = position;
+
+            transform = t;
+
+        } else {
+            LOG4CPP_WARN(logger, "Error getting camera3 pose");
+            return false;
+        }
+
+    } catch (std::exception &e) {
+        LOG4CPP_WARN(logger, "error retrieving pose for camera03: " << e.what());
+        return false;
+    }
     return true;
 }
 
@@ -407,6 +516,11 @@ bool UbitrackPointCloudConnector::camera03_get_pointcloud(Ubitrack::Measurement:
         LOG4CPP_WARN(logger, "error retrieving measurement for camera03: " << e.what());
         return false;
     }
+
+//    Eigen::Matrix4d transform;
+//    if (camera03_get_pose(ts, transform)) {
+//        cloud->Transform(transform);
+//    }
 
     return true;
 }

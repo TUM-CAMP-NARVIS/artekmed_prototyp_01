@@ -2,6 +2,9 @@
 // Created by Ulrich Eck on 15.03.18.
 //
 
+#include <Core/Core.h>
+#include <IO/IO.h>
+#include <Visualization/Visualization.h>
 
 #include "artekmed/UbitrackPointCloudVisualizer.h"
 #include "artekmed/UbitrackViewControl.h"
@@ -91,6 +94,7 @@ void UbitrackPointCloudVisualizer::SetUbitrackConnector(std::shared_ptr<Ubitrack
                 if (connector->have_camera01()) {
                     // transfer camera1_image to opengl texture
                     if (ubitrack_camera01_pointcloud_ptr) {
+
                         if (connector->camera01_get_pointcloud(ts, ubitrack_camera01_pointcloud_ptr)) {
                             view_control->FitInGeometry(*ubitrack_camera01_pointcloud_ptr);
                             needs_update = true;
@@ -100,29 +104,49 @@ void UbitrackPointCloudVisualizer::SetUbitrackConnector(std::shared_ptr<Ubitrack
                     }
                 }
 
-                if (connector->have_camera02()) {
-                    // transfer camera2_image to opengl texture
-                    if (ubitrack_camera02_pointcloud_ptr) {
-                        if (connector->camera02_get_pointcloud(ts, ubitrack_camera02_pointcloud_ptr)) {
-                            view_control->FitInGeometry(*ubitrack_camera02_pointcloud_ptr);
-                            needs_update = true;
-                        } else {
-                            LOG4CPP_WARN(logger, "error retrieving camera image.");
-                        }
-                    }
-                }
+//                if (connector->have_camera02()) {
+//                    if (!ubitrack_camera02_pose_ptr) {
+//                        Eigen::Matrix4d transform;
+//                        if (connector->camera02_get_pose(ts, transform)) {
+//                            auto mesh = open3d::CreateMeshCoordinateFrame(0.1);
+//                            mesh->Transform(transform);
+//                            ubitrack_camera02_pose_ptr = mesh;
+//                            AddGeometry(mesh);
+//                        }
+//                    }
+//
+//                    // transfer camera2_image to opengl texture
+//                    if (ubitrack_camera02_pointcloud_ptr) {
+//                        if (connector->camera02_get_pointcloud(ts, ubitrack_camera02_pointcloud_ptr)) {
+//                            view_control->FitInGeometry(*ubitrack_camera02_pointcloud_ptr);
+//                            needs_update = true;
+//                        } else {
+//                            LOG4CPP_WARN(logger, "error retrieving camera image.");
+//                        }
+//                    }
+//                }
 
-                if (connector->have_camera03()) {
-                    // transfer camera1_image to opengl texture
-                    if (ubitrack_camera03_pointcloud_ptr) {
-                        if (connector->camera03_get_pointcloud(ts, ubitrack_camera03_pointcloud_ptr)) {
-                            view_control->FitInGeometry(*ubitrack_camera03_pointcloud_ptr);
-                            needs_update = true;
-                        } else {
-                            LOG4CPP_WARN(logger, "error retrieving camera image.");
-                        }
-                    }
-                }
+//                if (connector->have_camera03()) {
+//                    if (!ubitrack_camera03_pose_ptr) {
+//                        Eigen::Matrix4d transform;
+//                        if (connector->camera03_get_pose(ts, transform)) {
+//                            auto mesh = open3d::CreateMeshCoordinateFrame(0.1);
+//                            mesh->Transform(transform);
+//                            ubitrack_camera03_pose_ptr = mesh;
+//                            AddGeometry(mesh);
+//                        }
+//                    }
+//
+//                    // transfer camera1_image to opengl texture
+//                    if (ubitrack_camera03_pointcloud_ptr) {
+//                        if (connector->camera03_get_pointcloud(ts, ubitrack_camera03_pointcloud_ptr)) {
+//                            view_control->FitInGeometry(*ubitrack_camera03_pointcloud_ptr);
+//                            needs_update = true;
+//                        } else {
+//                            LOG4CPP_WARN(logger, "error retrieving camera image.");
+//                        }
+//                    }
+//                }
 
                 // things have changed, notify renderer
                 UpdateWindowTitle();

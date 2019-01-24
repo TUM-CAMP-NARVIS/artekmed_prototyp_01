@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<UTQLResponse name="artekmed_rs_recorder" xsi:schemaLocation="http://ar.in.tum.de/ubitrack/utql http://ar.in.tum.de/files/ubitrack/utql/utql_types.xsd" xmlns="http://ar.in.tum.de/ubitrack/utql" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <Pattern name="RealsenseD435Camera" id="pattern_19">
+        <Output>
+            <Node name="IRImagePlaneRight">
+                <GuiPos x="394" y="212"/>
+            </Node>
+            <Node name="ColorCamera" id="node_20">
+                <GuiPos x="1124" y="42"/>
+            </Node>
+            <Node name="IRCameraRight">
+                <GuiPos x="494" y="32"/>
+            </Node>
+            <Node name="PointCloud" id="node_9">
+                <GuiPos x="1094" y="432"/>
+            </Node>
+            <Node name="IRCameraLeft" displayName="CameraRS1Left" id="node_19">
+                <GuiPos x="859" y="72"/>
+            </Node>
+            <Node name="ColorImagePlane" id="node_21">
+                <GuiPos x="1324" y="352"/>
+            </Node>
+            <Node name="IRImagePlaneLeft" id="node_12">
+                <GuiPos x="654" y="442"/>
+            </Node>
+            <Edge name="ColorImageOutput" source="ColorCamera" destination="ColorImagePlane">
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="type" value="Image" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="mode" value="push" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+            </Edge>
+            <Edge name="IRLeftImageOutput" source="IRCameraLeft" destination="IRImagePlaneLeft">
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="type" value="Image" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="mode" value="push" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+            </Edge>
+            <Edge name="IRRightIntrinsics" source="IRCameraRight" destination="IRImagePlaneRight">
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="type" value="3x3Matrix" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="mode" value="pull" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+            </Edge>
+            <Edge name="ColorIntrinsics" source="ColorCamera" destination="ColorImagePlane">
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="type" value="3x3Matrix" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="mode" value="pull" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+            </Edge>
+            <Edge name="DepthImageOutput" source="IRCameraLeft" destination="IRImagePlaneLeft">
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="type" value="Image" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="mode" value="push" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+            </Edge>
+            <Edge name="PointCloudOutput" source="IRCameraLeft" destination="PointCloud">
+                <GuiLandmark x="953" y="153"/>
+                <GuiLabelPos x="1214" y="197"/>
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="type" value="3DPositionList" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="mode" value="push" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+            </Edge>
+            <Edge name="LeftToRightTransform" source="IRCameraLeft" destination="IRCameraRight">
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="type" value="6D" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="mode" value="pull" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+            </Edge>
+            <Edge name="IRLeftCameraModel" source="IRCameraLeft" destination="IRImagePlaneLeft">
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="type" value="Intrinsics" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="mode" value="pull" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+            </Edge>
+            <Edge name="ColorCameraModel" source="ColorCamera" destination="ColorImagePlane">
+                <GuiLandmark x="1195" y="196"/>
+                <GuiLabelPos x="1314" y="236"/>
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="type" value="Intrinsics" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="mode" value="pull" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+            </Edge>
+            <Edge name="LeftToColorTransform" source="IRCameraLeft" destination="ColorCamera">
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="type" value="6D" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="mode" value="pull" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+            </Edge>
+            <Edge name="IRLeftIntrinsics" source="IRCameraLeft" destination="IRImagePlaneLeft">
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="type" value="3x3Matrix" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="mode" value="pull" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+            </Edge>
+            <Edge name="IRRightImageOutput" source="IRCameraRight" destination="IRImagePlaneRight">
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="type" value="Image" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="mode" value="push" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+            </Edge>
+            <Edge name="RightCameraModel" source="IRCameraRight" destination="IRImagePlaneRight">
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="type" value="Intrinsics" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="mode" value="pull" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+            </Edge>
+        </Output>
+        <DataflowConfiguration>
+            <UbitrackLib class="RealsenseCamera"/>
+            <Attribute xsi:type="utql:PrimitiveAttributeType" name="rsSerialNumber" value="7.52112070394E11" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+            <Attribute xsi:type="utql:PrimitiveAttributeType" name="rsColorVideoStreamFormat" value="BGRA8" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+            <Attribute xsi:type="utql:PrimitiveAttributeType" name="rsColorVideoResolution" value="1280x720" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+            <Attribute xsi:type="utql:PrimitiveAttributeType" name="rsInfraredVideoStreamFormat" value="Y8" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+            <Attribute xsi:type="utql:PrimitiveAttributeType" name="rsDepthResolution" value="848x480" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+            <Attribute xsi:type="utql:PrimitiveAttributeType" name="rsFrameRate" value="30" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+            <Attribute xsi:type="utql:PrimitiveAttributeType" name="rsLaserPower" value="150" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+            <Attribute xsi:type="utql:PrimitiveAttributeType" name="rsInfraredGain" value="16" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+            <Attribute xsi:type="utql:PrimitiveAttributeType" name="rsEmitterEnabled" value="1" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+            <Attribute xsi:type="utql:PrimitiveAttributeType" name="uploadImageOnGPU" value="false" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+            <Attribute xsi:type="utql:PrimitiveAttributeType" name="trackman-guipos" value="120 0" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+        </DataflowConfiguration>
+    </Pattern>
+    <Pattern name="BackgroundImage" id="pattern_34">
+        <Input>
+            <Node name="ImagePlane" id="node_12">
+                <GuiPos x="654" y="442"/>
+            </Node>
+            <Node name="Camera" id="node_19">
+                <GuiPos x="859" y="72"/>
+            </Node>
+            <Edge name="Image1" source="Camera" destination="ImagePlane" pattern-ref="pattern_19" edge-ref="IRLeftImageOutput">
+                <GuiLandmark x="576" y="706"/>
+                <GuiLabelPos x="596" y="739"/>
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="type" value="Image" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="mode" value="push" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+            </Edge>
+        </Input>
+        <DataflowConfiguration>
+            <UbitrackLib class="BackgroundImage"/>
+            <Attribute xsi:type="utql:PrimitiveAttributeType" name="useTexture" value="true" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+            <Attribute xsi:type="utql:PrimitiveAttributeType" name="trackman-guipos" value="0 170" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+        </DataflowConfiguration>
+    </Pattern>
+    <Pattern name="BackgroundImage" id="pattern_35">
+        <Input>
+            <Node name="ImagePlane" id="node_21">
+                <GuiPos x="1324" y="352"/>
+            </Node>
+            <Node name="Camera" id="node_20">
+                <GuiPos x="1124" y="42"/>
+            </Node>
+            <Edge name="Image1" source="Camera" destination="ImagePlane" pattern-ref="pattern_19" edge-ref="ColorImageOutput">
+                <GuiLandmark x="958" y="655"/>
+                <GuiLabelPos x="978" y="688"/>
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="type" value="Image" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="mode" value="push" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+            </Edge>
+        </Input>
+        <DataflowConfiguration>
+            <UbitrackLib class="BackgroundImage"/>
+            <Attribute xsi:type="utql:PrimitiveAttributeType" name="useTexture" value="true" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+            <Attribute xsi:type="utql:PrimitiveAttributeType" name="trackman-guipos" value="230 170" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+        </DataflowConfiguration>
+    </Pattern>
+</UTQLResponse>

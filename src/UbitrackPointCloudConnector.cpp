@@ -225,7 +225,7 @@ bool UbitrackPointCloudConnector::camera01_get_pointcloud(Ubitrack::Measurement:
 
     try {
         Ubitrack::Measurement::ImageMeasurement depth_image = m_pullsink_camera01_depth->get(ts);
-        Ubitrack::Measurement::PositionList vec3_measurement = m_pullsink_camera01_pointcloud->get(ts);
+//        Ubitrack::Measurement::PositionList vec3_measurement = m_pullsink_camera01_pointcloud->get(ts);
         Ubitrack::Measurement::CameraIntrinsics image_model = m_pullsink_camera01_image_model->get(ts);
         Ubitrack::Measurement::Pose camera_pose = m_pullsink_camera01_pose->get(ts);
 
@@ -240,14 +240,14 @@ bool UbitrackPointCloudConnector::camera01_get_pointcloud(Ubitrack::Measurement:
             return false;
         }
 
-        if ((depth_image->pixelFormat() != Ubitrack::Vision::Image::DEPTH) || (depth_image->bitsPerPixel() != 16)) {
+        if ((depth_image->pixelFormat() != Ubitrack::Vision::Image::DEPTH) || (depth_image->bitsPerPixel() != 32)) {
             LOG4CPP_ERROR(logger, "unsupported depth format - need DEPTH / UINT16!")
             return false;
         }
 
         Eigen::Matrix3d intrinsics = Ubitrack::Math::Wrapper::EigenMatrixCast().to_eigen<double, 3, 3>(image_model->matrix);
 
-//        buildPointCloud(depth_img, intrinsics, *cloud, 0.001);
+        buildPointCloudZED(depth_img, color_img, intrinsics, *cloud, 0.001);
 
 //        if ((vec3_measurement) && (!vec3_measurement->empty())) {
 //
@@ -352,68 +352,118 @@ bool UbitrackPointCloudConnector::camera02_get_pointcloud(Ubitrack::Measurement:
     std::unique_lock<std::mutex> ul( m_textureAccessMutex );
 
     try {
-        Ubitrack::Measurement::PositionList vec3_measurement = m_pullsink_camera02_pointcloud->get(ts);
-        Ubitrack::Measurement::ImageMeasurement img_measurement = m_pullsink_camera02_image->get(ts);
+        Ubitrack::Measurement::ImageMeasurement color_image = m_pullsink_camera02_image->get(ts);
+        Ubitrack::Measurement::ImageMeasurement depth_image = m_pullsink_camera02_depth->get(ts);
+//        Ubitrack::Measurement::PositionList vec3_measurement = m_pullsink_camera02_pointcloud->get(ts);
+        Ubitrack::Measurement::CameraIntrinsics image_model = m_pullsink_camera02_image_model->get(ts);
+        Ubitrack::Measurement::CameraIntrinsics depth_model = m_pullsink_camera02_depth_model->get(ts);
+        Ubitrack::Measurement::Pose camera_pose = m_pullsink_camera02_pose->get(ts);
+        Ubitrack::Measurement::Pose camera_depth2color = m_pullsink_camera02_depth2color->get(ts);
 
-        if ((vec3_measurement) && (!vec3_measurement->empty()) && (img_measurement)) {
+        Eigen::Matrix4d origin_tf;
+        {
+            Eigen::Quaternion<double> rotation = Ubitrack::Math::Wrapper::EigenQuaternionCast().to_eigen(camera_pose->rotation());
+            Eigen::Vector3d position = Ubitrack::Math::Wrapper::EigenVectorCast().to_eigen<double, 3>(camera_pose->translation());
 
-            size_t num_valid_pixels = vec3_measurement->size();
+            origin_tf.setIdentity();
+            origin_tf.topLeftCorner<3,3>() = rotation.toRotationMatrix();
+            origin_tf.topRightCorner<3,1>() = position;
+        }
 
-            auto img = img_measurement->Mat();
+        Eigen::Matrix4d depth2color_tf;
+        {
+            Eigen::Quaternion<double> rotation = Ubitrack::Math::Wrapper::EigenQuaternionCast().to_eigen(camera_depth2color->rotation());
+            Eigen::Vector3d position = Ubitrack::Math::Wrapper::EigenVectorCast().to_eigen<double, 3>(camera_depth2color->translation());
 
-            Ubitrack::Vision::Image::PixelFormat fmt = img_measurement->pixelFormat();
-            if ((fmt == Ubitrack::Vision::Image::BGRA) || (fmt == Ubitrack::Vision::Image::RGBA)) {
+            depth2color_tf.setIdentity();
+            depth2color_tf.topLeftCorner<3,3>() = rotation.toRotationMatrix();
+            depth2color_tf.topRightCorner<3,1>() = position;
+        }
 
-                auto& points = cloud->points_;
-                auto& colors = cloud->colors_;
-                const auto& pointcloud = *vec3_measurement;
+        auto depth_img = depth_image->Mat();
+        auto color_img = color_image->Mat();
 
-                points.resize(num_valid_pixels);
-                colors.resize(num_valid_pixels);
+        auto num_pixels_color = color_image->width() * color_image->height();
+        auto num_pixels_depth = depth_image->width() * depth_image->height();
 
-                int cnt = 0;
-                for (int i = 0; i < img_measurement->height(); i++) {
-                    for (int j = 0; j < img_measurement->width(); j++) {
-                        if (cnt < num_valid_pixels) {
-                            cv::Vec4b pixel = img.at<cv::Vec4b>(i, j);
-                            auto& p = pointcloud.at(cnt);
-                            points[cnt] = Eigen::Vector3d(p(0), p(1), p(2));
-                            if (fmt == Ubitrack::Vision::Image::BGRA) {
-                                colors[cnt++] = Eigen::Vector3d(pixel.val[2], pixel.val[1], pixel.val[0]) / 255.;
-                            } else {
-                                colors[cnt++] = Eigen::Vector3d(pixel.val[0], pixel.val[1], pixel.val[2]) / 255.;
-                            }
-                        }
-                    }
-                }
-            } else  if (fmt == Ubitrack::Vision::Image::LUMINANCE) {
-
-                auto& points = cloud->points_;
-                auto& colors = cloud->colors_;
-                const auto& pointcloud = *vec3_measurement;
-
-                points.resize(num_valid_pixels);
-                colors.resize(num_valid_pixels);
-
-                int cnt = 0;
-                for (int i = 0; i < m_current_camera01_image->height(); i++) {
-                    for (int j = 0; j < m_current_camera01_image->width(); j++) {
-                        if (cnt < num_valid_pixels) {
-                            uchar pixel = img.at<uchar>(i, j);
-                            auto& p = pointcloud.at(cnt);
-                            points[cnt] = Eigen::Vector3d(p(0), p(1), p(2));
-                            colors[cnt++] = Eigen::Vector3d(pixel, pixel, pixel) / 255.;
-                        }
-                    }
-                }
-            } else {
-                LOG4CPP_WARN( logger, "unknown image format: " << fmt);
-                return false;
-            }
-        } else {
-            LOG4CPP_WARN( logger, "no pointcloud measurement received");
+        if (num_pixels_color != num_pixels_depth) {
+            LOG4CPP_ERROR(logger, "Color and Depth image for ZED Camera must have the same size!")
             return false;
         }
+
+        if ((depth_image->pixelFormat() != Ubitrack::Vision::Image::DEPTH) || (depth_image->bitsPerPixel() != 16)) {
+            LOG4CPP_ERROR(logger, "unsupported depth format - need DEPTH / UINT16!")
+            return false;
+        }
+
+        Eigen::Matrix3d intrinsics_color = Ubitrack::Math::Wrapper::EigenMatrixCast().to_eigen<double, 3, 3>(image_model->matrix);
+        Eigen::Matrix3d intrinsics_depth = Ubitrack::Math::Wrapper::EigenMatrixCast().to_eigen<double, 3, 3>(depth_model->matrix);
+
+        buildPointCloudRS(depth_img, color_img, intrinsics_depth, intrinsics_color, depth2color_tf, *cloud, 0.001);
+
+
+//        Ubitrack::Measurement::PositionList vec3_measurement = m_pullsink_camera02_pointcloud->get(ts);
+//        Ubitrack::Measurement::ImageMeasurement img_measurement = m_pullsink_camera02_image->get(ts);
+//
+//        if ((vec3_measurement) && (!vec3_measurement->empty()) && (img_measurement)) {
+//
+//            size_t num_valid_pixels = vec3_measurement->size();
+//
+//            auto img = img_measurement->Mat();
+//
+//            Ubitrack::Vision::Image::PixelFormat fmt = img_measurement->pixelFormat();
+//            if ((fmt == Ubitrack::Vision::Image::BGRA) || (fmt == Ubitrack::Vision::Image::RGBA)) {
+//
+//                auto& points = cloud->points_;
+//                auto& colors = cloud->colors_;
+//                const auto& pointcloud = *vec3_measurement;
+//
+//                points.resize(num_valid_pixels);
+//                colors.resize(num_valid_pixels);
+//
+//                int cnt = 0;
+//                for (int i = 0; i < img_measurement->height(); i++) {
+//                    for (int j = 0; j < img_measurement->width(); j++) {
+//                        if (cnt < num_valid_pixels) {
+//                            cv::Vec4b pixel = img.at<cv::Vec4b>(i, j);
+//                            auto& p = pointcloud.at(cnt);
+//                            points[cnt] = Eigen::Vector3d(p(0), p(1), p(2));
+//                            if (fmt == Ubitrack::Vision::Image::BGRA) {
+//                                colors[cnt++] = Eigen::Vector3d(pixel.val[2], pixel.val[1], pixel.val[0]) / 255.;
+//                            } else {
+//                                colors[cnt++] = Eigen::Vector3d(pixel.val[0], pixel.val[1], pixel.val[2]) / 255.;
+//                            }
+//                        }
+//                    }
+//                }
+//            } else  if (fmt == Ubitrack::Vision::Image::LUMINANCE) {
+//
+//                auto& points = cloud->points_;
+//                auto& colors = cloud->colors_;
+//                const auto& pointcloud = *vec3_measurement;
+//
+//                points.resize(num_valid_pixels);
+//                colors.resize(num_valid_pixels);
+//
+//                int cnt = 0;
+//                for (int i = 0; i < m_current_camera01_image->height(); i++) {
+//                    for (int j = 0; j < m_current_camera01_image->width(); j++) {
+//                        if (cnt < num_valid_pixels) {
+//                            uchar pixel = img.at<uchar>(i, j);
+//                            auto& p = pointcloud.at(cnt);
+//                            points[cnt] = Eigen::Vector3d(p(0), p(1), p(2));
+//                            colors[cnt++] = Eigen::Vector3d(pixel, pixel, pixel) / 255.;
+//                        }
+//                    }
+//                }
+//            } else {
+//                LOG4CPP_WARN( logger, "unknown image format: " << fmt);
+//                return false;
+//            }
+//        } else {
+//            LOG4CPP_WARN( logger, "no pointcloud measurement received");
+//            return false;
+//        }
     } catch (std::exception &e) {
         LOG4CPP_WARN(logger, "error retrieving measurement for camera02: " << e.what());
         return false;

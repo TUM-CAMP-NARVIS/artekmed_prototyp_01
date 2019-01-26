@@ -4,8 +4,9 @@
 
 #include "artekmed/PointCloudProcessing.h"
 
-void buildPointCloud(
+void buildPointCloudZED(
         const cv::Mat& depth_img_rect,
+        const cv::Mat& color_img_rect,
         const Eigen::Matrix3d& intr_rect_ir,
         open3d::PointCloud& cloud,
         double depth_scale_factor)
@@ -13,8 +14,58 @@ void buildPointCloud(
     unsigned int w = depth_img_rect.cols;
     unsigned int h = depth_img_rect.rows;
 
-    double cx = intr_rect_ir(0,2);
-    double cy = intr_rect_ir(1,2);
+    double cx = -intr_rect_ir(0,2);
+    double cy = -intr_rect_ir(1,2);
+    double fx_inv = 1.0 / intr_rect_ir(0,0);
+    double fy_inv = 1.0 / intr_rect_ir(1,1);
+
+    unsigned int num_valid_pixels = w*h;
+
+    auto &points = cloud.points_;
+    auto &colors = cloud.colors_;
+    points.resize(num_valid_pixels);
+    colors.resize(num_valid_pixels);
+
+    for (int u = 0; u < w; ++u)
+        for (int v = 0; v < h; ++v)
+        {
+            float z = depth_img_rect.at<float>(v, u);
+            cv::Vec4b pixel = color_img_rect.at<cv::Vec4b>(v, u);
+
+            auto& pt = points[v*w + u];
+
+            if ((z != 0) && (!isnan(z)))
+            {
+                double z_metric = z * depth_scale_factor;
+
+                pt(0) = z_metric * ((u - cx) * fx_inv);
+                pt(1) = z_metric * ((v - cy) * fy_inv);
+                pt(2) = z_metric;
+
+                colors[v*w + u] = Eigen::Vector3d(pixel.val[2], pixel.val[1], pixel.val[0]) / 255.;
+            }
+            else
+            {
+                pt(0) = pt(1) = pt(2) = 0.; //std::numeric_limits<float>::quiet_NaN();
+            }
+        }
+}
+
+
+void buildPointCloudRS(
+        const cv::Mat& depth_img_rect,
+        const cv::Mat& color_img_rect,
+        const Eigen::Matrix3d& intr_rect_ir,
+        const Eigen::Matrix3d& intr_rect_co,
+        const Eigen::Matrix4d& depth2color_tf,
+        open3d::PointCloud& cloud,
+        double depth_scale_factor)
+{
+    unsigned int w = depth_img_rect.cols;
+    unsigned int h = depth_img_rect.rows;
+
+    double cx = -intr_rect_ir(0,2);
+    double cy = -intr_rect_ir(1,2);
     double fx_inv = 1.0 / intr_rect_ir(0,0);
     double fy_inv = 1.0 / intr_rect_ir(1,1);
 
@@ -29,6 +80,8 @@ void buildPointCloud(
         for (int v = 0; v < h; ++v)
         {
             uint16_t z = depth_img_rect.at<uint16_t>(v, u);
+//            cv::Vec4b pixel = color_img_rect.at<cv::Vec4b>(v, u);
+
             auto& pt = points[v*w + u];
 
             if (z != 0)
@@ -38,6 +91,8 @@ void buildPointCloud(
                 pt(0) = z_metric * ((u - cx) * fx_inv);
                 pt(1) = z_metric * ((v - cy) * fy_inv);
                 pt(2) = z_metric;
+
+//                colors[v*w + u] = Eigen::Vector3d(pixel.val[2], pixel.val[1], pixel.val[0]) / 255.;
             }
             else
             {
@@ -45,6 +100,7 @@ void buildPointCloud(
             }
         }
 }
+
 
 /**
 void buildPointCloud(

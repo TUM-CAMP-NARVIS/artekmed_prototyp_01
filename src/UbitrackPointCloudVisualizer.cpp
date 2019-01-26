@@ -104,27 +104,28 @@ void UbitrackPointCloudVisualizer::SetUbitrackConnector(std::shared_ptr<Ubitrack
                     }
                 }
 
-//                if (connector->have_camera02()) {
-//                    if (!ubitrack_camera02_pose_ptr) {
-//                        Eigen::Matrix4d transform;
-//                        if (connector->camera02_get_pose(ts, transform)) {
-//                            auto mesh = open3d::CreateMeshCoordinateFrame(0.1);
-//                            mesh->Transform(transform);
-//                            ubitrack_camera02_pose_ptr = mesh;
-//                            AddGeometry(mesh);
-//                        }
-//                    }
-//
-//                    // transfer camera2_image to opengl texture
-//                    if (ubitrack_camera02_pointcloud_ptr) {
-//                        if (connector->camera02_get_pointcloud(ts, ubitrack_camera02_pointcloud_ptr)) {
-//                            view_control->FitInGeometry(*ubitrack_camera02_pointcloud_ptr);
-//                            needs_update = true;
-//                        } else {
-//                            LOG4CPP_WARN(logger, "error retrieving camera image.");
-//                        }
-//                    }
-//                }
+                if (connector->have_camera02()) {
+                    if (!ubitrack_camera02_pose_ptr) {
+                        Eigen::Matrix4d transform;
+                        if (connector->camera02_get_pose(ts, transform)) {
+                            auto mesh = open3d::CreateMeshCoordinateFrame(1.);
+                            mesh->Transform(transform);
+                            ubitrack_camera02_pose_ptr = mesh;
+                            AddGeometry(mesh);
+                            needs_update = true;
+                        }
+                    }
+
+                    // transfer camera2_image to opengl texture
+                    if (ubitrack_camera02_pointcloud_ptr) {
+                        if (connector->camera02_get_pointcloud(ts, ubitrack_camera02_pointcloud_ptr)) {
+                            view_control->FitInGeometry(*ubitrack_camera02_pointcloud_ptr);
+                            needs_update = true;
+                        } else {
+                            LOG4CPP_WARN(logger, "error retrieving camera image.");
+                        }
+                    }
+                }
 
 //                if (connector->have_camera03()) {
 //                    if (!ubitrack_camera03_pose_ptr) {

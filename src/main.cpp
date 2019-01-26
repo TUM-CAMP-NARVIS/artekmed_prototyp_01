@@ -49,6 +49,12 @@
 #include <functional>
 #include <vector>
 
+#include <boost/thread.hpp>
+#include <boost/program_options.hpp>
+#include <boost/scoped_ptr.hpp>
+#include <boost/interprocess/sync/scoped_lock.hpp>
+
+
 #include <GL/glew.h>
 
 // open3d includes
@@ -72,8 +78,6 @@
 #include <log4cpp/PatternLayout.hh>
 #include <log4cpp/Category.hh>
 #include <log4cpp/PropertyConfigurator.hh>
-
-#include <boost/program_options.hpp>
 
 
 
@@ -141,8 +145,15 @@ int main(int ac, char** av) {
 	log4cpp::Category::getRoot().setPriority( log4cpp::Priority::INFO ); // default: INFO
 	log4cpp::Category::getInstance( "Ubitrack.Events" ).setPriority( log4cpp::Priority::NOTICE ); // default: NOTICE
 
+
+
     artekmed::UbitrackPointCloudVisualizer visualizer;
 
+    // initialize GLFW
+    if (!visualizer.InitGLFW()) {
+		LOG4CPP_ERROR( logger, "Unable to initialize GLFW." );
+		return 1;
+    }
 
 	LOG4CPP_INFO( logger, "Starting Basic Facade Demo demo" );
 	try

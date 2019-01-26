@@ -72,6 +72,14 @@ Visualizer::~Visualizer()
     glfwTerminate();    // to be safe
 }
 
+bool Visualizer::InitGLFW() {
+    if (!GLFWEnvironmentSingleton::InitGLFW()) {
+        PrintError("Failed to initialize GLFW\n");
+        return false;
+    }
+    return true;
+}
+
 bool Visualizer::CreateVisualizerWindow(const std::string &window_name/* = "Open3D"*/,
         const int width/* = 640*/, const int height/* = 480*/,
         const int left/* = 50*/, const int top/* = 50*/, const bool visible/* = true*/)
@@ -93,8 +101,7 @@ bool Visualizer::CreateVisualizerWindow(const std::string &window_name/* = "Open
     }
 
     glfwSetErrorCallback(GLFWEnvironmentSingleton::GLFWErrorCallback);
-    if (!GLFWEnvironmentSingleton::InitGLFW()) {
-        PrintError("Failed to initialize GLFW\n");
+    if (!InitGLFW()) {
         return false;
     }
 
@@ -205,6 +212,8 @@ void Visualizer::DestroyVisualizerWindow()
 {
     is_initialized_ = false;
     glfwDestroyWindow(window_);
+    GetRenderManager().teardown();
+
 }
 
 void Visualizer::RegisterAnimationCallback(
@@ -223,7 +232,82 @@ bool Visualizer::InitViewControl()
 bool Visualizer::InitRenderOption()
 {
     render_option_ptr_ = std::unique_ptr<RenderOption>(new RenderOption);
+    render_option_ptr_->image_stretch_option_ = RenderOption::ImageStretchOption::StretchWithWindow;
     return true;
+}
+
+
+bool Visualizer::SetupRenderManager() {
+    // create and register render manager
+    GetRenderManager().setup();
+    is_renderermanager_initialized = true;
+    return true;
+}
+
+
+void Visualizer::RenderManagerStep( Ubitrack::Visualization::RenderManager& manager) {
+        boost::shared_ptr<Ubitrack::Visualization::CameraHandle> cam;
+        boost::shared_ptr<Ubitrack::Visualization::GLFWWindowImpl> win;
+        while (manager.need_setup()) {
+            cam = manager.setup_pop_front();
+            PrintDebug("Camera setup: %s\n", cam->title());
+            win.reset(new Ubitrack::Visualization::GLFWWindowImpl(cam->initial_width(),
+                                         cam->initial_height(),
+                                         cam->title()));
+
+            // XXX can this be simplified ??
+            boost::shared_ptr<Ubitrack::Visualization::VirtualWindow> win_ = boost::dynamic_pointer_cast<Ubitrack::Visualization::VirtualWindow>(win);
+            if (!cam->setup(win_)) {
+                manager.setup_push_back(cam);
+            } else {
+                win->initGL(cam);
+#ifdef WIN32
+                Util::sleep(30);
+#endif
+//                windows_opened++;
+            }
+            glfwPollEvents();
+        }
+
+    std::vector< unsigned int > chToDelete;
+    auto pos = manager.cameras_begin();
+    auto end = manager.cameras_end();
+    int ellapsed_time = (int)(glfwGetTime() * 1000.);
+    while ( pos != end ) {
+        bool is_valid = false;
+        if (pos->second) {
+            cam = pos->second;
+            if (cam->get_window()) {
+                win = boost::dynamic_pointer_cast<Ubitrack::Visualization::GLFWWindowImpl>(cam->get_window());
+                if ((win) && (win->is_valid())) {
+                    win->pre_render();
+//							cam->pre_render();
+                    cam->render(ellapsed_time);
+                    //cam->post_render(); ??
+                    is_valid = true;
+                    win->post_render();  // make this loop through all current windows??
+                    //CheckForGLErrors("Render Error");
+                }
+            }
+        }
+        if (!is_valid) {
+            chToDelete.push_back(pos->first);
+        }
+        pos++;
+        glfwPollEvents();
+    }
+
+    if (!chToDelete.empty()) {
+        for (unsigned int i = 0; i < chToDelete.size(); i++) {
+            unsigned int cam_id = chToDelete.at(i);
+            manager.get_camera(cam_id)->teardown();
+            manager.unregister_camera(cam_id);
+            glfwPollEvents();
+        }
+    }
+    // need a way to exit the loop here ..
+    manager.wait_for_event(1);
+
 }
 
 void Visualizer::UpdateWindowTitle()
@@ -253,9 +337,11 @@ void Visualizer::BuildUtilities()
 
 void Visualizer::Run()
 {
+    Ubitrack::Visualization::RenderManager& utrender = GetRenderManager();
     BuildUtilities();
     UpdateWindowTitle();
     while (bool(animation_callback_func_) ? PollEvents() : WaitEvents()) {
+        RenderManagerStep(utrender);
         if (bool(animation_callback_func_in_loop_)) {
             if (animation_callback_func_in_loop_(this)) {
                 UpdateGeometry();
@@ -351,6 +437,33 @@ bool Visualizer::AddGeometry(std::shared_ptr<const Geometry> geometry_ptr)
             view_control_ptr_->GetBoundingBox().GetPrintInfo().c_str());
     return UpdateGeometry();
 }
+
+bool Visualizer::AddUbitrackImage(std::shared_ptr<const UbitrackImage> geometry_ptr)
+{
+    if (is_initialized_ == false) {
+        return false;
+    }
+    glfwMakeContextCurrent(window_);
+
+    if (geometry_ptr->GetGeometryType() ==
+        Geometry::GeometryType::Image) {
+        auto renderer_ptr = std::make_shared<glsl::UbitrackImageRenderer>();
+        if (renderer_ptr->AddGeometry(geometry_ptr) == false) {
+            return false;
+        }
+        geometry_renderer_ptrs_.push_back(renderer_ptr);
+    } else {
+        return false;
+    }
+
+    geometry_ptrs_.push_back(geometry_ptr);
+    view_control_ptr_->FitInGeometry(*geometry_ptr);
+    ResetViewPoint();
+    PrintDebug("Add geometry and update bounding box to %s\n",
+            view_control_ptr_->GetBoundingBox().GetPrintInfo().c_str());
+    return UpdateGeometry();
+}
+
 
 bool Visualizer::UpdateGeometry()
 {

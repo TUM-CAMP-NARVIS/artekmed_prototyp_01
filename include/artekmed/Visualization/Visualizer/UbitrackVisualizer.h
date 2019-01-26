@@ -26,27 +26,13 @@ public:
 public:
     void PrintVisualizerHelp() override;
 
-    bool AddUbitrackImage(std::shared_ptr<const UbitrackImage> geometry_ptr);
-
 protected:
     void UpdateWindowTitle() override;
-    void Render() override;
-
-    virtual bool StartUbitrack() = 0;
-    virtual bool StopUbitrack() = 0;
 
     bool InitOpenGL() override;
     bool InitViewControl() override;
-    bool InitRenderOption() override;
 
     void WindowCloseCallback(GLFWwindow *window) override;
-
-    void MouseMoveCallback(GLFWwindow* window, double x, double y) override;
-    void MouseScrollCallback(GLFWwindow* window, double x, double y) override;
-    void MouseButtonCallback(GLFWwindow* window,
-            int button, int action, int mods) override;
-    void KeyPressCallback(GLFWwindow *window,
-            int key, int scancode, int action, int mods) override;
 
 };
 

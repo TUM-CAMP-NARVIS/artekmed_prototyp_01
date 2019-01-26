@@ -40,6 +40,7 @@ protected:
     std::shared_ptr<open3d::Geometry3D> ubitrack_camera03_pose_ptr;
 
     std::shared_ptr<UbitrackPointCloudConnector> ubitrack_connector_ptr;
+
 };
 
 }	// namespace open3d

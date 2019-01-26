@@ -65,6 +65,7 @@ void UbitrackPointCloudVisualizer::SetUbitrackConnector(std::shared_ptr<Ubitrack
 
     RegisterAnimationCallback(
         [=](artekmed::Visualizer *vis) {
+
             // The lambda function captures no references to avoid dangling
             // references
             auto view_control = dynamic_cast<UbitrackViewControl*>(view_control_ptr_.get());
@@ -85,6 +86,7 @@ void UbitrackPointCloudVisualizer::SetUbitrackConnector(std::shared_ptr<Ubitrack
 
             if (!connector->isRunning()) {
               StartUbitrack();
+              SetupRenderManager();
             }
 
             Ubitrack::Measurement::Timestamp ts;

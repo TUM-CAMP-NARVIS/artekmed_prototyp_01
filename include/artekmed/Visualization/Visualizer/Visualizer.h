@@ -39,6 +39,7 @@
 #include <artekmed/Visualization/Visualizer/ViewControl.h>
 #include <artekmed/Visualization/Visualizer/RenderOption.h>
 #include <artekmed/Visualization/Shader/GeometryRenderer.h>
+#include "artekmed/Visualization/UbitrackRenderManager.h"
 
 namespace open3d {
     class TriangleMesh;
@@ -87,6 +88,14 @@ public:
     void RegisterAnimationCallback(
             std::function<bool(Visualizer *)> callback_func);
 
+
+    /// Function to manually initialize GLFW
+    virtual bool InitGLFW();
+
+    /// Function to manually setup the RenderManager for Ubitrack
+    virtual bool SetupRenderManager();
+
+
     /// Function to activate the window
     /// This function will block the current thread until the window is closed.
     void Run();
@@ -116,6 +125,14 @@ public:
     /// Visualizer should be updated accordingly.
     virtual bool AddGeometry(std::shared_ptr<const Geometry> geometry_ptr);
 
+
+    /// extra functionality for adding optimized ubitrack images (direct texture upload from received buffer for opengl and opencl)
+    virtual bool AddUbitrackImage(std::shared_ptr<const UbitrackImage> geometry_ptr);
+
+    // overwrite to start ubitrack instance(s)
+    virtual bool StartUbitrack() {};
+    virtual bool StopUbitrack() {};
+
     /// Function to update geometry
     /// This function must be called when geometry has been changed. Otherwise
     /// the behavior of Visualizer is undefined.
@@ -144,6 +161,10 @@ public:
 
     const std::string &GetWindowName() const {
         return window_name_;
+    }
+
+    Ubitrack::Visualization::RenderManager& GetRenderManager() {
+        return Ubitrack::Visualization::RenderManager::singleton();
     }
 
 protected:
@@ -176,6 +197,9 @@ protected:
             int key, int scancode, int action, int mods);
     virtual void WindowCloseCallback(GLFWwindow *window);
 
+
+    virtual void RenderManagerStep(Ubitrack::Visualization::RenderManager &manager);
+
 protected:
     // window
     GLFWwindow* window_ = NULL;
@@ -192,6 +216,7 @@ protected:
     MouseControl mouse_control_;
     bool is_redraw_required_ = true;
     bool is_initialized_ = false;
+    bool is_renderermanager_initialized = false;
 
     // view control
     std::unique_ptr<ViewControl> view_control_ptr_;

@@ -62,7 +62,7 @@ public:
     /// Function to set view points
     /// This function obtains OpenGL context and calls OpenGL functions to set
     /// the view point.
-    void SetViewMatrices(
+    virtual void SetViewMatrices(
             const Eigen::Matrix4d &model_matrix = Eigen::Matrix4d::Identity());
 
     /// Function to get equivalent view parameters (support orthogonal)

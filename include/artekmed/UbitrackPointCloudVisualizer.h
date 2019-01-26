@@ -5,11 +5,13 @@
 #ifndef ARTEKMED_UBITRACKSINGLECAMERAVISUALIZER_H
 #define ARTEKMED_UBITRACKSINGLECAMERAVISUALIZER_H
 
-#include "artekmed/UbitrackVisualizer.h"
-#include "artekmed/UbitrackImage.h"
+#include "artekmed/Visualization/Visualizer/UbitrackVisualizer.h"
+#include "artekmed/Visualization/Utility/UbitrackImage.h"
 #include "artekmed/UbitrackPointCloudConnector.h"
 
-namespace open3d {
+namespace artekmed {
+
+    using namespace open3d;
 
 class UbitrackPointCloudVisualizer : public UbitrackVisualizer
 {

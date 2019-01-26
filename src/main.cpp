@@ -54,7 +54,7 @@
 // open3d includes
 #include <Core/Core.h>
 #include <IO/IO.h>
-#include <Visualization/Visualization.h>
+#include <artekmed/Visualization/Visualization.h>
 
 #ifdef _WIN32
 #include <conio.h>
@@ -65,7 +65,7 @@
 
 #include "artekmed/UbitrackPointCloudConnector.h"
 #include "artekmed/UbitrackPointCloudVisualizer.h"
-#include "artekmed/UbitrackImage.h"
+#include "artekmed/Visualization/Utility/UbitrackImage.h"
 
 // logging
 #include <log4cpp/OstreamAppender.hh>
@@ -141,7 +141,7 @@ int main(int ac, char** av) {
 	log4cpp::Category::getRoot().setPriority( log4cpp::Priority::INFO ); // default: INFO
 	log4cpp::Category::getInstance( "Ubitrack.Events" ).setPriority( log4cpp::Priority::NOTICE ); // default: NOTICE
 
-    open3d::UbitrackPointCloudVisualizer visualizer;
+    artekmed::UbitrackPointCloudVisualizer visualizer;
 
 
 	LOG4CPP_INFO( logger, "Starting Basic Facade Demo demo" );

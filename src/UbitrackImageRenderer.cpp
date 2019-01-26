@@ -4,7 +4,7 @@
 
 #include "artekmed/UbitrackImageRenderer.h"
 
-namespace open3d {
+namespace artekmed {
 namespace glsl {
 
 bool UbitrackImageRenderer::Render(const RenderOption &option, const ViewControl &view)

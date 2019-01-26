@@ -8,22 +8,22 @@ message(STATUS "Open3D Shader Encoder: ${SHADERENCODER}")
 
 file(GLOB SHADER_FILES "GLSL/*.glsl")
 add_custom_command(
-        OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/UbitrackShader.h
-        COMMAND ${SHADERENCODER} UbitrackShader.h
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        OUTPUT ${CMAKE_SOURCE_DIR}/include/artekmed/Visualization/Shader/Shader.h
+        COMMAND ${SHADERENCODER} Shader.h
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/include/artekmed/Visualization/Shader/
         DEPENDS ${SHADER_FILES} ${SHADERENCODER}
 )
 foreach(file ${SHADER_FILES})
   add_custom_command(
-          OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/UbitrackShader.h
-          COMMAND ${SHADERENCODER} UbitrackShader.h ${file}
-          WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+          OUTPUT ${CMAKE_SOURCE_DIR}/include/artekmed/Visualization/Shader/Shader.h
+          COMMAND ${SHADERENCODER} Shader.h ${file}
+          WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/include/artekmed/Visualization/Shader/
           DEPENDS ${SHADER_FILES} ${SHADERENCODER}
           APPEND
   )
 endforeach(file)
 add_custom_target(ShaderFileTarget ALL
-        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/UbitrackShader.h)
+        DEPENDS ${CMAKE_SOURCE_DIR}/include/artekmed/Visualization/Shader/Shader.h)
 set_target_properties(ShaderFileTarget PROPERTIES FOLDER "Custom")
 
 source_group("Source Files\\GLSL" FILES ${SHADER_FILES})
@@ -34,30 +34,83 @@ source_group("Source Files\\GLSL" FILES ${SHADER_FILES})
 set(UBITRACK_SRCS
   "${CMAKE_CURRENT_SOURCE_DIR}/main.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/PointCloudProcessing.cpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/UbitrackImage.cpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/UbitrackImageShader.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/UbitrackImageRenderer.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/UbitrackBaseConnector.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/UbitrackPointCloudConnector.cpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/UbitrackVisualizer.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/UbitrackPointCloudVisualizer.cpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/UbitrackViewControl.cpp"
-)
+
+  "${CMAKE_CURRENT_SOURCE_DIR}/Visualization/UbitrackRenderManager.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/Visualization/Utility/UbitrackImage.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/Visualization/Shader/UbitrackImageShader.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/Visualization/Visualizer/UbitrackVisualizer.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/Visualization/Visualizer/UbitrackViewControl.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/Visualization/Shader/GeometryRenderer.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/Visualization/Shader/ImageMaskShader.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/Visualization/Shader/ImageShader.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/Visualization/Shader/NormalShader.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/Visualization/Shader/PhongShader.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/Visualization/Shader/PickingShader.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/Visualization/Shader/ShaderWrapper.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/Visualization/Shader/Simple2DShader.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/Visualization/Shader/SimpleBlackShader.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/Visualization/Shader/SimpleShader.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/Visualization/Utility/BoundingBox.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/Visualization/Utility/ColorMap.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/Visualization/Utility/DrawGeometry.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/Visualization/Utility/GLHelper.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/Visualization/Utility/PointCloudPicker.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/Visualization/Utility/SelectionPolygon.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/Visualization/Utility/SelectionPolygonVolume.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/Visualization/Visualizer/RenderOption.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/Visualization/Visualizer/RenderOptionWithEditing.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/Visualization/Visualizer/ViewControl.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/Visualization/Visualizer/ViewParameters.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/Visualization/Visualizer/VisualizerCallback.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/Visualization/Visualizer/VisualizerRender.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/Visualization/Visualizer/Visualizer.cpp"
+        )
 
 # All header files
 set(UBITRACK_HEADERS
   "${CMAKE_SOURCE_DIR}/include/artekmed/EigenWrapper.h"
   "${CMAKE_SOURCE_DIR}/include/artekmed/PointCloudProcessing.h"
   "${CMAKE_SOURCE_DIR}/include/artekmed/UbitrackHelpers.h"
-  "${CMAKE_SOURCE_DIR}/include/artekmed/UbitrackImage.h"
-  "${CMAKE_SOURCE_DIR}/include/artekmed/UbitrackImageShader.h"
   "${CMAKE_SOURCE_DIR}/include/artekmed/UbitrackImageRenderer.h"
   "${CMAKE_SOURCE_DIR}/include/artekmed/UbitrackBaseConnector.h"
   "${CMAKE_SOURCE_DIR}/include/artekmed/UbitrackPointCloudConnector.h"
-  "${CMAKE_SOURCE_DIR}/include/artekmed/UbitrackVisualizer.h"
   "${CMAKE_SOURCE_DIR}/include/artekmed/UbitrackPointCloudVisualizer.h"
-  "${CMAKE_SOURCE_DIR}/include/artekmed/UbitrackViewControl.h"
-        ../include/artekmed/UbitrackHelpers.h)
+
+  "${CMAKE_SOURCE_DIR}/include/artekmed/Visualization/UbitrackRenderManager.h"
+  "${CMAKE_SOURCE_DIR}/include/artekmed/Visualization/Utility/UbitrackImage.h"
+  "${CMAKE_SOURCE_DIR}/include/artekmed/Visualization/Shader/UbitrackImageShader.h"
+  "${CMAKE_SOURCE_DIR}/include/artekmed/Visualization/Visualizer/UbitrackVisualizer.h"
+  "${CMAKE_SOURCE_DIR}/include/artekmed/Visualization/Visualizer/UbitrackViewControl.h"
+
+
+  "${CMAKE_SOURCE_DIR}/include/artekmed/Visualization/Visualization.h"
+  "${CMAKE_SOURCE_DIR}/include/artekmed/Visualization/Shader/GeometryRenderer.h"
+  "${CMAKE_SOURCE_DIR}/include/artekmed/Visualization/Shader/ImageMaskShader.h"
+  "${CMAKE_SOURCE_DIR}/include/artekmed/Visualization/Shader/ImageShader.h"
+  "${CMAKE_SOURCE_DIR}/include/artekmed/Visualization/Shader/NormalShader.h"
+  "${CMAKE_SOURCE_DIR}/include/artekmed/Visualization/Shader/PhongShader.h"
+  "${CMAKE_SOURCE_DIR}/include/artekmed/Visualization/Shader/PickingShader.h"
+  "${CMAKE_SOURCE_DIR}/include/artekmed/Visualization/Shader/ShaderWrapper.h"
+  "${CMAKE_SOURCE_DIR}/include/artekmed/Visualization/Shader/Simple2DShader.h"
+  "${CMAKE_SOURCE_DIR}/include/artekmed/Visualization/Shader/SimpleBlackShader.h"
+  "${CMAKE_SOURCE_DIR}/include/artekmed/Visualization/Shader/SimpleShader.h"
+  "${CMAKE_SOURCE_DIR}/include/artekmed/Visualization/Utility/BoundingBox.h"
+  "${CMAKE_SOURCE_DIR}/include/artekmed/Visualization/Utility/ColorMap.h"
+  "${CMAKE_SOURCE_DIR}/include/artekmed/Visualization/Utility/DrawGeometry.h"
+  "${CMAKE_SOURCE_DIR}/include/artekmed/Visualization/Utility/GLHelper.h"
+  "${CMAKE_SOURCE_DIR}/include/artekmed/Visualization/Utility/PointCloudPicker.h"
+  "${CMAKE_SOURCE_DIR}/include/artekmed/Visualization/Utility/SelectionPolygon.h"
+  "${CMAKE_SOURCE_DIR}/include/artekmed/Visualization/Utility/SelectionPolygonVolume.h"
+  "${CMAKE_SOURCE_DIR}/include/artekmed/Visualization/Visualizer/RenderOption.h"
+  "${CMAKE_SOURCE_DIR}/include/artekmed/Visualization/Visualizer/RenderOptionWithEditing.h"
+  "${CMAKE_SOURCE_DIR}/include/artekmed/Visualization/Visualizer/ViewControl.h"
+  "${CMAKE_SOURCE_DIR}/include/artekmed/Visualization/Visualizer/ViewParameters.h"
+  "${CMAKE_SOURCE_DIR}/include/artekmed/Visualization/Visualizer/Visualizer.h"
+)
 
 if(MSVC)
   set(UBITRACK_COMPILE_DEFINITIONS ${UBITRACK_COMPILE_DEFINITIONS} "BOOST_ALL_DYN_LINK")
@@ -70,8 +123,10 @@ add_dependencies(${UBITRACK_APPLICATION_NAME} ShaderFileTarget)
 target_link_libraries(${UBITRACK_APPLICATION_NAME}
         CONAN_PKG::ubitrack_core
         CONAN_PKG::ubitrack_vision
+        CONAN_PKG::ubitrack_visualization
         CONAN_PKG::ubitrack_facade
         CONAN_PKG::open3d
+        CONAN_PKG::jsoncpp
         OpenGL::GL
         OpenGL::GLU
         OpenCL::OpenCL

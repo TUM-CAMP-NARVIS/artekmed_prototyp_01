@@ -26,6 +26,7 @@ class UbitrackCoreConan(ConanFile):
         "ubitrack_tools_trackman/1.0@ubitrack/stable",
         "eigen/[>=3.3.4]@camposs/stable",
         "open3d/0.5.0@camposs/stable",
+        "jsoncpp/[>=1.7.1]@camposs/stable",
        )
 
     # all sources are deployed with the package

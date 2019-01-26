@@ -4,15 +4,15 @@
 
 #include <Core/Core.h>
 #include <IO/IO.h>
-#include <Visualization/Visualization.h>
+#include <artekmed/Visualization/Visualization.h>
 
 #include "artekmed/UbitrackPointCloudVisualizer.h"
-#include "artekmed/UbitrackViewControl.h"
+#include "artekmed/Visualization/Visualizer/UbitrackViewControl.h"
 
 #include <log4cpp/Category.hh>
 static log4cpp::Category& logger(log4cpp::Category::getInstance("ArtekmedP1.UbitrackPointCloudVisualizer"));
 
-namespace open3d {
+namespace artekmed {
 
 UbitrackPointCloudVisualizer::UbitrackPointCloudVisualizer()
 {
@@ -64,7 +64,7 @@ void UbitrackPointCloudVisualizer::SetUbitrackConnector(std::shared_ptr<Ubitrack
     ubitrack_connector_ptr = connector_;
 
     RegisterAnimationCallback(
-        [=](open3d::Visualizer *vis) {
+        [=](artekmed::Visualizer *vis) {
             // The lambda function captures no references to avoid dangling
             // references
             auto view_control = dynamic_cast<UbitrackViewControl*>(view_control_ptr_.get());

@@ -5,11 +5,14 @@
 #ifndef ARTEKMED_UBITRACKIMAGERENDERER_H
 #define ARTEKMED_UBITRACKIMAGERENDERER_H
 
-#include <Visualization/Shader/GeometryRenderer.h>
+#include <artekmed/Visualization/Shader/GeometryRenderer.h>
 
-#include "artekmed/UbitrackImageShader.h"
+#include "artekmed/Visualization/Shader/UbitrackImageShader.h"
 
-namespace open3d {
+namespace artekmed {
+
+    using namespace open3d;
+
 namespace glsl {
 
 class UbitrackImageRenderer: public GeometryRenderer {

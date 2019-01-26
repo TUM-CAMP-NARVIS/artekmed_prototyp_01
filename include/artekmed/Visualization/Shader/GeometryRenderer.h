@@ -36,6 +36,7 @@
 #include <artekmed/Visualization/Shader/Simple2DShader.h>
 #include <artekmed/Visualization/Shader/ImageMaskShader.h>
 #include <artekmed/Visualization/Shader/PickingShader.h>
+#include "artekmed/Visualization/Shader/UbitrackImageShader.h"
 
 namespace artekmed {
 
@@ -193,6 +194,20 @@ public:
     
 protected:
     PhongShaderForTriangleMesh phong_shader_;
+};
+
+
+class UbitrackImageRenderer: public GeometryRenderer {
+public:
+    ~UbitrackImageRenderer() override {}
+
+public:
+    bool Render(const RenderOption& option, const ViewControl& view) override;
+    bool AddGeometry(std::shared_ptr<const Geometry> geometry_ptr) override;
+    bool UpdateGeometry() override;
+
+protected:
+    ImageShaderForUbitrackImage image_shader_;
 };
 
 }    // namespace open3d::glsl

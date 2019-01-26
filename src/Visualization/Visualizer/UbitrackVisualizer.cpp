@@ -14,7 +14,7 @@
 
 #include <utFacade/BasicFacade.h>
 #include <artekmed/Visualization/Visualizer/UbitrackViewControl.h>
-#include <artekmed/UbitrackImageRenderer.h>
+#include <artekmed/Visualization/Shader/GeometryRenderer.h>
 
 #include <log4cpp/Category.hh>
 static log4cpp::Category& logger(log4cpp::Category::getInstance("ArtekmedP1.UbitrackVisualizer"));

@@ -34,7 +34,6 @@ source_group("Source Files\\GLSL" FILES ${SHADER_FILES})
 set(UBITRACK_SRCS
   "${CMAKE_CURRENT_SOURCE_DIR}/main.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/PointCloudProcessing.cpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/UbitrackImageRenderer.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/UbitrackBaseConnector.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/UbitrackPointCloudConnector.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/UbitrackPointCloudVisualizer.cpp"
@@ -75,7 +74,6 @@ set(UBITRACK_HEADERS
   "${CMAKE_SOURCE_DIR}/include/artekmed/EigenWrapper.h"
   "${CMAKE_SOURCE_DIR}/include/artekmed/PointCloudProcessing.h"
   "${CMAKE_SOURCE_DIR}/include/artekmed/UbitrackHelpers.h"
-  "${CMAKE_SOURCE_DIR}/include/artekmed/UbitrackImageRenderer.h"
   "${CMAKE_SOURCE_DIR}/include/artekmed/UbitrackBaseConnector.h"
   "${CMAKE_SOURCE_DIR}/include/artekmed/UbitrackPointCloudConnector.h"
   "${CMAKE_SOURCE_DIR}/include/artekmed/UbitrackPointCloudVisualizer.h"

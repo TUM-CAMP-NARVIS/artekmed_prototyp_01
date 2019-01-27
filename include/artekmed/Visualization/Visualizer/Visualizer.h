@@ -29,13 +29,14 @@
 #include <string>
 #include <memory>
 
-#include <GL/glew.h>
+#include <utVision/OpenGLPlatform.h>
 #include <GLFW/glfw3.h>
 #include <Core/Geometry/Geometry.h>
 
 #include <artekmed/Visualization/Utility/ColorMap.h>
 #include <artekmed/Visualization/Utility/BoundingBox.h>
 
+#include <artekmed/Visualization/Visualizer/GuiController.h>
 #include <artekmed/Visualization/Visualizer/ViewControl.h>
 #include <artekmed/Visualization/Visualizer/RenderOption.h>
 #include <artekmed/Visualization/Shader/GeometryRenderer.h>
@@ -177,6 +178,9 @@ protected:
     /// Function to initialize RenderOption
     virtual bool InitRenderOption();
 
+    // Function to initialize GuiController
+    virtual bool InitGuiController();
+
     /// Function to do the main rendering
     /// The function first sets view point, then draw geometry (pointclouds and
     /// meshes individually).
@@ -223,6 +227,9 @@ protected:
 
     // rendering properties
     std::unique_ptr<RenderOption> render_option_ptr_;
+
+    // gui controller
+    std::unique_ptr<artekmed::GuiController> gui_controller_ptr;
 
     // geometry to be rendered
     std::vector<std::shared_ptr<const Geometry>> geometry_ptrs_;

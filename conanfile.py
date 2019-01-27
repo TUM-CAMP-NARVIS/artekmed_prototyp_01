@@ -26,6 +26,7 @@ class UbitrackCoreConan(ConanFile):
         "ubitrack_tools_trackman/1.0@ubitrack/stable",
         "eigen/[>=3.3.4]@camposs/stable",
         "open3d/0.5.0@camposs/stable",
+        "imgui/1.66@camposs/stable",
         "jsoncpp/[>=1.7.1]@camposs/stable",
        )
 
@@ -33,9 +34,12 @@ class UbitrackCoreConan(ConanFile):
     exports_sources = "cmake/*", "include/*", "config/*", "src/*", "CMakeLists.txt"
 
     def configure(self):
-        self.options['ubitrack_vision'].opengl_extension_wrapper = "glew"
+        self.options['ubitrack_vision'].opengl_extension_wrapper = "glad"
         self.options['ubitrack'].with_default_camera=True
-        self.options['ubitrack'].with_haptic_calibration=True
+        self.options['ubitrack'].with_camera_zed=True # this might require to set sdk-root option !!
+        self.options['ubitrack'].with_camera_realsense=True
+        # self.options['ubitrack'].with_device_videostream=True
+        # self.options['ubitrack'].with_haptic_calibration=True
         # if self.settings.os == "Windows":
         #     self.options['ubitrack'].with_camera_flycapture=True
 

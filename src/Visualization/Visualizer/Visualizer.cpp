@@ -198,6 +198,10 @@ bool Visualizer::CreateVisualizerWindow(const std::string &window_name/* = "Open
         return false;
     }
 
+    if (InitGuiController() == false) {
+        return false;
+    }
+
     int window_width, window_height;
     glfwGetFramebufferSize(window_, &window_width, &window_height);
     WindowResizeCallback(window_, window_width, window_height);
@@ -236,6 +240,13 @@ bool Visualizer::InitRenderOption()
     return true;
 }
 
+bool Visualizer::InitGuiController()
+{
+    gui_controller_ptr = std::unique_ptr<artekmed::GuiController>(new artekmed::GuiController);
+    gui_controller_ptr->enabled(true);
+    gui_controller_ptr->initialize(window_);
+    return true;
+}
 
 bool Visualizer::SetupRenderManager() {
     // create and register render manager

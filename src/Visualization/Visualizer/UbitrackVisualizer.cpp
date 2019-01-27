@@ -31,12 +31,27 @@ UbitrackVisualizer::~UbitrackVisualizer()
 
 bool UbitrackVisualizer::InitOpenGL()
 {
+
+#ifdef HAVE_GLAD
     // Init GLAD for this context:
-    LOG4CPP_INFO(logger, "Initialize GLEW.");
-    if (glewInit() != GLEW_OK) {
-        LOG4CPP_ERROR(logger, "Failed to initialize GLEW.");
+    LOG4CPP_INFO(logger, "Initialize GLAD.");
+    if (!gladLoadGLLoader((GLADloadproc) glfwGetProcAddress))
+    {
+        LOG4CPP_ERROR(logger, "Failed to initialize OpenGL context");
+        glfwDestroyWindow(m_pWindow);
         return false;
     }
+#endif
+#ifdef HAVE_GLEW
+    // Init GLEW for this context:
+    LOG4CPP_INFO(logger, "Initialize GLEW.");
+    GLenum err = glewInit();
+    if (err != GLEW_OK) {
+        LOG4CPP_ERROR(logger, "Failed to initialize GLEW: " <<  glewGetErrorString(err));
+        glfwDestroyWindow(m_pWindow);
+        return false;
+    }
+#endif
 
     // depth test
     glEnable(GL_DEPTH_TEST);

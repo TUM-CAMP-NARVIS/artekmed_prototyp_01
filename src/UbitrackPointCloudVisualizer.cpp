@@ -102,6 +102,7 @@ void UbitrackPointCloudVisualizer::SetUbitrackConnector(std::shared_ptr<Ubitrack
                             needs_update = true;
                         } else {
                             LOG4CPP_WARN(logger, "error retrieving camera image.");
+                            return false;
                         }
                     }
                 }
@@ -125,6 +126,7 @@ void UbitrackPointCloudVisualizer::SetUbitrackConnector(std::shared_ptr<Ubitrack
                             needs_update = true;
                         } else {
                             LOG4CPP_WARN(logger, "error retrieving camera image.");
+                            return false;
                         }
                     }
                 }

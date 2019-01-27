@@ -23,7 +23,7 @@ void buildPointCloudRS(
         const cv::Mat& depth_img_rect,
         const cv::Mat& color_img_rect,
         const Eigen::Matrix3d& intr_rect_ir,
-        const Eigen::Matrix3d& intr_rect_co,
+        const Eigen::Matrix3d& intr_rect_rgb,
         const Eigen::Matrix4d& depth2color_tf,
         open3d::PointCloud& cloud,
         double depth_scale_factor=1.0);

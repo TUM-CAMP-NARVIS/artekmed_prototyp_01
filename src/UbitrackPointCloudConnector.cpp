@@ -386,10 +386,10 @@ bool UbitrackPointCloudConnector::camera02_get_pointcloud(Ubitrack::Measurement:
         auto num_pixels_color = color_image->width() * color_image->height();
         auto num_pixels_depth = depth_image->width() * depth_image->height();
 
-        if (num_pixels_color != num_pixels_depth) {
-            LOG4CPP_ERROR(logger, "Color and Depth image for ZED Camera must have the same size!")
-            return false;
-        }
+//        if (num_pixels_color != num_pixels_depth) {
+//            LOG4CPP_ERROR(logger, "Color and Depth image for ZED Camera must have the same size!")
+//            return false;
+//        }
 
         if ((depth_image->pixelFormat() != Ubitrack::Vision::Image::DEPTH) || (depth_image->bitsPerPixel() != 16)) {
             LOG4CPP_ERROR(logger, "unsupported depth format - need DEPTH / UINT16!")

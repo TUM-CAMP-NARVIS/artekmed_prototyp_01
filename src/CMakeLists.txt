@@ -60,6 +60,7 @@ set(UBITRACK_SRCS
   "${CMAKE_CURRENT_SOURCE_DIR}/Visualization/Utility/PointCloudPicker.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/Visualization/Utility/SelectionPolygon.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/Visualization/Utility/SelectionPolygonVolume.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/Visualization/Visualizer/GuiController.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/Visualization/Visualizer/RenderOption.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/Visualization/Visualizer/RenderOptionWithEditing.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/Visualization/Visualizer/ViewControl.cpp"
@@ -103,12 +104,17 @@ set(UBITRACK_HEADERS
   "${CMAKE_SOURCE_DIR}/include/artekmed/Visualization/Utility/PointCloudPicker.h"
   "${CMAKE_SOURCE_DIR}/include/artekmed/Visualization/Utility/SelectionPolygon.h"
   "${CMAKE_SOURCE_DIR}/include/artekmed/Visualization/Utility/SelectionPolygonVolume.h"
+  "${CMAKE_SOURCE_DIR}/include/artekmed/Visualization/Visualizer/GuiController.h"
   "${CMAKE_SOURCE_DIR}/include/artekmed/Visualization/Visualizer/RenderOption.h"
   "${CMAKE_SOURCE_DIR}/include/artekmed/Visualization/Visualizer/RenderOptionWithEditing.h"
   "${CMAKE_SOURCE_DIR}/include/artekmed/Visualization/Visualizer/ViewControl.h"
   "${CMAKE_SOURCE_DIR}/include/artekmed/Visualization/Visualizer/ViewParameters.h"
   "${CMAKE_SOURCE_DIR}/include/artekmed/Visualization/Visualizer/Visualizer.h"
-)
+
+  "${CMAKE_SOURCE_DIR}/include/thirdparty/stb_easy_font.h"
+  "${CMAKE_SOURCE_DIR}/include/thirdparty/stb_image.h"
+  "${CMAKE_SOURCE_DIR}/include/thirdparty/stb_image_write.h"
+    )
 
 if(MSVC)
   set(UBITRACK_COMPILE_DEFINITIONS ${UBITRACK_COMPILE_DEFINITIONS} "BOOST_ALL_DYN_LINK")
@@ -125,6 +131,7 @@ target_link_libraries(${UBITRACK_APPLICATION_NAME}
         CONAN_PKG::ubitrack_facade
         CONAN_PKG::open3d
         CONAN_PKG::jsoncpp
+        CONAN_PKG::imgui
         OpenGL::GL
         OpenGL::GLU
         OpenCL::OpenCL

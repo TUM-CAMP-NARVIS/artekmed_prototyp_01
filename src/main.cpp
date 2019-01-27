@@ -55,7 +55,7 @@
 #include <boost/interprocess/sync/scoped_lock.hpp>
 
 
-#include <GL/glew.h>
+#include <utVision/OpenGLPlatform.h>
 
 // open3d includes
 #include <Core/Core.h>

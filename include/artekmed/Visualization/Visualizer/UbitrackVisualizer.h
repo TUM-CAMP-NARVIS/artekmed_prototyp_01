@@ -5,7 +5,7 @@
 #ifndef ARTEKMED_UBITRACKVISUALIZER_H
 #define ARTEKMED_UBITRACKVISUALIZER_H
 
-#include <GL/glew.h>
+#include <utVision/OpenGLPlatform.h>
 
 #include <artekmed/Visualization/Visualizer/Visualizer.h>
 

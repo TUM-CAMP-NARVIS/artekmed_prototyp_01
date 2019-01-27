@@ -26,7 +26,7 @@
 
 #pragma once
 
-#include <GL/glew.h>
+#include <utVision/OpenGLPlatform.h>
 #include <Core/Geometry/Geometry.h>
 
 #include <artekmed/Visualization/Visualizer/ViewControl.h>

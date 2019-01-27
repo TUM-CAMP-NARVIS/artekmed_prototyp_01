@@ -40,10 +40,27 @@ namespace artekmed {
 
 bool Visualizer::InitOpenGL()
 {
-    if (glewInit() != GLEW_OK) {
-        PrintError("Failed to initialize GLEW.\n");
+
+#ifdef HAVE_GLAD
+    // Init GLAD for this context:
+    PrintInfo("Initialize GLAD.");
+    if (!gladLoadGLLoader((GLADloadproc) glfwGetProcAddress))
+    {
+        PrintError(logger, "Failed to initialize OpenGL context");
+        glfwDestroyWindow(m_pWindow);
         return false;
     }
+#endif
+#ifdef HAVE_GLEW
+    // Init GLEW for this context:
+    PrintInfo("Initialize GLEW.");
+    GLenum err = glewInit();
+    if (err != GLEW_OK) {
+        PrintError("Failed to initialize GLEW: %s\n",  glewGetErrorString(err));
+        glfwDestroyWindow(m_pWindow);
+        return false;
+    }
+#endif
 
     // depth test
     glEnable(GL_DEPTH_TEST);
@@ -82,6 +99,13 @@ void Visualizer::Render()
     for (const auto &renderer_ptr : utility_renderer_ptrs_) {
         renderer_ptr->Render(*render_option_ptr_, *view_control_ptr_);
     }
+
+    if (gui_controller_ptr) {
+        gui_controller_ptr->pre_render();
+        gui_controller_ptr->render(view_control_ptr_->GetWindowWidth(), view_control_ptr_->GetWindowHeight());
+        gui_controller_ptr->post_render(window_);
+    }
+
 
     glfwSwapBuffers(window_);
 }

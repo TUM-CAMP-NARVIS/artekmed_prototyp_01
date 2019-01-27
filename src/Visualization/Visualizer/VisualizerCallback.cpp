@@ -42,6 +42,10 @@ void Visualizer::WindowResizeCallback(GLFWwindow *window, int w, int h)
     is_redraw_required_ = true;
 }
 
+// missing callbacks for ImGUI
+//    IMGUI_IMPL_API void     ImGui_ImplGlfw_ScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
+//    IMGUI_IMPL_API void     ImGui_ImplGlfw_CharCallback(GLFWwindow* window, unsigned int c);
+
 void Visualizer::MouseMoveCallback(GLFWwindow *window, double x, double y)
 {
 #ifdef __APPLE__
@@ -77,6 +81,9 @@ void Visualizer::MouseScrollCallback(GLFWwindow* window, double x, double y)
 void Visualizer::MouseButtonCallback(GLFWwindow* window,
         int button, int action, int mods)
 {
+    if(gui_controller_ptr) {
+        gui_controller_ptr->MouseButtonCallback(window_, button, action, mods);
+    }
     double x, y;
     glfwGetCursorPos(window, &x, &y);
 #ifdef __APPLE__
@@ -106,6 +113,10 @@ void Visualizer::MouseButtonCallback(GLFWwindow* window,
 void Visualizer::KeyPressCallback(GLFWwindow *window,
         int key, int scancode, int action, int mods)
 {
+
+    if(gui_controller_ptr) {
+        gui_controller_ptr->KeyCallback(window_, key, scancode, action, mods);
+    }
     if (action == GLFW_RELEASE) {
         return;
     }

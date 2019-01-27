@@ -93,17 +93,8 @@ void Visualizer::Render()
     glClearDepth(1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    size_t i = 0;
     for (const auto &renderer_ptr : geometry_renderer_ptrs_) {
-        // skip if not enabled (flag 0x01)
-        if (i < geometry_flags_.size()) {
-            if (geometry_flags_[i] == 0) {
-                i++;
-                continue;
-            }
-        }
         renderer_ptr->Render(*render_option_ptr_, *view_control_ptr_);
-        i++;
     }
 
     for (const auto &renderer_ptr : utility_renderer_ptrs_) {

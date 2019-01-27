@@ -71,10 +71,14 @@ public:
 
     bool IsVisible() const { return is_visible_; }
     void SetVisible(bool visible) { is_visible_ = visible; };
-    
+
+    const std::string& GetName() const { return name_; }
+    void SetName(const std::string& n) { name_ = n; };
+
 protected:
     std::shared_ptr<const Geometry> geometry_ptr_;
     bool is_visible_ = true;
+    std::string name_ = "none";
 };
 
 class PointCloudRenderer : public GeometryRenderer

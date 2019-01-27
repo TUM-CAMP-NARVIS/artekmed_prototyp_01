@@ -131,8 +131,21 @@ public:
     virtual bool AddUbitrackImage(std::shared_ptr<const UbitrackImage> geometry_ptr);
 
     // overwrite to start ubitrack instance(s)
-    virtual bool StartUbitrack() {};
-    virtual bool StopUbitrack() {};
+    virtual bool StartUbitrack() {
+        return true;
+    };
+
+    virtual bool StopUbitrack() {
+        return true;
+    };
+
+    void UbitrackShouldRun(bool v) {
+        ubitrack_should_run = v;
+    }
+
+    bool UbitrackShouldRun() {
+        return ubitrack_should_run;
+    }
 
     /// Function to update geometry
     /// This function must be called when geometry has been changed. Otherwise
@@ -149,6 +162,8 @@ public:
 
     ViewControl &GetViewControl() { return *view_control_ptr_; }
     RenderOption &GetRenderOption() { return *render_option_ptr_; }
+
+
     std::shared_ptr<Image> CaptureScreenFloatBuffer(bool do_render = true);
     void CaptureScreenImage(const std::string &filename = "",
             bool do_render = true);
@@ -168,8 +183,8 @@ public:
         return Ubitrack::Visualization::RenderManager::singleton();
     }
 
-    std::vector<char>& GetGeometryFlags() {
-        return geometry_flags_;
+    std::vector<std::shared_ptr<glsl::GeometryRenderer>>& GetGeometryRenderers() {
+        return geometry_renderer_ptrs_;
     }
 
 protected:
@@ -226,6 +241,7 @@ protected:
     bool is_redraw_required_ = true;
     bool is_initialized_ = false;
     bool is_renderermanager_initialized = false;
+    bool ubitrack_should_run = true;
 
     // view control
     std::unique_ptr<ViewControl> view_control_ptr_;

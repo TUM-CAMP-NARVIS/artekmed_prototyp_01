@@ -2,7 +2,7 @@
 // Created by Ulrich Eck on 15.03.18.
 //
 
-#include "artekmed/UbitrackBaseConnector.h"
+#include "artekmed/Ubitrack/BaseConnector.h"
 
 #include <log4cpp/Category.hh>
 static log4cpp::Category& logger(log4cpp::Category::getInstance("ArtekmedP1.UbitrackBaseConnector"));
@@ -11,8 +11,6 @@ static log4cpp::Category& logger(log4cpp::Category::getInstance("ArtekmedP1.Ubit
 
 UbitrackBaseConnector::UbitrackBaseConnector(const std::string& _components_path)
         : m_utFacade(new Ubitrack::Facade::AdvancedFacade(_components_path.c_str()) )
-        , m_haveNewFrame( false )
-        , m_lastTimestamp( 0 )
         , m_dataflowLoaded( false )
         , m_dataflowRunning( false )
 {
@@ -39,11 +37,23 @@ bool UbitrackBaseConnector::initialize(const std::string& _utql_filename) {
         LOG4CPP_ERROR(logger, "Error while loading dataflow: " << e.what());
         return false;
     }
+
+    m_cameras.clear();
+    add_cameras();
+
+    for (auto&& cam : m_cameras) {
+        cam->initialize(m_utFacade.get());
+    }
+
     m_dataflowLoaded = true;
     return true;
 }
 
 bool UbitrackBaseConnector::teardown() {
+    for (auto&& cam : m_cameras) {
+        cam->teardown(m_utFacade.get());
+    }
+
     if (m_dataflowRunning) {
         if (!stop()){
             return false;
@@ -51,6 +61,7 @@ bool UbitrackBaseConnector::teardown() {
     }
 
     if (m_dataflowLoaded) {
+
         try{
             m_utFacade->clearDataflow();
         } catch (Ubitrack::Util::Exception &e) {
@@ -89,50 +100,53 @@ bool UbitrackBaseConnector::stop() {
     return true;
 }
 
-void UbitrackBaseConnector::set_new_frame(Ubitrack::Measurement::Timestamp ts) {
-    std::unique_lock<std::mutex> ul( m_waitMutex );
-    m_lastTimestamp = ts;
-    m_haveNewFrame = true;
-    m_waitCondition.notify_one();
-}
 
+unsigned int UbitrackBaseConnector::wait_for_frame_timeout(unsigned int timeout_ms, std::vector<Ubitrack::Measurement::Timestamp>& tsv) {
 
-Ubitrack::Measurement::Timestamp UbitrackBaseConnector::wait_for_frame() {
-    // find a way to exit here in case we want to stop
-    // alternatively, we could only query the m_haveNewFrame variable (polling)
-    Ubitrack::Measurement::Timestamp ts(0);
-    while (!m_haveNewFrame) {
-        std::unique_lock<std::mutex> ul( m_waitMutex );
-        m_waitCondition.wait( ul );
-        ts = m_lastTimestamp;
-    }
+    int idx = 0;
+    unsigned int to = timeout_ms;
 
-    // reset haveNewFrame immediately to prepare for the next frame
-    // maybe this should be done in a seperate method ??
-    {
-        std::unique_lock<std::mutex> ul( m_waitMutex );
-        m_haveNewFrame = false;
-    }
-    return ts;
-}
+    bool have_new_frame = false;
+    bool have_timeout = false;
 
-unsigned int UbitrackBaseConnector::wait_for_frame_timeout(unsigned int timeout_ms, Ubitrack::Measurement::Timestamp& ts) {
-    auto timeout = std::chrono::milliseconds(timeout_ms);
+    tsv.resize(m_cameras.size());
 
-    std::unique_lock<std::mutex> ul( m_waitMutex );
-    if(m_waitCondition.wait_for( ul , timeout) == std::cv_status::no_timeout) {
-        if (m_haveNewFrame) {
-            ts = m_lastTimestamp;
-            m_haveNewFrame = false;
-            return 0;
-        } else {
-            // no new frame
-            ts = 0;
-            return 1;
+    for (auto&& cam: m_cameras) {
+        Ubitrack::Measurement::Timestamp t = 0;
+
+        // first camera is sync master where we wait with timeout.
+        if (idx == 0) {
+            auto ret = cam->wait_for_frame_timeout(to, t);
+            switch (ret) {
+                case 0:
+                    have_new_frame = true;
+                    break;
+                case 2:
+                    have_timeout = true;
+                    break;
+                default:
+                    break;
+            }
+        } else if (have_new_frame){
+            // pull all other cameras with 0 timeout.
+            auto ret = cam->wait_for_frame_timeout(0, t);
+            switch (ret) {
+                case 0:
+                    have_new_frame = true;
+                    break;
+                default:
+                    break;
+            }
         }
-    } else {
-        // timeout
-        ts = 0;
+        tsv.push_back(t);
+        idx++;
+    }
+    if (have_new_frame) {
+        return 0;
+    }
+    if (have_timeout) {
         return 2;
     }
+    // no new frame
+    return 1;
 }

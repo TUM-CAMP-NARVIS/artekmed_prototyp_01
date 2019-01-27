@@ -4,10 +4,34 @@
 
 #include <Eigen/LU>
 
+#include <Core/Utility/Console.h>
+#include <Eigen/Dense>
 
 #include "artekmed/PointCloudProcessing.h"
 
-void buildPointCloudZED(
+
+/* Given a point in 3D space, compute the corresponding pixel coordinates in an image with no distortion assumed */
+void project_point_to_pixel(Eigen::Vector2d& pixel, const Eigen::Matrix3d& intrin, const Eigen::Vector3d& point) {
+
+    double x = point(0) / point(2), y = point(1) / point(2);
+
+    pixel[0] = x * intrin(0,0) + intrin(0,2);
+    pixel[1] = y * intrin(1,1) + intrin(1,2);
+}
+
+/* Given pixel coordinates and depth in an image with no distortion or inverse distortion coefficients, compute the corresponding point in 3D space relative to the same camera */
+void deproject_pixel_to_point(Eigen::Vector3d& point, const Eigen::Matrix3d& intrin, const Eigen::Vector2d& pixel, float depth)
+{
+
+    double x = (pixel(0) - intrin(0,2)) / intrin(0,0);
+    double y = (pixel(1) - intrin(1,2)) / intrin(1,1);
+    point(0) = depth * x;
+    point(1) = depth * y;
+    point(2) = depth;
+}
+
+// build pointcloud from depth/color image using image intrinsics (assume depth==color camera)
+void buildColoredPointCloud(
         const cv::Mat& depth_img_rect,
         const cv::Mat& color_img_rect,
         const Eigen::Matrix3d& intr_rect_ir,
@@ -17,11 +41,6 @@ void buildPointCloudZED(
     unsigned int w = depth_img_rect.cols;
     unsigned int h = depth_img_rect.rows;
 
-    double cx = -intr_rect_ir(0,2);
-    double cy = -intr_rect_ir(1,2);
-    double fx_inv = 1.0 / intr_rect_ir(0,0);
-    double fy_inv = 1.0 / intr_rect_ir(1,1);
-
     unsigned int num_valid_pixels = w*h;
 
     auto &points = cloud.points_;
@@ -29,33 +48,42 @@ void buildPointCloudZED(
     points.resize(num_valid_pixels);
     colors.resize(num_valid_pixels);
 
-    for (int u = 0; u < w; ++u)
-        for (int v = 0; v < h; ++v)
-        {
-            float z = depth_img_rect.at<float>(v, u);
-            cv::Vec4b pixel = color_img_rect.at<cv::Vec4b>(v, u);
+// currently we're not compiling with openmp (needs cmake changes and libopenmp dependency)
+#pragma omp parallel for schedule(dynamic)
+    for (int depth_y = 0; depth_y < h; ++depth_y) {
+        int depth_pixel_index = depth_y * w;
+        for (int depth_x = 0; depth_x < w; ++depth_x, ++depth_pixel_index) {
 
-            auto& pt = points[v*w + u];
+            auto &pt = points[depth_pixel_index];
 
+            float z = depth_img_rect.at<float>(depth_y, depth_x);
+            // Skip over depth pixels with the value of zero, we have no depth data so we will not write anything into our aligned images
             if ((z != 0) && (!isnan(z)))
             {
-                double z_metric = z * depth_scale_factor;
+                float depth = z * depth_scale_factor;
 
-                pt(0) = z_metric * ((u - cx) * fx_inv);
-                pt(1) = z_metric * ((v - cy) * fy_inv);
-                pt(2) = -z_metric;
+                // Map the top-left corner of the depth pixel onto the other image
+                Eigen::Vector2d depth_pixel(depth_x, depth_y);
+                Eigen::Vector3d depth_point;
 
-                colors[v*w + u] = Eigen::Vector3d(pixel.val[2], pixel.val[1], pixel.val[0]) / 255.;
-            }
-            else
-            {
-                pt(0) = pt(1) = pt(2) = 0.; //std::numeric_limits<float>::quiet_NaN();
+                deproject_pixel_to_point(depth_point, intr_rect_ir, depth_pixel, depth);
+
+                // store pixel location
+                pt(0) = depth_point(0);
+                pt(1) = -depth_point(1);
+                pt(2) = -depth_point(2);
+
+                cv::Vec4b pixel = color_img_rect.at<cv::Vec4b>(depth_y, depth_x);
+                colors[depth_pixel_index] = Eigen::Vector3d(pixel.val[2], pixel.val[1], pixel.val[0]) / 255.;
+            } else {
+                pt(0) = pt(1) = pt(2) = 0.;
             }
         }
+    }
 }
 
-
-void buildPointCloudRS(
+// build pointcloud from depth/color image using depth/image intrinsics and depth2color transform
+void buildColoredPointCloud(
         const cv::Mat& depth_img_rect,
         const cv::Mat& color_img_rect,
         const Eigen::Matrix3d& intr_rect_ir,
@@ -70,12 +98,6 @@ void buildPointCloudRS(
     unsigned int w_rgb = color_img_rect.cols;
     unsigned int h_rgb = color_img_rect.rows;
 
-
-    double cx = -intr_rect_ir(0,2);
-    double cy = -intr_rect_ir(1,2);
-    double fx_inv = 1.0 / intr_rect_ir(0,0);
-    double fy_inv = 1.0 / intr_rect_ir(1,1);
-
     unsigned int num_valid_pixels = w*h;
 
     auto &points = cloud.points_;
@@ -83,96 +105,53 @@ void buildPointCloudRS(
     points.resize(num_valid_pixels);
     colors.resize(num_valid_pixels);
 
+    // tf - Depth2Color Transform
+    Eigen::Transform<double,3,Eigen::Affine> tf(depth2color_tf);
 
-    // inverse depth intrinsics
-    Eigen::Matrix4d intr_rect_rgb_inv;
-    intr_rect_rgb_inv.topLeftCorner<3,3>() = intr_rect_rgb.inverse();
-    intr_rect_rgb_inv(0, 3) = 0;
-    intr_rect_rgb_inv(1, 3) = 0;
-    intr_rect_rgb_inv(2, 3) = 0;
-    intr_rect_rgb_inv(3, 0) = 0;
-    intr_rect_rgb_inv(3, 1) = 0;
-    intr_rect_rgb_inv(3, 2) = 0;
-    intr_rect_rgb_inv(3, 3) = 1;
-
-    // Eigen ir2rgb_eigen (3x4)
-    Eigen::Matrix4d rgb2ir_tf = depth2color_tf.inverse();
-    Eigen::Matrix<double, 3, 4> rgb2ir;
-    for (int u = 0; u < 4; ++u)
-        for (int v = 0; v < 3; ++v)
-            rgb2ir(v,u) =  rgb2ir_tf(v, u);
-
-    // multiply into single (3x4) matrix
-    Eigen::Matrix<double, 3, 4> H_eigen =
-            intr_rect_ir * (rgb2ir * intr_rect_rgb_inv);
-
-    // *** reproject
-    Eigen::Vector3d p_rgb;
-    Eigen::Vector4d p_depth;
-
-    for (int v = 0; v < h; ++v)
-        for (int u = 0; u < w; ++u)
+// currently we're not compiling with openmp (needs cmake changes and libopenmp dependency)
+#pragma omp parallel for schedule(dynamic)
+    for (int depth_y = 0; depth_y < h; ++depth_y) {
+        int depth_pixel_index = depth_y * w;
+        for (int depth_x = 0; depth_x < w; ++depth_x, ++depth_pixel_index)
         {
-            uint16_t z = depth_img_rect.at<uint16_t>(v, u);
 
-            auto& pt = points[v*w + u];
+            auto &pt = points[depth_pixel_index];
 
+            uint16_t z = depth_img_rect.at<uint16_t>(depth_y, depth_x);
+            // Skip over depth pixels with the value of zero, we have no depth data so we will not write anything into our aligned images
             if (z != 0)
             {
-                // compute metric position
-                double z_metric = z * depth_scale_factor;
+                float depth = z * depth_scale_factor;
 
-                pt(0) = z_metric * ((u - cx) * fx_inv);
-                pt(1) = z_metric * ((v - cy) * fy_inv);
-                pt(2) = -z_metric;
+                // Map the top-left corner of the depth pixel onto the other image
+                Eigen::Vector2d depth_pixel(depth_x, depth_y);
+                Eigen::Vector2d other_pixel;
+                Eigen::Vector3d depth_point, other_point;
 
+                deproject_pixel_to_point(depth_point, intr_rect_ir, depth_pixel, depth);
 
-                // project into colorspace UV coordinates
-                p_depth(0) = u * z;
-                p_depth(1) = v * z;
-                p_depth(2) = z;
-                p_depth(3) = 1.0;
-                p_rgb = H_eigen * p_depth;
+                // store pixel location
+                pt(0) = depth_point(0);
+                pt(1) = depth_point(1);
+                pt(2) = -depth_point(2);
 
-                double px = p_rgb(0,0);
-                double py = p_rgb(1,0);
-                double pz = p_rgb(2,0);
+                // now transorm into rgb camera coordinates
+                other_point = (tf.rotation() * depth_point) + tf.translation();
 
-                int qu = (int)(px / pz);
-                int qv = (int)(py / pz);
+                project_point_to_pixel(other_pixel, intr_rect_rgb, other_point);
 
-                // skip outside of image
-                if (qu < 0 || qu >= w_rgb || qv < 0 || qv >= h_rgb) continue;
+                const int other_x = static_cast<int>(other_pixel(0));
+                const int other_y = static_cast<int>(other_pixel(1));
 
-                cv::Vec4b pixel = color_img_rect.at<cv::Vec4b>(qv, qu);
-                colors[v*w + u] = Eigen::Vector3d(pixel.val[2], pixel.val[1], pixel.val[0]) / 255.;
-            }
-            else
-            {
-                pt(0) = pt(1) = pt(2) = 0.; //std::numeric_limits<float>::quiet_NaN();
+                if (other_x < 0 || other_y < 0 || other_x >= w_rgb || other_y >= h_rgb)
+                    continue;
+
+                cv::Vec4b pixel = color_img_rect.at<cv::Vec4b>(other_y, other_x);
+                // assumes BGRA
+                colors[depth_pixel_index] = Eigen::Vector3d(pixel.val[2], pixel.val[1], pixel.val[0]) / 255.;
+            } else {
+                pt(0) = pt(1) = pt(2) = 0.;
             }
         }
-//
-//
-//    for (int u = 0; u < w; ++u)
-//        for (int v = 0; v < h; ++v)
-//        {
-//            uint16_t z = depth_img_rect.at<uint16_t>(v, u);
-//
-//            auto& pt = points[v*w + u];
-//
-//            if (z != 0)
-//            {
-//                double z_metric = z * depth_scale_factor;
-//
-//                pt(0) = z_metric * ((u - cx) * fx_inv);
-//                pt(1) = z_metric * ((v - cy) * fy_inv);
-//                pt(2) = -z_metric;
-//
-//            }
-//            else
-//            {
-//                pt(0) = pt(1) = pt(2) = 0.; //std::numeric_limits<float>::quiet_NaN();
-//            }
-//        }
+    }
 }

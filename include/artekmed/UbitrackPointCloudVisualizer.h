@@ -23,21 +23,15 @@ public:
 
 public:
     void SetUbitrackConnector(std::shared_ptr<UbitrackPointCloudConnector>& connector) throw();
-    void setPointCloud1(std::shared_ptr<open3d::PointCloud>& point_cloud);
-    void setPointCloud2(std::shared_ptr<open3d::PointCloud>& point_cloud);
-    void setPointCloud3(std::shared_ptr<open3d::PointCloud>& point_cloud);
+    void addPointCloud(std::shared_ptr<open3d::PointCloud>& point_cloud);
 
 protected:
 
     bool StartUbitrack() override;
     bool StopUbitrack() override;
 
-    std::shared_ptr<open3d::PointCloud> ubitrack_camera01_pointcloud_ptr;
-    std::shared_ptr<open3d::PointCloud> ubitrack_camera02_pointcloud_ptr;
-    std::shared_ptr<open3d::PointCloud> ubitrack_camera03_pointcloud_ptr;
+    std::vector<std::shared_ptr<open3d::PointCloud>> ubitrack_pointclouds_ptr;
 
-    std::shared_ptr<open3d::Geometry3D> ubitrack_camera02_pose_ptr;
-    std::shared_ptr<open3d::Geometry3D> ubitrack_camera03_pose_ptr;
 
     std::shared_ptr<UbitrackPointCloudConnector> ubitrack_connector_ptr;
 

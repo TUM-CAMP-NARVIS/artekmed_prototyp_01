@@ -18,6 +18,8 @@
 #include <utFacade/DataflowObserver.h>
 #include <utMeasurement/Measurement.h>
 
+#include "artekmed/Ubitrack/CameraConnector.h"
+
 /**
 * A Basic data flow observer
 */
@@ -61,12 +63,6 @@ public:
     explicit UbitrackBaseConnector(const std::string& _components_path);
     virtual ~UbitrackBaseConnector() = default;
 
-    /*
-     * waits for an image to be pushed and returns its timestamp
-     */
-    Ubitrack::Measurement::Timestamp wait_for_frame();
-    // returns 0 on success, 1 if no frame was received, 2 on timeout
-    unsigned int wait_for_frame_timeout(unsigned int timeout_ms, Ubitrack::Measurement::Timestamp& ts);
 
     /*
      * livecycle management for the utconnector
@@ -74,6 +70,15 @@ public:
      */
     virtual bool initialize(const std::string& _utql_filename);
     virtual bool teardown();
+
+
+    unsigned int wait_for_frame_timeout(unsigned int timeout_ms, std::vector<Ubitrack::Measurement::Timestamp>& ts);
+
+    virtual void add_cameras() {};
+
+    std::vector<std::shared_ptr<artekmed::RGBDCameraConnector>>& cameras() {
+        return m_cameras;
+    }
 
     virtual bool start();
     virtual bool stop();
@@ -85,18 +90,14 @@ public:
 
 protected:
 
-    void set_new_frame(Ubitrack::Measurement::Timestamp ts);
-
     std::unique_ptr<Ubitrack::Facade::AdvancedFacade> m_utFacade;
-    bool m_haveNewFrame;
-    Ubitrack::Measurement::Timestamp m_lastTimestamp;
+
+    std::vector<std::shared_ptr<artekmed::RGBDCameraConnector>> m_cameras;
 
     bool m_dataflowLoaded;
     bool m_dataflowRunning;
 
 private:
-    std::mutex m_waitMutex;
-    std::condition_variable m_waitCondition;
 };
 
 

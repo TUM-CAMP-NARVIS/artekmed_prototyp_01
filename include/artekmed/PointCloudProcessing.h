@@ -12,14 +12,14 @@
 #include <opencv2/opencv.hpp>
 
 
-void buildPointCloudZED(
+void buildColoredPointCloud(
         const cv::Mat& depth_img_rect,
         const cv::Mat& color_img_rect,
         const Eigen::Matrix3d& intr_rect_ir,
         open3d::PointCloud& cloud,
         double depth_scale_factor=1.0);
 
-void buildPointCloudRS(
+void buildColoredPointCloud(
         const cv::Mat& depth_img_rect,
         const cv::Mat& color_img_rect,
         const Eigen::Matrix3d& intr_rect_ir,
@@ -27,7 +27,6 @@ void buildPointCloudRS(
         const Eigen::Matrix4d& depth2color_tf,
         open3d::PointCloud& cloud,
         double depth_scale_factor=1.0);
-
 
 
 #endif //ARTEKMED_P1_POINTCLOUDPROCESSING_H

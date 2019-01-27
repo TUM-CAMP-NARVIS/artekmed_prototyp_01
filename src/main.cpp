@@ -155,6 +155,16 @@ int main(int ac, char** av) {
 		return 1;
     }
 
+	glfwWindowHint(GLFW_SAMPLES, 4);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+
+	glfwWindowHint(GLFW_RESIZABLE, GL_TRUE);
+
+	// set windows visible
+	glfwWindowHint(GLFW_VISIBLE, 1);
+
+
 	LOG4CPP_INFO( logger, "Starting Basic Facade Demo demo" );
 	try
 	{
@@ -189,22 +199,10 @@ int main(int ac, char** av) {
             return 1;
         }
 
-
-        if (connector->have_camera01()) {
-			// create ubitrack camera imageand add to visualizer
-			auto point_cloud1 = std::make_shared<open3d::PointCloud>();
-			visualizer.setPointCloud1(point_cloud1);
+        for (auto && cam : connector->cameras()) {
+			auto point_cloud = std::make_shared<open3d::PointCloud>();
+			visualizer.addPointCloud(point_cloud);
         }
-
-		if (connector->have_camera02()) {
-			auto point_cloud2 = std::make_shared<open3d::PointCloud>();
-			visualizer.setPointCloud2(point_cloud2);
-		}
-
-//		if (connector->have_camera03()) {
-//			auto point_cloud3 = std::make_shared<open3d::PointCloud>();
-//			visualizer.setPointCloud3(point_cloud3);
-//		}
 
 		auto origin = open3d::CreateMeshCoordinateFrame(2.);
         visualizer.AddGeometry(origin);

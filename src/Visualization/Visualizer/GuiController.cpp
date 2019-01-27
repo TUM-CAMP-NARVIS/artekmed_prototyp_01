@@ -98,30 +98,36 @@ bool GuiController::addCheckboxes(const char label[], bool* pData, uint32_t numC
 
 void GuiController::render(const int width, const int height, Visualizer* vis) {
     if (m_enabled) {
-        ImGui::Begin("Display");
+        ImGui::Begin("ARTEKMED");
 
-        std::vector<char>& arr = vis->GetGeometryFlags();
-        // not a nice solution .. but std::vector stores bit-streams ..
-        bool* checkbox_arr = (bool*)malloc(arr.size()*sizeof(bool));
-        for (int i = 0; i < arr.size(); ++i) {
-            if (arr[i] == 0x00) {
-                checkbox_arr[i] = false;
+        bool ubitrack_running = vis->UbitrackShouldRun();
+        ImGui::Checkbox("Ubitrack Running", &ubitrack_running);
+        if (ubitrack_running != vis->UbitrackShouldRun()) {
+            if (ubitrack_running) {
+                vis->UbitrackShouldRun(true);
             } else {
-                checkbox_arr[i] = true;
+                vis->UbitrackShouldRun(false);
             }
         }
-        addCheckboxes("Geometries", checkbox_arr, arr.size(), true);
-        for (int i = 0; i < arr.size(); ++i) {
-            if (checkbox_arr[i]) {
-                arr[i] = 0x01;
-            } else {
-                arr[i] = 0x00;
-            }
+
+
+        auto& renderer_ptrs = vis->GetGeometryRenderers();
+
+        // not a nice solution .. but std::vector stores bit-streams ..
+        bool* checkbox_arr = (bool*)malloc(renderer_ptrs.size()*sizeof(bool));
+        for (int i = 0; i < renderer_ptrs.size(); ++i) {
+            checkbox_arr[i] = renderer_ptrs[i]->IsVisible();
+        }
+        addCheckboxes("Geometries", checkbox_arr, renderer_ptrs.size(), false);
+        for (int i = 0; i < renderer_ptrs.size(); ++i) {
+            renderer_ptrs[i]->SetVisible(checkbox_arr[i]);
         }
         // free manually allocated buffer
         free(checkbox_arr);
 
         ImGui::End();
+
+
 
         ImGui::Begin("Open3D");
 

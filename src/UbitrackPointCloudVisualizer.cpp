@@ -22,22 +22,13 @@ UbitrackPointCloudVisualizer::~UbitrackPointCloudVisualizer()
 {
 }
 
-void UbitrackPointCloudVisualizer::setPointCloud1(std::shared_ptr<open3d::PointCloud>& point_cloud) {
-    ubitrack_camera01_pointcloud_ptr = point_cloud;
-    AddGeometry(point_cloud);
-}
-
-void UbitrackPointCloudVisualizer::setPointCloud2(std::shared_ptr<open3d::PointCloud>& point_cloud) {
-    ubitrack_camera02_pointcloud_ptr = point_cloud;
-    AddGeometry(point_cloud);
-}
-
-void UbitrackPointCloudVisualizer::setPointCloud3(std::shared_ptr<open3d::PointCloud>& point_cloud) {
-    ubitrack_camera03_pointcloud_ptr = point_cloud;
+void UbitrackPointCloudVisualizer::addPointCloud(std::shared_ptr<open3d::PointCloud>& point_cloud) {
+    ubitrack_pointclouds_ptr.emplace_back(point_cloud);
     AddGeometry(point_cloud);
 }
 
 bool UbitrackPointCloudVisualizer::StartUbitrack() {
+    UbitrackVisualizer::StartUbitrack();
     if (ubitrack_connector_ptr) {
         LOG4CPP_INFO(logger, "Starting Ubitrack Dataflow")
         ubitrack_connector_ptr->start();
@@ -52,6 +43,7 @@ bool UbitrackPointCloudVisualizer::StopUbitrack(){
     if (ubitrack_connector_ptr)
     LOG4CPP_INFO(logger, "Stopping Ubitrack Dataflow")
         ubitrack_connector_ptr->stop();
+    UbitrackVisualizer::StopUbitrack();
     return true;
 }
 
@@ -70,6 +62,7 @@ void UbitrackPointCloudVisualizer::SetUbitrackConnector(std::shared_ptr<Ubitrack
             // references
             auto view_control = dynamic_cast<UbitrackViewControl*>(view_control_ptr_.get());
             auto connector = ubitrack_connector_ptr.get();
+            bool needs_update = false;
 
             if (!connector) {
                 LOG4CPP_ERROR(logger, "connector not available - removing connector callback.");
@@ -84,81 +77,60 @@ void UbitrackPointCloudVisualizer::SetUbitrackConnector(std::shared_ptr<Ubitrack
                 return false;
             }
 
-            if (!connector->isRunning()) {
-              StartUbitrack();
-              SetupRenderManager();
-            }
+            if (UbitrackShouldRun()) {
+                if (!connector->isRunning()) {
+                    LOG4CPP_INFO(logger, "Start Ubitrack.");
+                    StartUbitrack();
+                    SetupRenderManager();
 
-            Ubitrack::Measurement::Timestamp ts;
-            if (!connector->wait_for_frame_timeout(1, ts)) {
-                bool needs_update = false;
-
-                if (connector->have_camera01()) {
-                    // transfer camera1_image to opengl texture
-                    if (ubitrack_camera01_pointcloud_ptr) {
-
-                        if (connector->camera01_get_pointcloud(ts, ubitrack_camera01_pointcloud_ptr)) {
-                            view_control->FitInGeometry(*ubitrack_camera01_pointcloud_ptr);
-                            needs_update = true;
-                        } else {
-                            LOG4CPP_WARN(logger, "error retrieving camera image.");
-                            return false;
-                        }
-                    }
-                }
-
-                if (connector->have_camera02()) {
-                    if (!ubitrack_camera02_pose_ptr) {
+                    // add debug coordinate frames for all camera poses
+                    Ubitrack::Measurement::Timestamp ts = connector->now();
+                    for (auto&& cam : connector->cameras()) {
                         Eigen::Matrix4d transform;
-                        if (connector->camera02_get_pose(ts, transform)) {
-                            auto mesh = open3d::CreateMeshCoordinateFrame(1.);
+                        if (cam->get_camera_pose(ts, transform)) {
+                            auto mesh = open3d::CreateMeshCoordinateFrame(0.3);
                             mesh->Transform(transform);
-                            ubitrack_camera02_pose_ptr = mesh;
                             AddGeometry(mesh);
                             needs_update = true;
-                        }
-                    }
 
-                    // transfer camera2_image to opengl texture
-                    if (ubitrack_camera02_pointcloud_ptr) {
-                        if (connector->camera02_get_pointcloud(ts, ubitrack_camera02_pointcloud_ptr)) {
-                            view_control->FitInGeometry(*ubitrack_camera02_pointcloud_ptr);
-                            needs_update = true;
-                        } else {
-                            LOG4CPP_WARN(logger, "error retrieving camera image.");
-                            return false;
                         }
                     }
                 }
+            } else {
+                if (connector->isRunning()) {
+                    LOG4CPP_INFO(logger, "Stop Ubitrack.");
+                    StopUbitrack();
+                }
+            }
 
-//                if (connector->have_camera03()) {
-//                    if (!ubitrack_camera03_pose_ptr) {
-//                        Eigen::Matrix4d transform;
-//                        if (connector->camera03_get_pose(ts, transform)) {
-//                            auto mesh = open3d::CreateMeshCoordinateFrame(0.1);
-//                            mesh->Transform(transform);
-//                            ubitrack_camera03_pose_ptr = mesh;
-//                            AddGeometry(mesh);
-//                        }
-//                    }
-//
-//                    // transfer camera1_image to opengl texture
-//                    if (ubitrack_camera03_pointcloud_ptr) {
-//                        if (connector->camera03_get_pointcloud(ts, ubitrack_camera03_pointcloud_ptr)) {
-//                            view_control->FitInGeometry(*ubitrack_camera03_pointcloud_ptr);
-//                            needs_update = true;
-//                        } else {
-//                            LOG4CPP_WARN(logger, "error retrieving camera image.");
-//                        }
-//                    }
-//                }
+            std::vector<Ubitrack::Measurement::Timestamp> tsv;
+            if (!connector->wait_for_frame_timeout(100, tsv)) {
+
+                int i = 0;
+                for (auto&& cam : connector->cameras()) {
+                    Ubitrack::Measurement::Timestamp ts = tsv[i];
+                    if ((ts != 0) && (cam->have_camera())) {
+
+                        if (i < ubitrack_pointclouds_ptr.size()) {
+                            auto& pc_ptr = ubitrack_pointclouds_ptr.at(i);
+                            if (cam->get_pointcloud(ts, pc_ptr)) {
+                                view_control->FitInGeometry(*pc_ptr);
+                                needs_update = true;
+                            } else {
+                                LOG4CPP_WARN(logger, "error retrieving from: " << cam->get_name());
+                                return false;
+                            }
+                        }
+                    }
+                    i++;
+                }
 
                 // things have changed, notify renderer
                 UpdateWindowTitle();
                 return needs_update;
 
             } else {
-                LOG4CPP_DEBUG(logger, "no data was received from connector.");
+                LOG4CPP_TRACE(logger, "no data was received from connector.");
             }
 
           UpdateWindowTitle();

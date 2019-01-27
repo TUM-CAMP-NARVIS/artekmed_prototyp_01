@@ -75,7 +75,7 @@ void UbitrackVisualizer::PrintVisualizerHelp()
 {
     Visualizer::PrintVisualizerHelp();
     PrintInfo("    -- AR Mode --\n");
-    PrintInfo("    XXX : Do something.\n");
+    PrintInfo("    Use ImGUI Controls.\n");
     PrintInfo("\n");
 }
 

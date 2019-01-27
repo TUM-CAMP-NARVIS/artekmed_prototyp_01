@@ -46,8 +46,8 @@ bool Visualizer::InitOpenGL()
     PrintInfo("Initialize GLAD.");
     if (!gladLoadGLLoader((GLADloadproc) glfwGetProcAddress))
     {
-        PrintError(logger, "Failed to initialize OpenGL context");
-        glfwDestroyWindow(m_pWindow);
+        PrintError("Failed to initialize OpenGL context");
+//        glfwDestroyWindow(window_);
         return false;
     }
 #endif
@@ -57,7 +57,7 @@ bool Visualizer::InitOpenGL()
     GLenum err = glewInit();
     if (err != GLEW_OK) {
         PrintError("Failed to initialize GLEW: %s\n",  glewGetErrorString(err));
-        glfwDestroyWindow(m_pWindow);
+//        glfwDestroyWindow(window_);
         return false;
     }
 #endif
@@ -93,16 +93,26 @@ void Visualizer::Render()
     glClearDepth(1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    size_t i = 0;
     for (const auto &renderer_ptr : geometry_renderer_ptrs_) {
+        // skip if not enabled (flag 0x01)
+        if (i < geometry_flags_.size()) {
+            if (geometry_flags_[i] == 0) {
+                i++;
+                continue;
+            }
+        }
         renderer_ptr->Render(*render_option_ptr_, *view_control_ptr_);
+        i++;
     }
+
     for (const auto &renderer_ptr : utility_renderer_ptrs_) {
         renderer_ptr->Render(*render_option_ptr_, *view_control_ptr_);
     }
 
     if (gui_controller_ptr) {
         gui_controller_ptr->pre_render();
-        gui_controller_ptr->render(view_control_ptr_->GetWindowWidth(), view_control_ptr_->GetWindowHeight());
+        gui_controller_ptr->render(view_control_ptr_->GetWindowWidth(), view_control_ptr_->GetWindowHeight(), this);
         gui_controller_ptr->post_render(window_);
     }
 

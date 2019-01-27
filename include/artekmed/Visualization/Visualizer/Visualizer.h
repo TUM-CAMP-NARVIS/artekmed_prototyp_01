@@ -168,6 +168,10 @@ public:
         return Ubitrack::Visualization::RenderManager::singleton();
     }
 
+    std::vector<char>& GetGeometryFlags() {
+        return geometry_flags_;
+    }
+
 protected:
     /// Function to initialize OpenGL
     virtual bool InitOpenGL();
@@ -204,6 +208,7 @@ protected:
 
     virtual void RenderManagerStep(Ubitrack::Visualization::RenderManager &manager);
 
+
 protected:
     // window
     GLFWwindow* window_ = NULL;
@@ -233,6 +238,7 @@ protected:
 
     // geometry to be rendered
     std::vector<std::shared_ptr<const Geometry>> geometry_ptrs_;
+    std::vector<char> geometry_flags_;
 
     // geometry renderers
     std::vector<std::shared_ptr<glsl::GeometryRenderer>>

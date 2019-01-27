@@ -38,7 +38,7 @@ bool UbitrackVisualizer::InitOpenGL()
     if (!gladLoadGLLoader((GLADloadproc) glfwGetProcAddress))
     {
         LOG4CPP_ERROR(logger, "Failed to initialize OpenGL context");
-        glfwDestroyWindow(m_pWindow);
+//        glfwDestroyWindow(_window);
         return false;
     }
 #endif
@@ -48,7 +48,7 @@ bool UbitrackVisualizer::InitOpenGL()
     GLenum err = glewInit();
     if (err != GLEW_OK) {
         LOG4CPP_ERROR(logger, "Failed to initialize GLEW: " <<  glewGetErrorString(err));
-        glfwDestroyWindow(m_pWindow);
+//        glfwDestroyWindow(_window);
         return false;
     }
 #endif

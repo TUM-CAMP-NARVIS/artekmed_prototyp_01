@@ -90,7 +90,7 @@ void UbitrackPointCloudVisualizer::SetUbitrackConnector(std::shared_ptr<Ubitrack
             }
 
             Ubitrack::Measurement::Timestamp ts;
-            if (!connector->wait_for_frame_timeout(1000, ts)) {
+            if (!connector->wait_for_frame_timeout(1, ts)) {
                 bool needs_update = false;
 
                 if (connector->have_camera01()) {
@@ -158,7 +158,7 @@ void UbitrackPointCloudVisualizer::SetUbitrackConnector(std::shared_ptr<Ubitrack
                 return needs_update;
 
             } else {
-                LOG4CPP_WARN(logger, "no data was received from connector.");
+                LOG4CPP_DEBUG(logger, "no data was received from connector.");
             }
 
           UpdateWindowTitle();

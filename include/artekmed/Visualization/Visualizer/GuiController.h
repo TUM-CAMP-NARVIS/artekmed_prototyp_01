@@ -9,12 +9,15 @@
 
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
-#include "imgui_impl_opengl2.h"
+#include "imgui_impl_opengl3.h"
 
+#include "artekmed/Visualization/Visualizer/ViewControl.h"
 
 namespace artekmed {
 
 //    using namespace open3d;
+
+    class Visualizer;
 
     class GuiController {
 
@@ -35,8 +38,13 @@ namespace artekmed {
         void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
         void CharCallback(GLFWwindow* window, unsigned int c);
 
+
+        bool addCheckBox(const char label[], bool& var, bool sameLine);
+        bool addCheckBox(const char label[], int& var, bool sameLine);
+        bool addCheckboxes(const char label[], bool* pData, uint32_t numCheckboxes, bool sameLine);
+
         virtual void pre_render();
-        virtual void render(const int width, const int height);
+        virtual void render(const int width, const int height, Visualizer* viewcontrol);
         virtual void post_render(GLFWwindow* window);
 
     protected:

@@ -103,43 +103,25 @@ bool UbitrackBaseConnector::stop() {
 
 unsigned int UbitrackBaseConnector::wait_for_frame_timeout(unsigned int timeout_ms, std::vector<Ubitrack::Measurement::Timestamp>& tsv) {
 
-    int idx = 0;
-    unsigned int to = timeout_ms;
-
     bool have_new_frame = false;
     bool have_timeout = false;
-
-    tsv.resize(m_cameras.size());
+    tsv.clear();
 
     for (auto&& cam: m_cameras) {
-        Ubitrack::Measurement::Timestamp t = 0;
 
-        // first camera is sync master where we wait with timeout.
-        if (idx == 0) {
-            auto ret = cam->wait_for_frame_timeout(to, t);
-            switch (ret) {
-                case 0:
-                    have_new_frame = true;
-                    break;
-                case 2:
-                    have_timeout = true;
-                    break;
-                default:
-                    break;
-            }
-        } else if (have_new_frame){
-            // pull all other cameras with 0 timeout.
-            auto ret = cam->wait_for_frame_timeout(0, t);
-            switch (ret) {
-                case 0:
-                    have_new_frame = true;
-                    break;
-                default:
-                    break;
-            }
-        }
+        Ubitrack::Measurement::Timestamp t = 0;
+        auto ret = cam->wait_for_frame_timeout(timeout_ms, t);
         tsv.push_back(t);
-        idx++;
+        switch (ret) {
+            case 0:
+                have_new_frame = true;
+                break;
+            case 2:
+                have_timeout = true;
+                break;
+            default:
+                break;
+        }
     }
     if (have_new_frame) {
         return 0;

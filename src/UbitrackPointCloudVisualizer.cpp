@@ -104,7 +104,7 @@ void UbitrackPointCloudVisualizer::SetUbitrackConnector(std::shared_ptr<Ubitrack
             }
 
             std::vector<Ubitrack::Measurement::Timestamp> tsv;
-            if (!connector->wait_for_frame_timeout(100, tsv)) {
+            if (!connector->wait_for_frame_timeout(3, tsv)) {
 
                 int i = 0;
                 for (auto&& cam : connector->cameras()) {

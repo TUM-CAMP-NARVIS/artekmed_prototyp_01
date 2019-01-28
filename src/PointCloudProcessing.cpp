@@ -132,7 +132,7 @@ void buildColoredPointCloud(
 
                 // store pixel location
                 pt(0) = depth_point(0);
-                pt(1) = -depth_point(1);
+                pt(1) = depth_point(1);
                 pt(2) = -depth_point(2);
 
                 // now transorm into rgb camera coordinates

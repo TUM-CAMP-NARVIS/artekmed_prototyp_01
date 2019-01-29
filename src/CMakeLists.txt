@@ -29,6 +29,30 @@ set_target_properties(ShaderFileTarget PROPERTIES FOLDER "Custom")
 source_group("Source Files\\GLSL" FILES ${SHADER_FILES})
 
 
+# OCL Sources inlined in headers
+file(GLOB OCL_FILES "OCL/*.cl")
+add_custom_command(
+        OUTPUT ${CMAKE_SOURCE_DIR}/include/artekmed/Compute/OCLKernels.h
+        COMMAND ${SHADERENCODER} OCLKernels.h
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/include/artekmed/Compute/
+        DEPENDS ${OCL_FILES} ${SHADERENCODER}
+)
+foreach(file ${OCL_FILES})
+  add_custom_command(
+          OUTPUT ${CMAKE_SOURCE_DIR}/include/artekmed/Compute/OCLKernels.h
+          COMMAND ${SHADERENCODER} OCLKernels.h ${file}
+          WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/include/artekmed/Compute/
+          DEPENDS ${OCL_FILES} ${SHADERENCODER}
+          APPEND
+  )
+endforeach(file)
+add_custom_target(OpenclFileTarget ALL
+        DEPENDS ${CMAKE_SOURCE_DIR}/include/artekmed/Compute/OCLKernels.h)
+set_target_properties(OpenclFileTarget PROPERTIES FOLDER "Custom")
+
+source_group("Source Files\\OCL" FILES ${OCL_FILES})
+
+
 
 # All cpp files
 set(UBITRACK_SRCS
@@ -37,6 +61,7 @@ set(UBITRACK_SRCS
   "${CMAKE_CURRENT_SOURCE_DIR}/UbitrackPointCloudConnector.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/UbitrackPointCloudVisualizer.cpp"
 
+  "${CMAKE_CURRENT_SOURCE_DIR}/Compute/OCLPointCloudProcessing.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/Ubitrack/CameraConnector.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/Ubitrack/BaseConnector.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/Visualization/UbitrackRenderManager.cpp"
@@ -79,6 +104,7 @@ set(UBITRACK_HEADERS
   "${CMAKE_SOURCE_DIR}/include/artekmed/UbitrackPointCloudConnector.h"
   "${CMAKE_SOURCE_DIR}/include/artekmed/UbitrackPointCloudVisualizer.h"
 
+  "${CMAKE_SOURCE_DIR}/include/artekmed/Compute/OCLPointCloudProcessing.h"
   "${CMAKE_SOURCE_DIR}/include/artekmed/Ubitrack/CameraConnector.h"
   "${CMAKE_SOURCE_DIR}/include/artekmed/Ubitrack/BaseConnector.h"
   "${CMAKE_SOURCE_DIR}/include/artekmed/Visualization/UbitrackRenderManager.h"
@@ -125,6 +151,7 @@ endif(MSVC)
 # UTCORE library definition
 add_executable(${UBITRACK_APPLICATION_NAME} ${UBITRACK_SRCS} ${UBITRACK_HEADERS})
 add_dependencies(${UBITRACK_APPLICATION_NAME} ShaderFileTarget)
+add_dependencies(${UBITRACK_APPLICATION_NAME} OpenclFileTarget)
 
 target_link_libraries(${UBITRACK_APPLICATION_NAME}
         CONAN_PKG::ubitrack_core

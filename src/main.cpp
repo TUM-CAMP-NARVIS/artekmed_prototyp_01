@@ -80,6 +80,8 @@
 #include <log4cpp/PropertyConfigurator.hh>
 
 
+#include <utVision/OpenCLManager.h>
+#include "artekmed/Compute/OCLPointCloudProcessing.h"
 
 
 using namespace Ubitrack;
@@ -206,6 +208,10 @@ int main(int ac, char** av) {
 
 		auto origin = open3d::CreateMeshCoordinateFrame(2.);
         visualizer.AddGeometry(origin);
+
+
+        OCLPointCloudProcessing ocltest;
+        ocltest.test_oclkernel();
 
 		visualizer.Run();
         visualizer.DestroyVisualizerWindow();

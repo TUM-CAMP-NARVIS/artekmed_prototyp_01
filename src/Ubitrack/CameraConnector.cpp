@@ -6,6 +6,22 @@
 #include "artekmed/PointCloudProcessing.h"
 #include "artekmed/EigenWrapper.h"
 
+#define DO_TIMING
+
+#ifdef DO_TIMING
+#include <utUtil/BlockTimer.h>
+
+static Ubitrack::Util::BlockTimer g_blockTimer1( "Process1", "artekmed.cameraconnector.Timing" );
+static Ubitrack::Util::BlockTimer g_blockTimer2( "Process2", "artekmed.cameraconnector.Timing" );
+static Ubitrack::Util::BlockTimer g_blockTimer3( "Transform", "artekmed.cameraconnector.Timing" );
+//static Ubitrack::Util::BlockTimer g_blockTimer4( "Marker2", "artekmed.cameraconnector.Timing" );
+//static Ubitrack::Util::BlockTimer g_blockTimer( "MarkerDetection", "artekmed.cameraconnector.Timing" );
+//static Ubitrack::Util::BlockTimer g_blockTimer( "MarkerDetection", "artekmed.cameraconnector.Timing" );
+
+#endif
+
+
+
 #include <log4cpp/Category.hh>
 static log4cpp::Category& logger(log4cpp::Category::getInstance("ArtekmedP1.CameraConnector"));
 
@@ -278,13 +294,22 @@ namespace artekmed {
 
 
 
-    bool RGBDCameraConnector::get_pointcloud(Ubitrack::Measurement::Timestamp ts, std::shared_ptr<open3d::PointCloud>& cloud)
-    {
+    bool RGBDCameraConnector::get_pointcloud(Ubitrack::Measurement::Timestamp ts, std::shared_ptr<open3d::PointCloud>& cloud) {
+        // if sinks are not complete - stop
         if (!have_camera()) {
             return false;
         }
-        // we need locking here to prevent concurrent access to m_current_camera01_image (when receiving new frame)
-        std::unique_lock<std::mutex> ul( m_textureAccessMutex );
+
+        // if no timestamp is provided - stop
+        if (ts == 0) {
+            return false;
+        }
+
+        LOG4CPP_INFO(logger, "get_pointcloud (" << m_camera_basename << ", " << ts << ")");
+
+        bool have_camera_pose = false;
+        bool have_depth_model = false;
+        bool have_depth2color = false;
 
         Ubitrack::Measurement::ImageMeasurement color_image;
         Ubitrack::Measurement::ImageMeasurement depth_image;
@@ -294,102 +319,122 @@ namespace artekmed {
         Ubitrack::Measurement::Pose camera_pose;
         Ubitrack::Measurement::Pose camera_depth2color;
 
-        bool have_camera_pose = false;
-        bool have_depth_model = false;
-        bool have_depth2color = false;
-
-        // should be configurable ..
-        double depth_scale_factor = 0.001;
-
-        try {
-            color_image = m_current_camera_image;
-            depth_image = m_pullsink_camera_depth->get(ts);
-            image_model = m_pullsink_camera_image_model->get(ts);
-
-        } catch(std::exception &e) {
-            LOG4CPP_ERROR(logger, "error retrieving measurement for " << m_camera_basename << ": " << e.what());
-            return false;
-        }
+        {
+            // we need locking here to prevent concurrent access to m_current_camera01_image (when receiving new frame)
+            std::unique_lock<std::mutex> ul(m_textureAccessMutex);
 
 
-        try {
-            if (m_pullsink_camera_depth_model) {
-                depth_model = m_pullsink_camera_depth_model->get(ts);
-                have_depth_model = true;
-            }
-        } catch(std::exception &e) {
-            depth_model = image_model;
-        }
 
-        try {
-            if (m_pullsink_camera_pose) {
-                camera_pose = m_pullsink_camera_pose->get(ts);
-                have_camera_pose = true;
-            }
-        } catch(std::exception &e) {
-            camera_pose = Ubitrack::Measurement::Pose(ts, Ubitrack::Math::Pose());
-        }
+            // should be configurable ..
+            double depth_scale_factor = 0.001;
 
-        try {
-            if (m_pullsink_depth2color_pose) {
-                camera_depth2color = m_pullsink_depth2color_pose->get(ts);
-                have_depth2color = true;
-            }
-        } catch(std::exception &e) {
-            camera_depth2color = Ubitrack::Measurement::Pose(ts, Ubitrack::Math::Pose());
-        }
+            try {
+                color_image = m_current_camera_image;
+                depth_image = m_pullsink_camera_depth->get(ts);
+                image_model = m_pullsink_camera_image_model->get(ts);
 
-        auto depth_img = depth_image->Mat();
-        auto color_img = color_image->Mat();
-
-        Eigen::Matrix3d intrinsics_color = Ubitrack::Math::Wrapper::EigenIntrinsicMatrixCast().to_eigen(image_model->matrix);
-
-        if ( (have_depth_model) && (have_depth2color)) {
-
-            // this currently suports only depthmaps from intel realsense as uint16
-            if ((depth_image->pixelFormat() != Ubitrack::Vision::Image::DEPTH) || (depth_image->bitsPerPixel() != 16)) {
-                LOG4CPP_ERROR(logger, "unsupported depth format - need DEPTH / UINT16!");
+            } catch (std::exception &e) {
+                LOG4CPP_ERROR(logger, "error retrieving measurement for " << m_camera_basename << ": " << e.what());
                 return false;
             }
 
-            Eigen::Matrix3d intrinsics_depth = Ubitrack::Math::Wrapper::EigenIntrinsicMatrixCast().to_eigen(depth_model->matrix);
 
-            Eigen::Matrix4d depth2color_tf;
-            {
-                Eigen::Quaternion<double> rotation = Ubitrack::Math::Wrapper::EigenQuaternionCast().to_eigen(camera_depth2color->rotation());
-                Eigen::Vector3d position = Ubitrack::Math::Wrapper::EigenVectorCast().to_eigen<double, 3>(camera_depth2color->translation());
-
-                depth2color_tf.setIdentity();
-                depth2color_tf.topLeftCorner<3,3>() = rotation.toRotationMatrix();
-                depth2color_tf.topRightCorner<3,1>() = position;
+            try {
+                if (m_pullsink_camera_depth_model) {
+                    depth_model = m_pullsink_camera_depth_model->get(ts);
+                    have_depth_model = true;
+                }
+            } catch (std::exception &e) {
+                depth_model = image_model;
             }
 
-            // compute pointcloud and colors
-            buildColoredPointCloud(depth_img, color_img, intrinsics_depth, intrinsics_color, depth2color_tf, *cloud, depth_scale_factor);
-
-        } else {
-
-            // this is a RGBD Camera without offset between Color and Depth (e.g. Stereolabs ZED)
-
-            auto num_pixels_color = color_image->width() * color_image->height();
-            auto num_pixels_depth = depth_image->width() * depth_image->height();
-
-            if (num_pixels_color != num_pixels_depth) {
-                LOG4CPP_ERROR(logger, "Color and Depth image for ZED Camera must have the same size!");
-                return false;
+            try {
+                if (m_pullsink_camera_pose) {
+                    camera_pose = m_pullsink_camera_pose->get(ts);
+                    have_camera_pose = true;
+                }
+            } catch (std::exception &e) {
+                camera_pose = Ubitrack::Measurement::Pose(ts, Ubitrack::Math::Pose());
             }
 
-            // for now works only with ZED depth images 32bit float
-            if ((depth_image->pixelFormat() != Ubitrack::Vision::Image::DEPTH) || (depth_image->bitsPerPixel() != 32)) {
-                LOG4CPP_ERROR(logger, "unsupported depth format - need DEPTH / 32F!");
-                return false;
+            try {
+                if (m_pullsink_depth2color_pose) {
+                    camera_depth2color = m_pullsink_depth2color_pose->get(ts);
+                    have_depth2color = true;
+                }
+            } catch (std::exception &e) {
+                camera_depth2color = Ubitrack::Measurement::Pose(ts, Ubitrack::Math::Pose());
             }
 
-            buildColoredPointCloud(depth_img, color_img, intrinsics_color, *cloud, depth_scale_factor);
+            auto depth_img = depth_image->Mat();
+            auto color_img = color_image->Mat();
 
+            Eigen::Matrix3d intrinsics_color = Ubitrack::Math::Wrapper::EigenIntrinsicMatrixCast().to_eigen(
+                    image_model->matrix);
+
+            if ((have_depth_model) && (have_depth2color)) {
+
+#ifdef DO_TIMING
+                UBITRACK_TIME(g_blockTimer1);
+#endif
+
+                // this currently suports only depthmaps from intel realsense as uint16
+                if ((depth_image->pixelFormat() != Ubitrack::Vision::Image::DEPTH) || (depth_image->bitsPerPixel() != 16)) {
+                    LOG4CPP_ERROR(logger, "unsupported depth format - need DEPTH / UINT16!");
+                    return false;
+                }
+
+                Eigen::Matrix3d intrinsics_depth = Ubitrack::Math::Wrapper::EigenIntrinsicMatrixCast().to_eigen(
+                        depth_model->matrix);
+
+                Eigen::Matrix4d depth2color_tf;
+                {
+                    Eigen::Quaternion<double> rotation = Ubitrack::Math::Wrapper::EigenQuaternionCast().to_eigen(
+                            camera_depth2color->rotation());
+                    Eigen::Vector3d position = Ubitrack::Math::Wrapper::EigenVectorCast().to_eigen<double, 3>(
+                            camera_depth2color->translation());
+
+                    depth2color_tf.setIdentity();
+                    depth2color_tf.topLeftCorner<3, 3>() = rotation.toRotationMatrix();
+                    depth2color_tf.topRightCorner<3, 1>() = position;
+                }
+
+                // compute pointcloud and colors
+                buildColoredPointCloud(depth_img, color_img,
+                                       intrinsics_depth.cast<float>(), intrinsics_color.cast<float>(), depth2color_tf.cast<float>(),
+                                       *cloud, depth_scale_factor);
+
+
+            } else {
+
+#ifdef DO_TIMING
+                UBITRACK_TIME(g_blockTimer2);
+#endif
+                // this is a RGBD Camera without offset between Color and Depth (e.g. Stereolabs ZED)
+
+                auto num_pixels_color = color_image->width() * color_image->height();
+                auto num_pixels_depth = depth_image->width() * depth_image->height();
+
+                if (num_pixels_color != num_pixels_depth) {
+                    LOG4CPP_ERROR(logger, "Color and Depth image for ZED Camera must have the same size!");
+                    return false;
+                }
+
+                // for now works only with ZED depth images 32bit float
+                if ((depth_image->pixelFormat() != Ubitrack::Vision::Image::DEPTH) || (depth_image->bitsPerPixel() != 32)) {
+                    LOG4CPP_ERROR(logger, "unsupported depth format - need DEPTH / 32F!");
+                    return false;
+                }
+
+                buildColoredPointCloud(depth_img, color_img, intrinsics_color.cast<float>(), *cloud, depth_scale_factor);
+
+            }
         }
 
         if (have_camera_pose) {
+#ifdef DO_TIMING
+            UBITRACK_TIME(g_blockTimer3);
+#endif
             Eigen::Matrix4d origin_tf;
             {
                 Eigen::Quaternion<double> rotation = Ubitrack::Math::Wrapper::EigenQuaternionCast().to_eigen(camera_pose->rotation());
@@ -404,6 +449,15 @@ namespace artekmed {
             cloud->Transform(origin_tf);
 
         }
+
+
+#ifdef DO_TIMING
+        LOG4CPP_INFO( logger, g_blockTimer1);
+        LOG4CPP_INFO( logger, g_blockTimer2);
+        LOG4CPP_INFO( logger, g_blockTimer3);
+//        LOG4CPP_INFO( logger, g_blockTimer4);
+
+#endif
 
         return true;
     }

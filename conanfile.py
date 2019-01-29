@@ -28,6 +28,7 @@ class UbitrackCoreConan(ConanFile):
         "open3d/0.5.0@camposs/stable",
         "imgui/1.66@camposs/stable",
         "jsoncpp/[>=1.7.1]@camposs/stable",
+        # "folly/2018.11.12.00@camposs/stable",
        )
 
     # all sources are deployed with the package

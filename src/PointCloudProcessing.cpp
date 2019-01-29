@@ -11,20 +11,28 @@
 
 
 /* Given a point in 3D space, compute the corresponding pixel coordinates in an image with no distortion assumed */
-void project_point_to_pixel(Eigen::Vector2d& pixel, const Eigen::Matrix3d& intrin, const Eigen::Vector3d& point) {
+void project_point_to_pixel(Eigen::Vector2f& pixel, const Eigen::Matrix3f& intrin, const Eigen::Vector3f& point) {
 
-    double x = point(0) / point(2), y = point(1) / point(2);
+    float x = point(0) / point(2), y = point(1) / point(2);
 
     pixel[0] = x * intrin(0,0) + intrin(0,2);
     pixel[1] = y * intrin(1,1) + intrin(1,2);
 }
 
+///* Transform 3D coordinates relative to one sensor to 3D coordinates relative to another viewpoint */
+//static void rs2_transform_point_to_point(float to_point[3], const struct rs2_extrinsics * extrin, const float from_point[3])
+//{
+//    to_point[0] = extrin->rotation[0] * from_point[0] + extrin->rotation[3] * from_point[1] + extrin->rotation[6] * from_point[2] + extrin->translation[0];
+//    to_point[1] = extrin->rotation[1] * from_point[0] + extrin->rotation[4] * from_point[1] + extrin->rotation[7] * from_point[2] + extrin->translation[1];
+//    to_point[2] = extrin->rotation[2] * from_point[0] + extrin->rotation[5] * from_point[1] + extrin->rotation[8] * from_point[2] + extrin->translation[2];
+//}
+
 /* Given pixel coordinates and depth in an image with no distortion or inverse distortion coefficients, compute the corresponding point in 3D space relative to the same camera */
-void deproject_pixel_to_point(Eigen::Vector3d& point, const Eigen::Matrix3d& intrin, const Eigen::Vector2d& pixel, float depth)
+void deproject_pixel_to_point(Eigen::Vector3f& point, const Eigen::Matrix3f& intrin, const Eigen::Vector2f& pixel, float depth)
 {
 
-    double x = (pixel(0) - intrin(0,2)) / intrin(0,0);
-    double y = (pixel(1) - intrin(1,2)) / intrin(1,1);
+    float x = (pixel(0) - intrin(0,2)) / intrin(0,0);
+    float y = (pixel(1) - intrin(1,2)) / intrin(1,1);
     point(0) = depth * x;
     point(1) = depth * y;
     point(2) = depth;
@@ -34,9 +42,9 @@ void deproject_pixel_to_point(Eigen::Vector3d& point, const Eigen::Matrix3d& int
 void buildColoredPointCloud(
         const cv::Mat& depth_img_rect,
         const cv::Mat& color_img_rect,
-        const Eigen::Matrix3d& intr_rect_ir,
+        const Eigen::Matrix3f& intr_rect_ir,
         open3d::PointCloud& cloud,
-        double depth_scale_factor)
+        float depth_scale_factor)
 {
     unsigned int w = depth_img_rect.cols;
     unsigned int h = depth_img_rect.rows;
@@ -63,8 +71,8 @@ void buildColoredPointCloud(
                 float depth = z * depth_scale_factor;
 
                 // Map the top-left corner of the depth pixel onto the other image
-                Eigen::Vector2d depth_pixel(depth_x, depth_y);
-                Eigen::Vector3d depth_point;
+                Eigen::Vector2f depth_pixel(depth_x, depth_y);
+                Eigen::Vector3f depth_point;
 
                 deproject_pixel_to_point(depth_point, intr_rect_ir, depth_pixel, depth);
 
@@ -86,11 +94,11 @@ void buildColoredPointCloud(
 void buildColoredPointCloud(
         const cv::Mat& depth_img_rect,
         const cv::Mat& color_img_rect,
-        const Eigen::Matrix3d& intr_rect_ir,
-        const Eigen::Matrix3d& intr_rect_rgb,
-        const Eigen::Matrix4d& depth2color_tf,
+        const Eigen::Matrix3f& intr_rect_ir,
+        const Eigen::Matrix3f& intr_rect_rgb,
+        const Eigen::Matrix4f& depth2color_tf,
         open3d::PointCloud& cloud,
-        double depth_scale_factor)
+        float depth_scale_factor)
 {
     unsigned int w = depth_img_rect.cols;
     unsigned int h = depth_img_rect.rows;
@@ -106,7 +114,7 @@ void buildColoredPointCloud(
     colors.resize(num_valid_pixels);
 
     // tf - Depth2Color Transform
-    Eigen::Transform<double,3,Eigen::Affine> tf(depth2color_tf);
+    Eigen::Transform<float,3,Eigen::Affine> tf(depth2color_tf);
 
 // currently we're not compiling with openmp (needs cmake changes and libopenmp dependency)
 #pragma omp parallel for schedule(dynamic)
@@ -124,15 +132,16 @@ void buildColoredPointCloud(
                 float depth = z * depth_scale_factor;
 
                 // Map the top-left corner of the depth pixel onto the other image
-                Eigen::Vector2d depth_pixel(depth_x, depth_y);
-                Eigen::Vector2d other_pixel;
-                Eigen::Vector3d depth_point, other_point;
+                Eigen::Vector2f depth_pixel(depth_x, depth_y);
+                Eigen::Vector2f other_pixel;
+                Eigen::Vector3f depth_point, other_point;
 
                 deproject_pixel_to_point(depth_point, intr_rect_ir, depth_pixel, depth);
 
                 // store pixel location
                 pt(0) = depth_point(0);
                 pt(1) = depth_point(1);
+                // XXX the negation here is experimental !!!
                 pt(2) = -depth_point(2);
 
                 // now transorm into rgb camera coordinates

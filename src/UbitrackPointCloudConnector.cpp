@@ -27,7 +27,7 @@ void UbitrackPointCloudConnector::add_cameras() {
 
     m_cameras.emplace_back(std::make_shared<artekmed::RGBDCameraConnector>("camera01"));
     m_cameras.emplace_back(std::make_shared<artekmed::RGBDCameraConnector>("camera02"));
-//    m_cameras.emplace_back(std::make_shared<artekmed::RGBDCameraConnector>("camera03"));
+    m_cameras.emplace_back(std::make_shared<artekmed::RGBDCameraConnector>("camera03"));
 }
 
 //

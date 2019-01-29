@@ -326,7 +326,7 @@ namespace artekmed {
 
 
             // should be configurable ..
-            double depth_scale_factor = 0.001;
+            float depth_scale_factor = 0.001;
 
             try {
                 color_image = m_current_camera_image;
@@ -384,6 +384,12 @@ namespace artekmed {
                     return false;
                 }
 
+                // for now works only with RS D435 depth images 24bit BGR
+                if ((color_image->pixelFormat() != Ubitrack::Vision::Image::BGR) || (color_image->bitsPerPixel() != 24)) {
+                    LOG4CPP_ERROR(logger, "unsupported color format - need BGR / CV_8UC3");
+                    return false;
+                }
+
                 Eigen::Matrix3d intrinsics_depth = Ubitrack::Math::Wrapper::EigenIntrinsicMatrixCast().to_eigen(
                         depth_model->matrix);
 
@@ -423,6 +429,12 @@ namespace artekmed {
                 // for now works only with ZED depth images 32bit float
                 if ((depth_image->pixelFormat() != Ubitrack::Vision::Image::DEPTH) || (depth_image->bitsPerPixel() != 32)) {
                     LOG4CPP_ERROR(logger, "unsupported depth format - need DEPTH / 32F!");
+                    return false;
+                }
+
+                // for now works only with ZED depth images 32bit BGRA
+                if ((color_image->pixelFormat() != Ubitrack::Vision::Image::BGRA) || (color_image->bitsPerPixel() != 32)) {
+                    LOG4CPP_ERROR(logger, "unsupported color format - need BGRA / CV_8UC4");
                     return false;
                 }
 

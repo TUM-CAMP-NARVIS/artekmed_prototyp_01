@@ -15,17 +15,29 @@ void project_point_to_pixel(Eigen::Vector2f& pixel, const Eigen::Matrix3f& intri
 
     float x = point(0) / point(2), y = point(1) / point(2);
 
-    pixel[0] = x * intrin(0,0) + intrin(0,2);
-    pixel[1] = y * intrin(1,1) + intrin(1,2);
+    pixel(0) = x * intrin(0,0) + intrin(0,2);
+    pixel(1) = y * intrin(1,1) + intrin(1,2);
 }
 
+// Matrix 4x4
+//00 01 02 03
+//10 11 12 13
+//20 21 22 23
+//30 31 32 33
+//Column Major: 00 10 20 30 01 11 21 31 ...
+// Eigen accessors vec(row, col)
+
 ///* Transform 3D coordinates relative to one sensor to 3D coordinates relative to another viewpoint */
-//static void rs2_transform_point_to_point(float to_point[3], const struct rs2_extrinsics * extrin, const float from_point[3])
-//{
+void transform_point_to_point(Eigen::Vector3f& to_point, const Eigen::Matrix4f& extrin, const Eigen::Vector3f& from_point)
+{
+
+    to_point(0) = extrin(0,0) * from_point(0) + extrin(0,1) * from_point(1) + extrin(0,2) * from_point(2) + extrin(0, 3);
+    to_point(1) = extrin(1,0) * from_point(0) + extrin(1,1) * from_point(1) + extrin(1,2) * from_point(2) + extrin(1, 3);
+    to_point(2) = extrin(2,0) * from_point(0) + extrin(2,1) * from_point(1) + extrin(2,2) * from_point(2) + extrin(2, 3);
 //    to_point[0] = extrin->rotation[0] * from_point[0] + extrin->rotation[3] * from_point[1] + extrin->rotation[6] * from_point[2] + extrin->translation[0];
 //    to_point[1] = extrin->rotation[1] * from_point[0] + extrin->rotation[4] * from_point[1] + extrin->rotation[7] * from_point[2] + extrin->translation[1];
 //    to_point[2] = extrin->rotation[2] * from_point[0] + extrin->rotation[5] * from_point[1] + extrin->rotation[8] * from_point[2] + extrin->translation[2];
-//}
+}
 
 /* Given pixel coordinates and depth in an image with no distortion or inverse distortion coefficients, compute the corresponding point in 3D space relative to the same camera */
 void deproject_pixel_to_point(Eigen::Vector3f& point, const Eigen::Matrix3f& intrin, const Eigen::Vector2f& pixel, float depth)
@@ -77,8 +89,8 @@ void buildColoredPointCloud(
                 deproject_pixel_to_point(depth_point, intr_rect_ir, depth_pixel, depth);
 
                 // store pixel location
-                pt(0) = depth_point(0);
-                pt(1) = depth_point(1);
+                pt(0) = -depth_point(0);
+                pt(1) = -depth_point(1);
                 pt(2) = -depth_point(2);
 
                 cv::Vec4b pixel = color_img_rect.at<cv::Vec4b>(depth_y, depth_x);
@@ -113,9 +125,6 @@ void buildColoredPointCloud(
     points.resize(num_valid_pixels);
     colors.resize(num_valid_pixels);
 
-    // tf - Depth2Color Transform
-    Eigen::Transform<float,3,Eigen::Affine> tf(depth2color_tf);
-
 // currently we're not compiling with openmp (needs cmake changes and libopenmp dependency)
 #pragma omp parallel for schedule(dynamic)
     for (int depth_y = 0; depth_y < h; ++depth_y) {
@@ -138,14 +147,15 @@ void buildColoredPointCloud(
 
                 deproject_pixel_to_point(depth_point, intr_rect_ir, depth_pixel, depth);
 
+                // OpenGL like coordinate system
                 // store pixel location
-                pt(0) = depth_point(0);
-                pt(1) = depth_point(1);
-                // XXX the negation here is experimental !!!
+                pt(0) = -depth_point(0);
+                pt(1) = -depth_point(1);
                 pt(2) = -depth_point(2);
 
                 // now transorm into rgb camera coordinates
-                other_point = (tf.rotation() * depth_point) + tf.translation();
+                transform_point_to_point(other_point, depth2color_tf, depth_point);
+//                other_point = (tf.rotation() * depth_point) + tf.translation();
 
                 project_point_to_pixel(other_pixel, intr_rect_rgb, other_point);
 
@@ -155,8 +165,8 @@ void buildColoredPointCloud(
                 if (other_x < 0 || other_y < 0 || other_x >= w_rgb || other_y >= h_rgb)
                     continue;
 
-                cv::Vec4b pixel = color_img_rect.at<cv::Vec4b>(other_y, other_x);
-                // assumes BGRA
+                // assumes BGR
+                cv::Vec3b pixel = color_img_rect.at<cv::Vec3b>(other_y, other_x);
                 colors[depth_pixel_index] = Eigen::Vector3d(pixel.val[2], pixel.val[1], pixel.val[0]) / 255.;
             } else {
                 pt(0) = pt(1) = pt(2) = 0.;

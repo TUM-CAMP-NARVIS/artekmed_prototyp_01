@@ -168,7 +168,7 @@ int main(int ac, char** av) {
 
 
 	LOG4CPP_INFO( logger, "Starting Basic Facade Demo demo" );
-	try
+//	try
 	{
 		// initialize Ubitrack logging
 		Facade::initUbitrackLogging("log4cpp.conf");
@@ -210,8 +210,8 @@ int main(int ac, char** av) {
         visualizer.AddGeometry(origin);
 
 
-        OCLPointCloudProcessing ocltest;
-        ocltest.test_oclkernel();
+//        OCLPointCloudProcessing ocltest;
+//        ocltest.test_oclkernel();
 
 		visualizer.Run();
         visualizer.DestroyVisualizerWindow();
@@ -221,13 +221,13 @@ int main(int ac, char** av) {
 		LOG4CPP_INFO( logger, "Finished, cleaning up..." );
 		connector->teardown();
 	}
-	catch( std::exception& e )
-	{
-		LOG4CPP_ERROR( logger, "exception occurred: " << e.what() );
-	}
-	catch(...) {
-		LOG4CPP_ERROR( logger, "unkown error occured" );
-	}
+//	catch( std::exception& e )
+//	{
+//		LOG4CPP_ERROR( logger, "exception occurred: " << e.what() );
+//	}
+//	catch(...) {
+//		LOG4CPP_ERROR( logger, "unkown error occured" );
+//	}
 
 	LOG4CPP_INFO( logger, "artekmed terminating." );
 

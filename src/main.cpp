@@ -81,7 +81,7 @@
 
 
 #include <utVision/OpenCLManager.h>
-#include "artekmed/Compute/OCLPointCloudProcessing.h"
+#include "artekmed/Compute/OCLPointCloudProcessor.h"
 
 
 using namespace Ubitrack;
@@ -201,6 +201,9 @@ int main(int ac, char** av) {
             return 1;
         }
 
+        // initialize opencl -> should be done through utVision/OpenCLManager - but doesn't work on my linux box..
+        cv::ocl::Context context = cv::ocl::Context::getDefault(true);
+
         for (auto && cam : connector->cameras()) {
 			auto point_cloud = std::make_shared<open3d::PointCloud>();
 			visualizer.addPointCloud(point_cloud);
@@ -208,10 +211,6 @@ int main(int ac, char** av) {
 
 		auto origin = open3d::CreateMeshCoordinateFrame(2.);
         visualizer.AddGeometry(origin);
-
-
-//        OCLPointCloudProcessing ocltest;
-//        ocltest.test_oclkernel();
 
 		visualizer.Run();
         visualizer.DestroyVisualizerWindow();

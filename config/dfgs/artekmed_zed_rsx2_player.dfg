@@ -10,12 +10,12 @@
                 <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedDepthMode" value="DEPTH_MODE_ULTRA" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
                 <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedSensingMode" value="SENSING_MODE_STANDARD" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
                 <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedRecordingEnabled" value="false" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
-                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedRecordingSVOFilename" value="/home/ueck/mywork/artekmed/artekmed_prototyp_01/cmake-build-release/zedcapture.svo" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
-                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedRecordingTimestampFilename" value="/home/ueck/mywork/artekmed/artekmed_prototyp_01/cmake-build-release/zedcapture_ts.txt" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedRecordingSVOFilename" value="${ARTEKMED_DATA_DIR}/zedcapture.svo" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedRecordingTimestampFilename" value="${ARTEKMED_DATA_DIR}/zedcapture_ts.txt" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
                 <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedSvoCompressionMode" value="LOSSLESS" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
                 <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedPlaybackEnabled" value="true" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
-                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedPlaybackSVOFilename" value="/home/ueck/mywork/artekmed/artekmed_prototyp_01/cmake-build-release/zedcapture.svo" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
-                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedPlaybackTimestampFilename" value="/home/ueck/mywork/artekmed/artekmed_prototyp_01/cmake-build-release/zedcapture_ts.txt" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedPlaybackSVOFilename" value="${ARTEKMED_DATA_DIR}/zedcapture.svo" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedPlaybackTimestampFilename" value="${ARTEKMED_DATA_DIR}/zedcapture_ts.txt" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
             </Node>
             <Node name="B" id="node_5">
                 <GuiPos x="80" y="695"/>
@@ -49,12 +49,12 @@
                 <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedDepthMode" value="DEPTH_MODE_ULTRA" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
                 <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedSensingMode" value="SENSING_MODE_STANDARD" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
                 <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedRecordingEnabled" value="false" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
-                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedRecordingSVOFilename" value="/home/ueck/mywork/artekmed/artekmed_prototyp_01/cmake-build-release/zedcapture.svo" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
-                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedRecordingTimestampFilename" value="/home/ueck/mywork/artekmed/artekmed_prototyp_01/cmake-build-release/zedcapture_ts.txt" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedRecordingSVOFilename" value="${ARTEKMED_DATA_DIR}/zedcapture.svo" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedRecordingTimestampFilename" value="${ARTEKMED_DATA_DIR}/zedcapture_ts.txt" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
                 <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedSvoCompressionMode" value="LOSSLESS" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
                 <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedPlaybackEnabled" value="true" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
-                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedPlaybackSVOFilename" value="/home/ueck/mywork/artekmed/artekmed_prototyp_01/cmake-build-release/zedcapture.svo" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
-                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedPlaybackTimestampFilename" value="/home/ueck/mywork/artekmed/artekmed_prototyp_01/cmake-build-release/zedcapture_ts.txt" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedPlaybackSVOFilename" value="${ARTEKMED_DATA_DIR}/zedcapture.svo" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedPlaybackTimestampFilename" value="${ARTEKMED_DATA_DIR}/zedcapture_ts.txt" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
             </Node>
             <Edge name="ImageOutput" source="Camera" destination="ImagePlane">
                 <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedSensorType" value="VIDEO" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
@@ -85,12 +85,12 @@
                 <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedDepthMode" value="DEPTH_MODE_ULTRA" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
                 <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedSensingMode" value="SENSING_MODE_STANDARD" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
                 <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedRecordingEnabled" value="false" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
-                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedRecordingSVOFilename" value="/home/ueck/mywork/artekmed/artekmed_prototyp_01/cmake-build-release/zedcapture.svo" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
-                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedRecordingTimestampFilename" value="/home/ueck/mywork/artekmed/artekmed_prototyp_01/cmake-build-release/zedcapture_ts.txt" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedRecordingSVOFilename" value="${ARTEKMED_DATA_DIR}/zedcapture.svo" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedRecordingTimestampFilename" value="${ARTEKMED_DATA_DIR}/zedcapture_ts.txt" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
                 <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedSvoCompressionMode" value="LOSSLESS" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
                 <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedPlaybackEnabled" value="true" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
-                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedPlaybackSVOFilename" value="/home/ueck/mywork/artekmed/artekmed_prototyp_01/cmake-build-release/zedcapture.svo" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
-                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedPlaybackTimestampFilename" value="/home/ueck/mywork/artekmed/artekmed_prototyp_01/cmake-build-release/zedcapture_ts.txt" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedPlaybackSVOFilename" value="${ARTEKMED_DATA_DIR}/zedcapture.svo" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedPlaybackTimestampFilename" value="${ARTEKMED_DATA_DIR}/zedcapture_ts.txt" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
             </Node>
             <Node name="CameraRight">
                 <GuiPos x="483" y="188"/>
@@ -131,12 +131,12 @@
                 <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedDepthMode" value="DEPTH_MODE_ULTRA" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
                 <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedSensingMode" value="SENSING_MODE_STANDARD" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
                 <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedRecordingEnabled" value="false" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
-                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedRecordingSVOFilename" value="/home/ueck/mywork/artekmed/artekmed_prototyp_01/cmake-build-release/zedcapture.svo" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
-                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedRecordingTimestampFilename" value="/home/ueck/mywork/artekmed/artekmed_prototyp_01/cmake-build-release/zedcapture_ts.txt" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedRecordingSVOFilename" value="${ARTEKMED_DATA_DIR}/zedcapture.svo" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedRecordingTimestampFilename" value="${ARTEKMED_DATA_DIR}/zedcapture_ts.txt" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
                 <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedSvoCompressionMode" value="LOSSLESS" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
                 <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedPlaybackEnabled" value="true" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
-                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedPlaybackSVOFilename" value="/home/ueck/mywork/artekmed/artekmed_prototyp_01/cmake-build-release/zedcapture.svo" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
-                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedPlaybackTimestampFilename" value="/home/ueck/mywork/artekmed/artekmed_prototyp_01/cmake-build-release/zedcapture_ts.txt" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedPlaybackSVOFilename" value="${ARTEKMED_DATA_DIR}/zedcapture.svo" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedPlaybackTimestampFilename" value="${ARTEKMED_DATA_DIR}/zedcapture_ts.txt" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
             </Node>
             <Node name="B" id="node_5">
                 <GuiPos x="80" y="695"/>
@@ -164,12 +164,12 @@
                 <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedDepthMode" value="DEPTH_MODE_ULTRA" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
                 <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedSensingMode" value="SENSING_MODE_STANDARD" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
                 <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedRecordingEnabled" value="false" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
-                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedRecordingSVOFilename" value="/home/ueck/mywork/artekmed/artekmed_prototyp_01/cmake-build-release/zedcapture.svo" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
-                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedRecordingTimestampFilename" value="/home/ueck/mywork/artekmed/artekmed_prototyp_01/cmake-build-release/zedcapture_ts.txt" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedRecordingSVOFilename" value="${ARTEKMED_DATA_DIR}/zedcapture.svo" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedRecordingTimestampFilename" value="${ARTEKMED_DATA_DIR}/zedcapture_ts.txt" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
                 <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedSvoCompressionMode" value="LOSSLESS" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
                 <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedPlaybackEnabled" value="true" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
-                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedPlaybackSVOFilename" value="/home/ueck/mywork/artekmed/artekmed_prototyp_01/cmake-build-release/zedcapture.svo" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
-                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedPlaybackTimestampFilename" value="/home/ueck/mywork/artekmed/artekmed_prototyp_01/cmake-build-release/zedcapture_ts.txt" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedPlaybackSVOFilename" value="${ARTEKMED_DATA_DIR}/zedcapture.svo" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedPlaybackTimestampFilename" value="${ARTEKMED_DATA_DIR}/zedcapture_ts.txt" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
             </Node>
             <Edge name="AB" source="A" destination="B">
                 <Attribute xsi:type="utql:PrimitiveAttributeType" name="staticPosition" value="0.0  0.0  0.0" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
@@ -196,12 +196,12 @@
                 <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedDepthMode" value="DEPTH_MODE_ULTRA" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
                 <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedSensingMode" value="SENSING_MODE_STANDARD" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
                 <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedRecordingEnabled" value="false" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
-                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedRecordingSVOFilename" value="/home/ueck/mywork/artekmed/artekmed_prototyp_01/cmake-build-release/zedcapture.svo" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
-                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedRecordingTimestampFilename" value="/home/ueck/mywork/artekmed/artekmed_prototyp_01/cmake-build-release/zedcapture_ts.txt" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedRecordingSVOFilename" value="${ARTEKMED_DATA_DIR}/zedcapture.svo" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedRecordingTimestampFilename" value="${ARTEKMED_DATA_DIR}/zedcapture_ts.txt" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
                 <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedSvoCompressionMode" value="LOSSLESS" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
                 <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedPlaybackEnabled" value="true" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
-                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedPlaybackSVOFilename" value="/home/ueck/mywork/artekmed/artekmed_prototyp_01/cmake-build-release/zedcapture.svo" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
-                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedPlaybackTimestampFilename" value="/home/ueck/mywork/artekmed/artekmed_prototyp_01/cmake-build-release/zedcapture_ts.txt" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedPlaybackSVOFilename" value="${ARTEKMED_DATA_DIR}/zedcapture.svo" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedPlaybackTimestampFilename" value="${ARTEKMED_DATA_DIR}/zedcapture_ts.txt" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
             </Node>
             <Edge name="Input" source="A" destination="B" pattern-ref="pattern_24" edge-ref="AB">
                 <GuiLandmark x="760" y="537"/>
@@ -227,12 +227,12 @@
                 <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedDepthMode" value="DEPTH_MODE_ULTRA" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
                 <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedSensingMode" value="SENSING_MODE_STANDARD" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
                 <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedRecordingEnabled" value="false" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
-                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedRecordingSVOFilename" value="/home/ueck/mywork/artekmed/artekmed_prototyp_01/cmake-build-release/zedcapture.svo" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
-                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedRecordingTimestampFilename" value="/home/ueck/mywork/artekmed/artekmed_prototyp_01/cmake-build-release/zedcapture_ts.txt" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedRecordingSVOFilename" value="${ARTEKMED_DATA_DIR}/zedcapture.svo" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedRecordingTimestampFilename" value="${ARTEKMED_DATA_DIR}/zedcapture_ts.txt" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
                 <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedSvoCompressionMode" value="LOSSLESS" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
                 <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedPlaybackEnabled" value="true" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
-                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedPlaybackSVOFilename" value="/home/ueck/mywork/artekmed/artekmed_prototyp_01/cmake-build-release/zedcapture.svo" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
-                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedPlaybackTimestampFilename" value="/home/ueck/mywork/artekmed/artekmed_prototyp_01/cmake-build-release/zedcapture_ts.txt" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedPlaybackSVOFilename" value="${ARTEKMED_DATA_DIR}/zedcapture.svo" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedPlaybackTimestampFilename" value="${ARTEKMED_DATA_DIR}/zedcapture_ts.txt" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
             </Node>
             <Node name="B" id="node_5">
                 <GuiPos x="80" y="695"/>
@@ -262,12 +262,12 @@
                 <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedDepthMode" value="DEPTH_MODE_ULTRA" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
                 <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedSensingMode" value="SENSING_MODE_STANDARD" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
                 <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedRecordingEnabled" value="false" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
-                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedRecordingSVOFilename" value="/home/ueck/mywork/artekmed/artekmed_prototyp_01/cmake-build-release/zedcapture.svo" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
-                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedRecordingTimestampFilename" value="/home/ueck/mywork/artekmed/artekmed_prototyp_01/cmake-build-release/zedcapture_ts.txt" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedRecordingSVOFilename" value="${ARTEKMED_DATA_DIR}/zedcapture.svo" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedRecordingTimestampFilename" value="${ARTEKMED_DATA_DIR}/zedcapture_ts.txt" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
                 <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedSvoCompressionMode" value="LOSSLESS" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
                 <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedPlaybackEnabled" value="true" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
-                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedPlaybackSVOFilename" value="/home/ueck/mywork/artekmed/artekmed_prototyp_01/cmake-build-release/zedcapture.svo" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
-                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedPlaybackTimestampFilename" value="/home/ueck/mywork/artekmed/artekmed_prototyp_01/cmake-build-release/zedcapture_ts.txt" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedPlaybackSVOFilename" value="${ARTEKMED_DATA_DIR}/zedcapture.svo" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedPlaybackTimestampFilename" value="${ARTEKMED_DATA_DIR}/zedcapture_ts.txt" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
             </Node>
             <Edge name="DepthMapOutput" source="Camera" destination="ImagePlane">
                 <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedSensorType" value="DEPTH" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
@@ -291,12 +291,12 @@
                 <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedDepthMode" value="DEPTH_MODE_ULTRA" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
                 <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedSensingMode" value="SENSING_MODE_STANDARD" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
                 <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedRecordingEnabled" value="false" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
-                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedRecordingSVOFilename" value="/home/ueck/mywork/artekmed/artekmed_prototyp_01/cmake-build-release/zedcapture.svo" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
-                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedRecordingTimestampFilename" value="/home/ueck/mywork/artekmed/artekmed_prototyp_01/cmake-build-release/zedcapture_ts.txt" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedRecordingSVOFilename" value="${ARTEKMED_DATA_DIR}/zedcapture.svo" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedRecordingTimestampFilename" value="${ARTEKMED_DATA_DIR}/zedcapture_ts.txt" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
                 <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedSvoCompressionMode" value="LOSSLESS" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
                 <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedPlaybackEnabled" value="true" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
-                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedPlaybackSVOFilename" value="/home/ueck/mywork/artekmed/artekmed_prototyp_01/cmake-build-release/zedcapture.svo" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
-                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedPlaybackTimestampFilename" value="/home/ueck/mywork/artekmed/artekmed_prototyp_01/cmake-build-release/zedcapture_ts.txt" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedPlaybackSVOFilename" value="${ARTEKMED_DATA_DIR}/zedcapture.svo" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedPlaybackTimestampFilename" value="${ARTEKMED_DATA_DIR}/zedcapture_ts.txt" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
             </Node>
             <Node name="B" id="node_5">
                 <GuiPos x="80" y="695"/>
@@ -389,11 +389,11 @@
             <Attribute xsi:type="utql:PrimitiveAttributeType" name="rsLaserPower" value="150" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
             <Attribute xsi:type="utql:PrimitiveAttributeType" name="rsInfraredGain" value="16" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
             <Attribute xsi:type="utql:PrimitiveAttributeType" name="rsEmitterEnabled" value="1" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
-            <Attribute xsi:type="utql:PrimitiveAttributeType" name="rsRosBagFilename" value="/home/ueck/mywork/artekmed/artekmed_prototyp_01/cmake-build-release/rscapture1.bag" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
-            <Attribute xsi:type="utql:PrimitiveAttributeType" name="rsTimestampFilename" value="/home/ueck/mywork/artekmed/artekmed_prototyp_01/cmake-build-release/rscapture1_ts.txt" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
-            <Attribute xsi:type="utql:PrimitiveAttributeType" name="rsCameraModelLeftFilename" value="/home/ueck/mywork/artekmed/artekmed_prototyp_01/cmake-build-release/rscapture1_cameramodel_left.calib" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
-            <Attribute xsi:type="utql:PrimitiveAttributeType" name="rsCameraModelColorFilename" value="/home/ueck/mywork/artekmed/artekmed_prototyp_01/cmake-build-release/rscapture1_cameramodel_color.calib" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
-            <Attribute xsi:type="utql:PrimitiveAttributeType" name="rsDepth2ColorFilename" value="/home/ueck/mywork/artekmed/artekmed_prototyp_01/cmake-build-release/rscapture1_depth2color.calib" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+            <Attribute xsi:type="utql:PrimitiveAttributeType" name="rsRosBagFilename" value="${ARTEKMED_DATA_DIR}/rscapture1.bag" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+            <Attribute xsi:type="utql:PrimitiveAttributeType" name="rsTimestampFilename" value="${ARTEKMED_DATA_DIR}/rscapture1_ts.txt" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+            <Attribute xsi:type="utql:PrimitiveAttributeType" name="rsCameraModelLeftFilename" value="${ARTEKMED_DATA_DIR}/rscapture1_cameramodel_left.calib" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+            <Attribute xsi:type="utql:PrimitiveAttributeType" name="rsCameraModelColorFilename" value="${ARTEKMED_DATA_DIR}/rscapture1_cameramodel_color.calib" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+            <Attribute xsi:type="utql:PrimitiveAttributeType" name="rsDepth2ColorFilename" value="${ARTEKMED_DATA_DIR}/rscapture1_depth2color.calib" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
             <Attribute xsi:type="utql:PrimitiveAttributeType" name="uploadImageOnGPU" value="false" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
             <Attribute xsi:type="utql:PrimitiveAttributeType" name="trackman-guipos" value="1390 0" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
         </DataflowConfiguration>
@@ -408,12 +408,12 @@
                 <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedDepthMode" value="DEPTH_MODE_ULTRA" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
                 <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedSensingMode" value="SENSING_MODE_STANDARD" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
                 <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedRecordingEnabled" value="false" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
-                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedRecordingSVOFilename" value="/home/ueck/mywork/artekmed/artekmed_prototyp_01/cmake-build-release/zedcapture.svo" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
-                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedRecordingTimestampFilename" value="/home/ueck/mywork/artekmed/artekmed_prototyp_01/cmake-build-release/zedcapture_ts.txt" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedRecordingSVOFilename" value="${ARTEKMED_DATA_DIR}/zedcapture.svo" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedRecordingTimestampFilename" value="${ARTEKMED_DATA_DIR}/zedcapture_ts.txt" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
                 <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedSvoCompressionMode" value="LOSSLESS" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
                 <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedPlaybackEnabled" value="true" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
-                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedPlaybackSVOFilename" value="/home/ueck/mywork/artekmed/artekmed_prototyp_01/cmake-build-release/zedcapture.svo" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
-                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedPlaybackTimestampFilename" value="/home/ueck/mywork/artekmed/artekmed_prototyp_01/cmake-build-release/zedcapture_ts.txt" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedPlaybackSVOFilename" value="${ARTEKMED_DATA_DIR}/zedcapture.svo" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedPlaybackTimestampFilename" value="${ARTEKMED_DATA_DIR}/zedcapture_ts.txt" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
             </Node>
             <Node name="B" displayName="Left IR Camera" id="node_51">
                 <GuiPos x="1195" y="506"/>
@@ -425,7 +425,7 @@
         </Output>
         <DataflowConfiguration>
             <UbitrackLib class="PoseCalibReader"/>
-            <Attribute xsi:type="utql:PrimitiveAttributeType" name="file" value="/home/ueck/mywork/artekmed/artekmed_prototyp_01/config/zed_rs1_pose.calib" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+            <Attribute xsi:type="utql:PrimitiveAttributeType" name="file" value="${ARTEKMED_CONFIG_DIR}/zed_rs1_pose.calib" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
             <Attribute xsi:type="utql:PrimitiveAttributeType" name="trackman-guipos" value="2080 0" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
         </DataflowConfiguration>
     </Pattern>
@@ -439,12 +439,12 @@
                 <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedDepthMode" value="DEPTH_MODE_ULTRA" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
                 <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedSensingMode" value="SENSING_MODE_STANDARD" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
                 <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedRecordingEnabled" value="false" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
-                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedRecordingSVOFilename" value="/home/ueck/mywork/artekmed/artekmed_prototyp_01/cmake-build-release/zedcapture.svo" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
-                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedRecordingTimestampFilename" value="/home/ueck/mywork/artekmed/artekmed_prototyp_01/cmake-build-release/zedcapture_ts.txt" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedRecordingSVOFilename" value="${ARTEKMED_DATA_DIR}/zedcapture.svo" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedRecordingTimestampFilename" value="${ARTEKMED_DATA_DIR}/zedcapture_ts.txt" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
                 <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedSvoCompressionMode" value="LOSSLESS" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
                 <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedPlaybackEnabled" value="true" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
-                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedPlaybackSVOFilename" value="/home/ueck/mywork/artekmed/artekmed_prototyp_01/cmake-build-release/zedcapture.svo" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
-                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedPlaybackTimestampFilename" value="/home/ueck/mywork/artekmed/artekmed_prototyp_01/cmake-build-release/zedcapture_ts.txt" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedPlaybackSVOFilename" value="${ARTEKMED_DATA_DIR}/zedcapture.svo" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedPlaybackTimestampFilename" value="${ARTEKMED_DATA_DIR}/zedcapture_ts.txt" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
             </Node>
             <Node name="B" id="node_51">
                 <GuiPos x="1195" y="506"/>
@@ -651,11 +651,11 @@
             <Attribute xsi:type="utql:PrimitiveAttributeType" name="rsLaserPower" value="150" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
             <Attribute xsi:type="utql:PrimitiveAttributeType" name="rsInfraredGain" value="16" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
             <Attribute xsi:type="utql:PrimitiveAttributeType" name="rsEmitterEnabled" value="1" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
-            <Attribute xsi:type="utql:PrimitiveAttributeType" name="rsRosBagFilename" value="/home/ueck/mywork/artekmed/artekmed_prototyp_01/cmake-build-release/rscapture2.bag" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
-            <Attribute xsi:type="utql:PrimitiveAttributeType" name="rsTimestampFilename" value="/home/ueck/mywork/artekmed/artekmed_prototyp_01/cmake-build-release/rscapture2_timestamps.txt" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
-            <Attribute xsi:type="utql:PrimitiveAttributeType" name="rsCameraModelLeftFilename" value="/home/ueck/mywork/artekmed/artekmed_prototyp_01/cmake-build-release/rscapture2_cameramodel_left.calib" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
-            <Attribute xsi:type="utql:PrimitiveAttributeType" name="rsCameraModelColorFilename" value="/home/ueck/mywork/artekmed/artekmed_prototyp_01/cmake-build-release/rscapture2_cameramodel_color.calib" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
-            <Attribute xsi:type="utql:PrimitiveAttributeType" name="rsDepth2ColorFilename" value="/home/ueck/mywork/artekmed/artekmed_prototyp_01/cmake-build-release/rscapture2_depth2color.calib" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+            <Attribute xsi:type="utql:PrimitiveAttributeType" name="rsRosBagFilename" value="${ARTEKMED_DATA_DIR}/rscapture2.bag" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+            <Attribute xsi:type="utql:PrimitiveAttributeType" name="rsTimestampFilename" value="${ARTEKMED_DATA_DIR}/rscapture2_timestamps.txt" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+            <Attribute xsi:type="utql:PrimitiveAttributeType" name="rsCameraModelLeftFilename" value="${ARTEKMED_DATA_DIR}/rscapture2_cameramodel_left.calib" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+            <Attribute xsi:type="utql:PrimitiveAttributeType" name="rsCameraModelColorFilename" value="${ARTEKMED_DATA_DIR}/rscapture2_cameramodel_color.calib" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+            <Attribute xsi:type="utql:PrimitiveAttributeType" name="rsDepth2ColorFilename" value="${ARTEKMED_DATA_DIR}/rscapture2_depth2color.calib" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
             <Attribute xsi:type="utql:PrimitiveAttributeType" name="uploadImageOnGPU" value="false" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
             <Attribute xsi:type="utql:PrimitiveAttributeType" name="trackman-guipos" value="2770 0" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
         </DataflowConfiguration>
@@ -797,12 +797,12 @@
                 <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedDepthMode" value="DEPTH_MODE_ULTRA" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
                 <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedSensingMode" value="SENSING_MODE_STANDARD" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
                 <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedRecordingEnabled" value="false" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
-                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedRecordingSVOFilename" value="/home/ueck/mywork/artekmed/artekmed_prototyp_01/cmake-build-release/zedcapture.svo" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
-                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedRecordingTimestampFilename" value="/home/ueck/mywork/artekmed/artekmed_prototyp_01/cmake-build-release/zedcapture_ts.txt" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedRecordingSVOFilename" value="${ARTEKMED_DATA_DIR}/zedcapture.svo" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedRecordingTimestampFilename" value="${ARTEKMED_DATA_DIR}/zedcapture_ts.txt" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
                 <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedSvoCompressionMode" value="LOSSLESS" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
                 <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedPlaybackEnabled" value="true" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
-                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedPlaybackSVOFilename" value="/home/ueck/mywork/artekmed/artekmed_prototyp_01/cmake-build-release/zedcapture.svo" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
-                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedPlaybackTimestampFilename" value="/home/ueck/mywork/artekmed/artekmed_prototyp_01/cmake-build-release/zedcapture_ts.txt" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedPlaybackSVOFilename" value="${ARTEKMED_DATA_DIR}/zedcapture.svo" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedPlaybackTimestampFilename" value="${ARTEKMED_DATA_DIR}/zedcapture_ts.txt" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
             </Node>
             <Node name="B" displayName="Left IR Camera" id="node_59">
                 <GuiPos x="1293" y="128"/>
@@ -814,7 +814,7 @@
         </Output>
         <DataflowConfiguration>
             <UbitrackLib class="PoseCalibReader"/>
-            <Attribute xsi:type="utql:PrimitiveAttributeType" name="file" value="/home/ueck/mywork/artekmed/artekmed_prototyp_01/config/zed_rs2_pose.calib" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+            <Attribute xsi:type="utql:PrimitiveAttributeType" name="file" value="${ARTEKMED_CONFIG_DIR}/zed_rs2_pose.calib" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
             <Attribute xsi:type="utql:PrimitiveAttributeType" name="trackman-guipos" value="3470 0" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
         </DataflowConfiguration>
     </Pattern>
@@ -828,12 +828,12 @@
                 <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedDepthMode" value="DEPTH_MODE_ULTRA" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
                 <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedSensingMode" value="SENSING_MODE_STANDARD" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
                 <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedRecordingEnabled" value="false" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
-                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedRecordingSVOFilename" value="/home/ueck/mywork/artekmed/artekmed_prototyp_01/cmake-build-release/zedcapture.svo" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
-                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedRecordingTimestampFilename" value="/home/ueck/mywork/artekmed/artekmed_prototyp_01/cmake-build-release/zedcapture_ts.txt" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedRecordingSVOFilename" value="${ARTEKMED_DATA_DIR}/zedcapture.svo" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedRecordingTimestampFilename" value="${ARTEKMED_DATA_DIR}/zedcapture_ts.txt" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
                 <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedSvoCompressionMode" value="LOSSLESS" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
                 <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedPlaybackEnabled" value="true" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
-                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedPlaybackSVOFilename" value="/home/ueck/mywork/artekmed/artekmed_prototyp_01/cmake-build-release/zedcapture.svo" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
-                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedPlaybackTimestampFilename" value="/home/ueck/mywork/artekmed/artekmed_prototyp_01/cmake-build-release/zedcapture_ts.txt" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedPlaybackSVOFilename" value="${ARTEKMED_DATA_DIR}/zedcapture.svo" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedPlaybackTimestampFilename" value="${ARTEKMED_DATA_DIR}/zedcapture_ts.txt" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
             </Node>
             <Node name="B" id="node_59">
                 <GuiPos x="1293" y="128"/>
@@ -860,12 +860,12 @@
                 <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedDepthMode" value="DEPTH_MODE_ULTRA" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
                 <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedSensingMode" value="SENSING_MODE_STANDARD" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
                 <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedRecordingEnabled" value="false" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
-                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedRecordingSVOFilename" value="/home/ueck/mywork/artekmed/artekmed_prototyp_01/cmake-build-release/zedcapture.svo" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
-                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedRecordingTimestampFilename" value="/home/ueck/mywork/artekmed/artekmed_prototyp_01/cmake-build-release/zedcapture_ts.txt" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedRecordingSVOFilename" value="${ARTEKMED_DATA_DIR}/zedcapture.svo" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedRecordingTimestampFilename" value="${ARTEKMED_DATA_DIR}/zedcapture_ts.txt" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
                 <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedSvoCompressionMode" value="LOSSLESS" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
                 <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedPlaybackEnabled" value="true" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
-                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedPlaybackSVOFilename" value="/home/ueck/mywork/artekmed/artekmed_prototyp_01/cmake-build-release/zedcapture.svo" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
-                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedPlaybackTimestampFilename" value="/home/ueck/mywork/artekmed/artekmed_prototyp_01/cmake-build-release/zedcapture_ts.txt" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedPlaybackSVOFilename" value="${ARTEKMED_DATA_DIR}/zedcapture.svo" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
+                <Attribute xsi:type="utql:PrimitiveAttributeType" name="zedPlaybackTimestampFilename" value="${ARTEKMED_DATA_DIR}/zedcapture_ts.txt" xmlns:utql="http://ar.in.tum.de/ubitrack/utql"/>
             </Node>
         </Output>
         <DataflowConfiguration>

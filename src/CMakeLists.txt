@@ -1,7 +1,6 @@
 set(UBITRACK_APPLICATION_NAME artekmed_p1)
 
 
-
 # some black magic to automatically create a header file from shader files
 find_program(SHADERENCODER EncodeShader PATHS ${CONAN_OPEN3D_ROOT}/bin)
 message(STATUS "Open3D Shader Encoder: ${SHADERENCODER}")
@@ -61,7 +60,10 @@ set(UBITRACK_SRCS
   "${CMAKE_CURRENT_SOURCE_DIR}/UbitrackPointCloudConnector.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/UbitrackPointCloudVisualizer.cpp"
 
-  "${CMAKE_CURRENT_SOURCE_DIR}/Compute/OCLPointCloudProcessing.cpp"
+
+      "${CMAKE_CURRENT_SOURCE_DIR}/Compute/ProgramWrapper.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/Compute/OCLPointCloudProcessor.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/Compute/OCLTestProcessor.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/Ubitrack/CameraConnector.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/Ubitrack/BaseConnector.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/Visualization/UbitrackRenderManager.cpp"
@@ -104,7 +106,10 @@ set(UBITRACK_HEADERS
   "${CMAKE_SOURCE_DIR}/include/artekmed/UbitrackPointCloudConnector.h"
   "${CMAKE_SOURCE_DIR}/include/artekmed/UbitrackPointCloudVisualizer.h"
 
-  "${CMAKE_SOURCE_DIR}/include/artekmed/Compute/OCLPointCloudProcessing.h"
+  "${CMAKE_SOURCE_DIR}/include/artekmed/Compute/ProgramWrapper.h"
+  "${CMAKE_SOURCE_DIR}/include/artekmed/Compute/cl.hpp"
+  "${CMAKE_SOURCE_DIR}/include/artekmed/Compute/OCLPointCloudProcessor.h"
+  "${CMAKE_SOURCE_DIR}/include/artekmed/Compute/OCLTestProcessor.h"
   "${CMAKE_SOURCE_DIR}/include/artekmed/Ubitrack/CameraConnector.h"
   "${CMAKE_SOURCE_DIR}/include/artekmed/Ubitrack/BaseConnector.h"
   "${CMAKE_SOURCE_DIR}/include/artekmed/Visualization/UbitrackRenderManager.h"
@@ -152,6 +157,8 @@ endif(MSVC)
 add_executable(${UBITRACK_APPLICATION_NAME} ${UBITRACK_SRCS} ${UBITRACK_HEADERS})
 add_dependencies(${UBITRACK_APPLICATION_NAME} ShaderFileTarget)
 add_dependencies(${UBITRACK_APPLICATION_NAME} OpenclFileTarget)
+
+set_target_properties(${UBITRACK_APPLICATION_NAME} PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 
 target_link_libraries(${UBITRACK_APPLICATION_NAME}
         CONAN_PKG::ubitrack_core

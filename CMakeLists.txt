@@ -1,8 +1,10 @@
+cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
+
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
-project(artekmed_p1)
+project(artekmed_p1 LANGUAGES C CXX CUDA)
 
-cmake_minimum_required(VERSION 3.4.0)
+LIST(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 if(EXISTS ${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
   include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
@@ -52,6 +54,15 @@ IF(OpenCL_FOUND)
   include_directories(${OpenCL_INCLUDE_DIR})
   SET(HAVE_OPENCL 1)
   MESSAGE(STATUS "Found OpenCL: ${OpenCL_INCLUDE_DIR} - ${OpenCL_LIBRARY}")
+
+  if(UNIX AND NOT APPLE)
+    include(CheckOpenCLICDLoader)
+    if(OpenCL_C_WORKS AND NOT OpenCL_CXX_WORKS)
+      set(OPENCL_ICD_LOADER_IS_OLD 1)
+      message(WARNING "Your libOpenCL.so is incompatible with CL/cl.h. Install ocl-icd-opencl-dev to update libOpenCL.so?")
+    endif()
+  endif()
+
 ENDIF(OpenCL_FOUND)
 
 # library

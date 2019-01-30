@@ -63,7 +63,7 @@ public:
     const std::string &GetShaderName() const { return shader_name_; }
     
     void PrintShaderWarning(const std::string &message) const;
-    
+
 protected:
     /// Function to compile shader
     /// In a derived class, this must be declared as final, and called from
@@ -103,7 +103,7 @@ protected:
     void SetShaderName(const std::string &shader_name) {
         shader_name_ = shader_name;
     }
-    
+
 private:
     std::string shader_name_ = "ShaderWrapper";
 };

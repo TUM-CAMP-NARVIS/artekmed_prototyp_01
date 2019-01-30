@@ -16,10 +16,12 @@ namespace artekmed {
 
 UbitrackPointCloudVisualizer::UbitrackPointCloudVisualizer()
 {
+    pointcloud_processor_ptr = std::make_shared<compute::OCLTestProcessor>("HelloWorld");
 }
 
 UbitrackPointCloudVisualizer::~UbitrackPointCloudVisualizer()
 {
+    pointcloud_processor_ptr.reset();
 }
 
 void UbitrackPointCloudVisualizer::addPointCloud(std::shared_ptr<open3d::PointCloud>& point_cloud) {
@@ -102,6 +104,30 @@ void UbitrackPointCloudVisualizer::SetUbitrackConnector(std::shared_ptr<Ubitrack
                     StopUbitrack();
                 }
             }
+
+#ifdef ___DISABLED
+            // check and init OpenCL if needed ..
+            auto clmgr = &Ubitrack::Vision::OpenCLManager::singleton();
+            if (clmgr->isEnabled()) {
+                if (!clmgr->isActive()) {
+                    clmgr->activate();
+                }
+                if (!clmgr->isInitialized()) {
+                    // curren context ??
+                    clmgr->initializeOpenGL();
+                }
+            }
+
+            if (clmgr->isInitialized()) {
+
+            }
+#endif
+
+            if (cv::ocl::haveOpenCL()) {
+                pointcloud_processor_ptr->run_kernel();
+            }
+
+
 
             std::vector<Ubitrack::Measurement::Timestamp> tsv;
             if (!connector->wait_for_frame_timeout(3, tsv)) {

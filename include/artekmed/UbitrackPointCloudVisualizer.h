@@ -9,6 +9,9 @@
 #include "artekmed/Visualization/Utility/UbitrackImage.h"
 #include "artekmed/UbitrackPointCloudConnector.h"
 
+#include "artekmed/Compute/OCLPointCloudProcessor.h"
+#include "artekmed/Compute/OCLTestProcessor.h"
+
 namespace artekmed {
 
     using namespace open3d;
@@ -34,6 +37,8 @@ protected:
 
 
     std::shared_ptr<UbitrackPointCloudConnector> ubitrack_connector_ptr;
+    std::shared_ptr<compute::OCLTestProcessor> pointcloud_processor_ptr;
+    bool ocl_initialized = false;
 
 };
 

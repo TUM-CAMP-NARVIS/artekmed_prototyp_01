@@ -2,7 +2,8 @@ cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
 
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
-project(artekmed_p1 LANGUAGES C CXX CUDA)
+#project(artekmed_p1 LANGUAGES C CXX CUDA)
+project(artekmed_p1 LANGUAGES C CXX)
 
 LIST(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 

@@ -202,7 +202,7 @@ int main(int ac, char** av) {
         }
 
         // initialize opencl -> should be done through utVision/OpenCLManager - but doesn't work on my linux box..
-        cv::ocl::Context context = cv::ocl::Context::getDefault(true);
+//        cv::ocl::Context context = cv::ocl::Context::getDefault(true);
 
         for (auto && cam : connector->cameras()) {
 			auto point_cloud = std::make_shared<open3d::PointCloud>();

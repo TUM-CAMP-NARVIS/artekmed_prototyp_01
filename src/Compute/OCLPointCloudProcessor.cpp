@@ -37,36 +37,36 @@ void OCLPointCloudProcessor::Release()
 void OCLPointCloudProcessor::buildPointCloud(const cv::Mat &depth_img_rect, const Eigen::Matrix3f &intr_rect_ir,
                                              open3d::PointCloud &cloud, float depth_scale_factor) {
 
-//    size_t data_size = 1024;
-//
-//    cv::Mat mat_src(cv::Size(data_size, 1), CV_32F);
-//    double mean = 0.0;
-//    double stddev = 500.0 / 3.0; // 99.7% of values will be inside [-500, +500] interval
-//    cv::randn(mat_src, cv::Scalar(mean), cv::Scalar(stddev));
-//
-//    cv::UMat umat_src = mat_src.getUMat(cv::ACCESS_READ, cv::USAGE_ALLOCATE_DEVICE_MEMORY);
-//    cv::UMat umat_dst(data_size, CV_32F, cv::ACCESS_WRITE, cv::USAGE_ALLOCATE_DEVICE_MEMORY);
-//
-//
-//
-//    auto& kernel = GetKernel("depthmap_to_points");
-//
-//
-//    kernel.args(
-//            cv::ocl::KernelArg::ReadOnlyNoSize(umat_src),
-//            cv::ocl::KernelArg::ReadWrite(umat_dst)
-//    );
-//
-//    size_t globalThreads[3] = { data_size, 1, 1 };
-//    //size_t localThreads[3] = { 16, 16, 1 };
-//    bool success = kernel.run(3, globalThreads, NULL, true);
-//    if (!success){
-//        cout << "Failed running the kernel..." << endl;
-//        return;
-//    }
-//
-//    // Download the dst data from the device (?)
-//    cv::Mat mat_dst = umat_dst.getMat(cv::ACCESS_READ);
-//
+    float fx = intr_rect_ir(0,0);
+    float ppx = intr_rect_ir(0,2);
+    float fy = intr_rect_ir(1,1);
+    float ppy = intr_rect_ir(1,2);
+
+    cv::UMat umat_src_depth = depth_img_rect.getUMat(cv::ACCESS_READ, cv::USAGE_ALLOCATE_DEVICE_MEMORY);
+    cv::UMat umat_dst_depth(depth_img_rect.size(), CV_32FC3, cv::ACCESS_WRITE, cv::USAGE_ALLOCATE_DEVICE_MEMORY);
+
+    cv::ocl::Kernel kernel;
+    if (!GetKernel("depthmap_to_points", kernel)) {
+        PrintProgramWarning("no kernel .. skip");
+        return;
+    }
+
+    kernel.args(
+            cv::ocl::KernelArg::ReadOnlyNoSize(umat_src_depth),
+            cv::ocl::KernelArg::ReadWrite(umat_dst_depth)
+    );
+
+    cv::Size dims = depth_img_rect.size();
+    size_t globalThreads[3] = { (size_t)dims.height, (size_t)dims.width, 1 };
+    size_t localThreads[3] = { 16, 16, 1 };
+    bool success = kernel.run(3, globalThreads, localThreads, true);
+    if (!success){
+        cout << "Failed running the kernel.. " << endl;
+        return;
+    }
+
+    // Download the dst data from the device (?)
+    cv::Mat mat_dst = umat_dst_depth.getMat(cv::ACCESS_READ);
+
 
 }

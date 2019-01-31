@@ -60,8 +60,9 @@ set(UBITRACK_SRCS
   "${CMAKE_CURRENT_SOURCE_DIR}/UbitrackPointCloudConnector.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/UbitrackPointCloudVisualizer.cpp"
 
-
-      "${CMAKE_CURRENT_SOURCE_DIR}/Compute/ProgramWrapper.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/Compute/DepthRegistration.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/Compute/DepthRegistrationOpenCL.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/Compute/ProgramWrapper.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/Compute/OCLPointCloudProcessor.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/Compute/OCLTestProcessor.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/Ubitrack/CameraConnector.cpp"
@@ -106,6 +107,8 @@ set(UBITRACK_HEADERS
   "${CMAKE_SOURCE_DIR}/include/artekmed/UbitrackPointCloudConnector.h"
   "${CMAKE_SOURCE_DIR}/include/artekmed/UbitrackPointCloudVisualizer.h"
 
+  "${CMAKE_SOURCE_DIR}/include/artekmed/Compute/DepthRegistration.h"
+  "${CMAKE_SOURCE_DIR}/include/artekmed/Compute/DepthRegistrationOpenCL.h"
   "${CMAKE_SOURCE_DIR}/include/artekmed/Compute/ProgramWrapper.h"
   "${CMAKE_SOURCE_DIR}/include/artekmed/Compute/cl.hpp"
   "${CMAKE_SOURCE_DIR}/include/artekmed/Compute/OCLPointCloudProcessor.h"

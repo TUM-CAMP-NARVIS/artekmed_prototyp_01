@@ -30,11 +30,15 @@ namespace artekmed {
                 oss.precision(16);
                 oss << std::scientific;
 
-//                oss << " -D INPUT_TYPE=uint16_t";
-//                oss << " -D OUTPUT_TYPE=float";
-                oss << " -D PIX_PER_WI_Y=128";
+                oss << " -D DATA_TYPE=float";
+                oss << " -D INPUT_TYPE=ushort";
+                oss << " -D OUTPUT_TYPE=float3";
 
-//
+                const cv::ocl::Device & dev = cv::ocl::Device::getDefault();
+                int pxPerWIy = (dev.isIntel() && (dev.type() & cv::ocl::Device::TYPE_GPU)) ? 4 : 1;
+                oss << " -D PIX_PER_WI_Y=%d" << pxPerWIy;
+
+
 //                // Rotation
 //                oss << " -D r00=" << rotation.at<double>(0, 0) << "f";
 //                oss << " -D r01=" << rotation.at<double>(0, 1) << "f";

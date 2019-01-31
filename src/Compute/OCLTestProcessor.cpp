@@ -56,7 +56,8 @@ void OCLTestProcessor::run_kernel()
     cv::UMat umat_src = mat_src.getUMat(cv::ACCESS_READ, cv::USAGE_ALLOCATE_DEVICE_MEMORY);
     cv::UMat umat_dst(data_size, CV_32F, cv::ACCESS_WRITE, cv::USAGE_ALLOCATE_DEVICE_MEMORY);
 
-    cv::ocl::Kernel kernel = GetKernel("square");
+    cv::ocl::Kernel kernel;
+    GetKernel("square", kernel);
 
     kernel.args(
             cv::ocl::KernelArg::ReadOnlyNoSize(umat_src),

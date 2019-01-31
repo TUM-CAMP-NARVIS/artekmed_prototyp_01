@@ -16,12 +16,10 @@ namespace artekmed {
 
 UbitrackPointCloudVisualizer::UbitrackPointCloudVisualizer()
 {
-    pointcloud_processor_ptr = std::make_shared<compute::OCLTestProcessor>("HelloWorld");
 }
 
 UbitrackPointCloudVisualizer::~UbitrackPointCloudVisualizer()
 {
-    pointcloud_processor_ptr.reset();
 }
 
 void UbitrackPointCloudVisualizer::addPointCloud(std::shared_ptr<open3d::PointCloud>& point_cloud) {
@@ -66,6 +64,8 @@ void UbitrackPointCloudVisualizer::SetUbitrackConnector(std::shared_ptr<Ubitrack
             auto connector = ubitrack_connector_ptr.get();
             bool needs_update = false;
 
+//            LOG4CPP_INFO(logger, "Registration Callback.");
+
             if (!connector) {
                 LOG4CPP_ERROR(logger, "connector not available - removing connector callback.");
                 RegisterAnimationCallback(nullptr);
@@ -83,7 +83,7 @@ void UbitrackPointCloudVisualizer::SetUbitrackConnector(std::shared_ptr<Ubitrack
                 if (!connector->isRunning()) {
                     LOG4CPP_INFO(logger, "Start Ubitrack.");
                     StartUbitrack();
-                    SetupRenderManager();
+//                    SetupRenderManager();
 
                     // add debug coordinate frames for all camera poses
                     Ubitrack::Measurement::Timestamp ts = connector->now();
@@ -123,14 +123,8 @@ void UbitrackPointCloudVisualizer::SetUbitrackConnector(std::shared_ptr<Ubitrack
             }
 #endif
 
-            if (cv::ocl::haveOpenCL()) {
-                pointcloud_processor_ptr->run_kernel();
-            }
-
-
-
             std::vector<Ubitrack::Measurement::Timestamp> tsv;
-            if (!connector->wait_for_frame_timeout(3, tsv)) {
+            if (!connector->wait_for_frame_timeout(30, tsv)) {
 
                 int i = 0;
                 for (auto&& cam : connector->cameras()) {

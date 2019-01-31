@@ -32,8 +32,18 @@ namespace artekmed {
 
         public:
 
-            cv::ocl::Kernel GetKernel(const char * kernel_name) {
-                return cv::ocl::Kernel(kernel_name, m_program);
+            bool GetKernel(const char * kernel_name, cv::ocl::Kernel& kernel) {
+
+                if (!compiled_) {
+                    Compile();
+                }
+                if (!compiled_) {
+                    PrintProgramWarning("Something is wrong in compiling.");
+                    return false;
+                }
+
+                kernel =  cv::ocl::Kernel(kernel_name, m_program);
+                return true;
             }
 
             const std::string &GetProgramName() const { return program_name_; }

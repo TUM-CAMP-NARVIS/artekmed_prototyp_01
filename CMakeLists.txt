@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
 
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
@@ -18,7 +18,7 @@ include(GNUInstallDirs)
 include(cmake/UbitrackConfig)
 
 
-OPTION(ENABLE_OPENMP "Enable OpenMP parallelization" OFF)
+OPTION(ENABLE_OPENMP "Enable OpenMP parallelization" ON)
 
 if (ENABLE_OPENMP)
   find_package(OpenMP REQUIRED)

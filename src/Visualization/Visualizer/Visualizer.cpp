@@ -249,10 +249,10 @@ bool Visualizer::InitGuiController()
 }
 
 bool Visualizer::SetupRenderManager() {
-    // create and register render manager
-    glfwMakeContextCurrent(window_);
-    GetRenderManager().setup();
-    is_renderermanager_initialized = true;
+//    // create and register render manager
+//    glfwMakeContextCurrent(window_);
+//    GetRenderManager().setup();
+//    is_renderermanager_initialized = true;
     return true;
 }
 
@@ -353,7 +353,8 @@ void Visualizer::Run()
     BuildUtilities();
     UpdateWindowTitle();
     while (bool(animation_callback_func_) ? PollEvents() : WaitEvents()) {
-        RenderManagerStep(utrender);
+//        RenderManagerStep(utrender);
+
         if (bool(animation_callback_func_in_loop_)) {
             if (animation_callback_func_in_loop_(this)) {
                 UpdateGeometry();

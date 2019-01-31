@@ -24,6 +24,7 @@
 #include "utComponents/ApplicationPushSource.h"
 #include "utComponents/ApplicationEndpointsVision.h"
 #include "artekmed/Visualization/Utility/UbitrackImage.h"
+#include "artekmed/Compute/DepthRegistration.h"
 
 namespace artekmed {
 
@@ -69,6 +70,7 @@ namespace artekmed {
         boost::shared_ptr<Ubitrack::Components::ApplicationPullSinkPose>             m_pullsink_camera_pose;
         boost::shared_ptr<Ubitrack::Components::ApplicationPullSinkCameraIntrinsics> m_pullsink_camera_image_model;
 
+
         bool m_haveNewFrame;
         Ubitrack::Measurement::Timestamp m_lastTimestamp;
 
@@ -77,7 +79,6 @@ namespace artekmed {
 
         std::mutex m_textureAccessMutex;
         Ubitrack::Measurement::ImageMeasurement m_current_camera_image;
-
 
     };
 
@@ -108,6 +109,8 @@ namespace artekmed {
         boost::shared_ptr<Ubitrack::Components::ApplicationPullSinkPositionList>   m_pullsink_camera_pointcloud;
         boost::shared_ptr<Ubitrack::Components::ApplicationPullSinkPose>           m_pullsink_depth2color_pose;
         boost::shared_ptr<Ubitrack::Components::ApplicationPullSinkCameraIntrinsics> m_pullsink_camera_depth_model;
+
+        std::shared_ptr<DepthRegistration> m_depthregistration;
 
     };
 

@@ -6,7 +6,7 @@
 #include "artekmed/PointCloudProcessing.h"
 #include "artekmed/EigenWrapper.h"
 
-#define DO_TIMING
+//#define DO_TIMING
 
 #ifdef DO_TIMING
 #include <utUtil/BlockTimer.h>
@@ -20,6 +20,7 @@ static Ubitrack::Util::BlockTimer g_blockTimer3( "Transform", "artekmed.cameraco
 
 #endif
 
+#include "artekmed/Compute/OCLPointCloudProcessor.h"
 
 
 #include <log4cpp/Category.hh>
@@ -223,6 +224,7 @@ namespace artekmed {
             LOG4CPP_ERROR(logger, e.what());
             m_pullsink_depth2color_pose.reset();
         }
+
         return true;
     }
 
@@ -234,6 +236,9 @@ namespace artekmed {
         m_pullsink_camera_pointcloud.reset();
         m_pullsink_camera_depth_model.reset();
         m_pullsink_depth2color_pose.reset();
+
+        m_depthregistration.reset();
+
         return true;
     }
 
@@ -305,7 +310,7 @@ namespace artekmed {
             return false;
         }
 
-        LOG4CPP_INFO(logger, "get_pointcloud (" << m_camera_basename << ", " << ts << ")");
+//        LOG4CPP_INFO(logger, "get_pointcloud (" << m_camera_basename << ", " << ts << ")");
 
         bool have_camera_pose = false;
         bool have_depth_model = false;
@@ -438,7 +443,50 @@ namespace artekmed {
                     return false;
                 }
 
-                buildColoredPointCloud(depth_img, color_img, intrinsics_color.cast<float>(), *cloud, depth_scale_factor);
+//                if (cv::ocl::haveOpenCL()) {
+//
+//                    if (!m_depthregistration) {
+//                        LOG4CPP_INFO(logger, "Initialize Depth Processing");
+//                        m_depthregistration.reset(DepthRegistration::New());
+//
+//                        cv::Mat depth_intr(cv::Size(3, 3), CV_32F);
+//                        for (int i = 0; i < 3; i++)
+//                            for (int j = 0; j < 3; j++)
+//                                depth_intr.at<float>(i,j) = intrinsics_color(i,j);
+//
+//                        cv::Size depth_size(depth_image->width(), depth_image->height());
+//                        m_depthregistration->init(depth_intr, depth_size, 0.001);
+//                    }
+//
+//                    if (m_depthregistration) {
+//                        cv::Mat points;
+//                        LOG4CPP_INFO(logger, "call depthToPoints");
+//                        m_depthregistration->depthToPoints(depth_img, points);
+//
+//                        size_t num_points = points.total();
+//                        cloud->points_.resize(num_points);
+//                        cloud->colors_.resize(num_points);
+//
+//                        for (int i = 0; i < num_points; i++ ) {
+//                            const int x = i % points.cols;
+//                            const int y = i / points.cols;
+//
+//                            auto &pt = cloud->points_[i];
+//                            cv::Vec3f pos = points.at<cv::Vec3f>(y, x);
+//                            pt(0) = pos(0);
+//                            pt(1) = pos(1);
+//                            pt(2) = pos(2);
+//
+//                            cv::Vec4b pixel = color_img.at<cv::Vec4b>(y, x);
+//                            cloud->colors_[i] = Eigen::Vector3d(pixel.val[2], pixel.val[1], pixel.val[0]) / 255.;
+//
+//                        }
+//                    }
+//
+//                } else
+                {
+                    buildColoredPointCloud(depth_img, color_img, intrinsics_color.cast<float>(), *cloud, depth_scale_factor);
+                }
 
             }
         }

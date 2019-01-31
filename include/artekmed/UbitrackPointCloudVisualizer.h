@@ -37,7 +37,6 @@ protected:
 
 
     std::shared_ptr<UbitrackPointCloudConnector> ubitrack_connector_ptr;
-    std::shared_ptr<compute::OCLTestProcessor> pointcloud_processor_ptr;
     bool ocl_initialized = false;
 
 };

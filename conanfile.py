@@ -39,6 +39,11 @@ class UbitrackCoreConan(ConanFile):
         self.options['ubitrack'].with_default_camera=True
         self.options['ubitrack'].with_camera_zed=True # this might require to set sdk-root option !!
         self.options['ubitrack'].with_camera_realsense=True
+
+        if self.settings.os == "Linux":
+            self.options["opencv"].with_gtk = True
+            self.options['ubitrack_core'].enable_tracing = True
+
         # self.options['ubitrack'].with_device_videostream=True
         # self.options['ubitrack'].with_haptic_calibration=True
         # if self.settings.os == "Windows":

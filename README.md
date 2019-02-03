@@ -97,8 +97,11 @@ Installation of dependencies on Ubuntu Linux 18.04
  ```
   $ sudo pip3 install doit
   $ git clone https://github.com/ubitrack/ubitrack_release_tools.git
+  $ cd ubitrack_release_tools
   $ cp custom_options_example.yml local_options.yml
-  adjust your configuration
+ ```
+  now adjust your configuration in local_options.yml
+ ```
   $ doit custom_options=local_options.yml
  ```
 

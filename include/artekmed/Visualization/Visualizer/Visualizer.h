@@ -242,6 +242,7 @@ protected:
     bool is_initialized_ = false;
     bool is_renderermanager_initialized = false;
     bool ubitrack_should_run = true;
+    unsigned long render_pass_count = 0;
 
     // view control
     std::unique_ptr<ViewControl> view_control_ptr_;

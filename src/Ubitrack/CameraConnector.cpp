@@ -6,19 +6,9 @@
 #include "artekmed/PointCloudProcessing.h"
 #include "artekmed/EigenWrapper.h"
 
+#include <utUtil/TracingProvider.h>
+
 //#define DO_TIMING
-
-#ifdef DO_TIMING
-#include <utUtil/BlockTimer.h>
-
-static Ubitrack::Util::BlockTimer g_blockTimer1( "Process1", "artekmed.cameraconnector.Timing" );
-static Ubitrack::Util::BlockTimer g_blockTimer2( "Process2", "artekmed.cameraconnector.Timing" );
-static Ubitrack::Util::BlockTimer g_blockTimer3( "Transform", "artekmed.cameraconnector.Timing" );
-//static Ubitrack::Util::BlockTimer g_blockTimer4( "Marker2", "artekmed.cameraconnector.Timing" );
-//static Ubitrack::Util::BlockTimer g_blockTimer( "MarkerDetection", "artekmed.cameraconnector.Timing" );
-//static Ubitrack::Util::BlockTimer g_blockTimer( "MarkerDetection", "artekmed.cameraconnector.Timing" );
-
-#endif
 
 #include "artekmed/Compute/OCLPointCloudProcessor.h"
 
@@ -85,6 +75,10 @@ namespace artekmed {
 
 
     void VideoCameraConnector::set_new_frame(Ubitrack::Measurement::Timestamp ts) {
+#ifdef HAVE_USDT
+        FOLLY_SDT(artekmed_p1, cameraconnector_set_new_frame, m_camera_basename, ts);
+#endif
+
         std::unique_lock<std::mutex> ul( m_waitMutex );
         m_lastTimestamp = ts;
         m_haveNewFrame = true;
@@ -93,6 +87,9 @@ namespace artekmed {
 
     void VideoCameraConnector::receive_image(const Ubitrack::Measurement::ImageMeasurement& image)
     {
+#ifdef HAVE_USDT
+        FOLLY_SDT(artekmed_p1, cameraconnector_receive_image, m_camera_basename, image.time());
+#endif
         {
             std::unique_lock<std::mutex> ul(m_textureAccessMutex);
             m_current_camera_image = image;
@@ -109,6 +106,9 @@ namespace artekmed {
             if (m_haveNewFrame) {
                 ts = m_lastTimestamp;
                 m_haveNewFrame = false;
+#ifdef HAVE_USDT
+                FOLLY_SDT(artekmed_p1, cameraconnector_wait_for_frame_timeout, m_camera_basename, ts);
+#endif
                 return 0;
             } else {
                 // no new frame
@@ -310,6 +310,10 @@ namespace artekmed {
             return false;
         }
 
+#ifdef HAVE_USDT
+        FOLLY_SDT(artekmed_p1, cameraconnector_get_pointcloud_begin, m_camera_basename, ts);
+#endif
+
 //        LOG4CPP_INFO(logger, "get_pointcloud (" << m_camera_basename << ", " << ts << ")");
 
         bool have_camera_pose = false;
@@ -379,8 +383,8 @@ namespace artekmed {
 
             if ((have_depth_model) && (have_depth2color)) {
 
-#ifdef DO_TIMING
-                UBITRACK_TIME(g_blockTimer1);
+#ifdef HAVE_USDT
+                FOLLY_SDT(artekmed_p1, cameraconnector_get_pointcloud_convert1, m_camera_basename, ts);
 #endif
 
                 // this currently suports only depthmaps from intel realsense as uint16
@@ -418,9 +422,10 @@ namespace artekmed {
 
             } else {
 
-#ifdef DO_TIMING
-                UBITRACK_TIME(g_blockTimer2);
+#ifdef HAVE_USDT
+                FOLLY_SDT(artekmed_p1, cameraconnector_get_pointcloud_convert2, m_camera_basename, ts);
 #endif
+
                 // this is a RGBD Camera without offset between Color and Depth (e.g. Stereolabs ZED)
 
                 auto num_pixels_color = color_image->width() * color_image->height();
@@ -492,8 +497,8 @@ namespace artekmed {
         }
 
         if (have_camera_pose) {
-#ifdef DO_TIMING
-            UBITRACK_TIME(g_blockTimer3);
+#ifdef HAVE_USDT
+            FOLLY_SDT(artekmed_p1, cameraconnector_get_pointcloud_transform, m_camera_basename, ts);
 #endif
             Eigen::Matrix4d origin_tf;
             {
@@ -510,19 +515,10 @@ namespace artekmed {
 
         }
 
-
-#ifdef DO_TIMING
-        LOG4CPP_INFO( logger, g_blockTimer1);
-        LOG4CPP_INFO( logger, g_blockTimer2);
-        LOG4CPP_INFO( logger, g_blockTimer3);
-//        LOG4CPP_INFO( logger, g_blockTimer4);
-
+#ifdef HAVE_USDT
+        FOLLY_SDT(artekmed_p1, cameraconnector_get_pointcloud_end, m_camera_basename, ts);
 #endif
 
         return true;
     }
-
-
-
-
 }

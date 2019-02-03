@@ -25,6 +25,7 @@
 // ----------------------------------------------------------------------------
 
 #include "artekmed/Visualization/Visualizer/Visualizer.h"
+#include <utUtil/TracingProvider.h>
 
 #include <Core/Geometry/TriangleMesh.h>
 
@@ -353,6 +354,10 @@ void Visualizer::Run()
     BuildUtilities();
     UpdateWindowTitle();
     while (bool(animation_callback_func_) ? PollEvents() : WaitEvents()) {
+
+#ifdef HAVE_USDT
+        FOLLY_SDT(artekmed_p1, visualizer_run, Ubitrack::Measurement::now());
+#endif
 //        RenderManagerStep(utrender);
 
         if (bool(animation_callback_func_in_loop_)) {

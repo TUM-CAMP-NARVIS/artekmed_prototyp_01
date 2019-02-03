@@ -6,7 +6,7 @@ RUN apt-get update --fix-missing && \
     apt-get install -y wget bzip2 ca-certificates curl apt-utils sudo
 
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-                       build-essential libv4l-dev qv4l2 opencl-headers \
+                       build-essential libv4l-dev qv4l2 opencl-headers systemtap-sdt-dev\
                        ocl-icd-opencl-dev libusb-1.0-0-dev libgtk2.0-dev \
                        pkg-config libomp-dev git cmake python3-pip python3-dev python3-setuptools
 

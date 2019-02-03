@@ -23,17 +23,9 @@ static inline bool filter(char const* inputString)
  * @brief Contains the operation start data to trace.
  */
 
-typedef struct
-{
-    u64 timestamp;
-    int domain;
-    char component_name[64];   ///< The component name
-    char component_port[64];   ///< The port name
-} EventQueueEvent;
-
 struct start_data_t
 {
-    EventQueueEvent event;
+    u64 count;
     u64 start;        ///< Timestamp of the start operation (start timestamp).
 };
 
@@ -42,27 +34,23 @@ struct start_data_t
  * key: the operation id.
  * value: The operation start latency data.
  */
-BPF_HASH(start_hash, EventQueueEvent, struct start_data_t);
+BPF_HASH(start_hash, u64, struct start_data_t);
 
 /**
  * @brief Reads the operation request arguments and stores the start data in the hash.
  * @param ctx The BPF context.
  */
-int trace_operation_start(struct pt_regs* ctx)
+int trace_visualizer_render_begin(struct pt_regs* ctx)
 {
     struct start_data_t start_data = {};
-    EventQueueEvent ev;
-    bpf_usdt_readarg_p(3, ctx, &start_data.component_name, sizeof(ev.component_name));
-    bpf_usdt_readarg_p(4, ctx, &start_data.port_name, sizeof(ev.port_name));
+
+    // process args here
 
     FILTER ///< Replaced by python code.
 
-    bpf_usdt_readarg(1, ctx, &ev.domain);
-    bpf_usdt_readarg(2, ctx, &ev.timestamp);
-
-    start_data.event = event;
+    bpf_usdt_readarg(1, ctx, &start_data.count);
 
     start_data.start = bpf_ktime_get_ns();
-    start_hash.update(&start_data.event, &start_data);
+    start_hash.update(&start_data.count, &start_data);
     return 0;
 }

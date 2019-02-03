@@ -4,6 +4,8 @@
 
 #include "artekmed/Ubitrack/BaseConnector.h"
 
+#include <utUtil/TracingProvider.h>
+
 #include <log4cpp/Category.hh>
 static log4cpp::Category& logger(log4cpp::Category::getInstance("ArtekmedP1.UbitrackBaseConnector"));
 
@@ -106,6 +108,9 @@ unsigned int UbitrackBaseConnector::wait_for_frame_timeout(unsigned int timeout_
     bool have_new_frame = false;
     bool have_timeout = false;
     tsv.clear();
+#ifdef HAVE_USDT
+    FOLLY_SDT(artekmed_p1, baseconnector_wait_for_frame_begin);
+#endif
 
     for (auto&& cam: m_cameras) {
 
@@ -123,6 +128,11 @@ unsigned int UbitrackBaseConnector::wait_for_frame_timeout(unsigned int timeout_
                 break;
         }
     }
+
+#ifdef HAVE_USDT
+    FOLLY_SDT(artekmed_p1, baseconnector_wait_for_frame_end);
+#endif
+
     if (have_new_frame) {
         return 0;
     }

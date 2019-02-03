@@ -32,12 +32,18 @@
 #include <artekmed/Visualization/Shader/Shader.h>
 #include <artekmed/Visualization/Utility/ColorMap.h>
 
+#include <utUtil/TracingProvider.h>
+
 namespace artekmed {
 
 namespace glsl {
 
 bool SimpleShader::Compile()
 {
+#ifdef HAVE_USDT
+    FOLLY_SDT(artekmed_p1, shader_compile_begin, (unsigned int)vertex_position_buffer_);
+#endif
+
     using namespace open3d::glsl;
     if (CompileShaders(SimpleVertexShader, NULL,
             SimpleFragmentShader) == false) {
@@ -47,6 +53,9 @@ bool SimpleShader::Compile()
     vertex_position_ = glGetAttribLocation(program_, "vertex_position");
     vertex_color_ = glGetAttribLocation(program_, "vertex_color");
     MVP_ = glGetUniformLocation(program_, "MVP");
+#ifdef HAVE_USDT
+    FOLLY_SDT(artekmed_p1, shader_compile_end, (unsigned int)vertex_position_buffer_);
+#endif
     return true;
 }
 
@@ -59,6 +68,10 @@ void SimpleShader::Release()
 bool SimpleShader::BindGeometry(const Geometry &geometry,
         const RenderOption &option, const ViewControl &view)
 {
+#ifdef HAVE_USDT
+    FOLLY_SDT(artekmed_p1, shader_bind_begin, (unsigned int)vertex_position_buffer_);
+#endif
+
     // If there is already geometry, we first unbind it.
     // We use GL_STATIC_DRAW. When geometry changes, we clear buffers and
     // rebind the geometry. Note that this approach is slow. If the geometry is
@@ -85,12 +98,18 @@ bool SimpleShader::BindGeometry(const Geometry &geometry,
     glBufferData(GL_ARRAY_BUFFER, colors.size() * sizeof(Eigen::Vector3f),
             colors.data(), GL_STATIC_DRAW);
     bound_ = true;
+#ifdef HAVE_USDT
+    FOLLY_SDT(artekmed_p1, shader_bind_end, (unsigned int)vertex_position_buffer_);
+#endif
     return true;
 }
 
 bool SimpleShader::RenderGeometry(const Geometry &geometry,
         const RenderOption &option, const ViewControl &view)
 {
+#ifdef HAVE_USDT
+    FOLLY_SDT(artekmed_p1, shader_render_begin, (unsigned int)vertex_position_buffer_);
+#endif
     if (PrepareRendering(geometry, option, view) == false) {
         PrintShaderWarning("Rendering failed during preparation.");
         return false;
@@ -106,6 +125,9 @@ bool SimpleShader::RenderGeometry(const Geometry &geometry,
     glDrawArrays(draw_arrays_mode_, 0, draw_arrays_size_);
     glDisableVertexAttribArray(vertex_position_);
     glDisableVertexAttribArray(vertex_color_);
+#ifdef HAVE_USDT
+    FOLLY_SDT(artekmed_p1, shader_render_end, (unsigned int)vertex_position_buffer_);
+#endif
     return true;
 }
 
@@ -137,6 +159,10 @@ bool SimpleShaderForPointCloud::PrepareBinding(const Geometry &geometry,
         std::vector<Eigen::Vector3f> &points,
         std::vector<Eigen::Vector3f> &colors)
 {
+#ifdef HAVE_USDT
+    FOLLY_SDT(artekmed_p1, shader_pointcloud_prepare_binding_begin, (unsigned int)vertex_position_buffer_);
+#endif
+
     if (geometry.GetGeometryType() !=
             Geometry::GeometryType::PointCloud) {
         PrintShaderWarning("Rendering type is not PointCloud.");
@@ -182,6 +208,9 @@ bool SimpleShaderForPointCloud::PrepareBinding(const Geometry &geometry,
     }
     draw_arrays_mode_ = GL_POINTS;
     draw_arrays_size_ = GLsizei(points.size());
+#ifdef HAVE_USDT
+    FOLLY_SDT(artekmed_p1, shader_pointcloud_prepare_binding_end, (unsigned int)vertex_position_buffer_);
+#endif
     return true;
 }
 
@@ -198,6 +227,8 @@ bool SimpleShaderForLineSet::PrepareRendering(const Geometry &geometry,
     glDepthFunc(GL_LESS);
     return true;
 }
+
+// more USDT tracepoints should be added
 
 bool SimpleShaderForLineSet::PrepareBinding(const Geometry &geometry,
         const RenderOption &option, const ViewControl &view,

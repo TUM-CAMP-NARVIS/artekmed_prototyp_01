@@ -36,6 +36,8 @@
 
 #include <artekmed/Visualization/Utility/GLHelper.h>
 
+#include "utUtil/TracingProvider.h"
+
 namespace artekmed {
 
 bool Visualizer::InitOpenGL()
@@ -81,6 +83,12 @@ bool Visualizer::InitOpenGL()
 
 void Visualizer::Render()
 {
+    render_pass_count++;
+
+#ifdef HAVE_USDT
+    FOLLY_SDT(artekmed_p1, visualizer_render_begin, render_pass_count);
+#endif
+
     glfwMakeContextCurrent(window_);
 
     view_control_ptr_->SetViewMatrices();
@@ -109,6 +117,9 @@ void Visualizer::Render()
 
 
     glfwSwapBuffers(window_);
+#ifdef HAVE_USDT
+    FOLLY_SDT(artekmed_p1, visualizer_render_end, render_pass_count);
+#endif
 }
 
 void Visualizer::ResetViewPoint(bool reset_bounding_box/* = false*/)

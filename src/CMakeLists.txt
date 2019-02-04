@@ -147,9 +147,6 @@ set(UBITRACK_HEADERS
   "${CMAKE_SOURCE_DIR}/include/artekmed/Visualization/Visualizer/ViewParameters.h"
   "${CMAKE_SOURCE_DIR}/include/artekmed/Visualization/Visualizer/Visualizer.h"
 
-  "${CMAKE_SOURCE_DIR}/include/thirdparty/stb_easy_font.h"
-  "${CMAKE_SOURCE_DIR}/include/thirdparty/stb_image.h"
-  "${CMAKE_SOURCE_DIR}/include/thirdparty/stb_image_write.h"
     )
 
 if(MSVC)

@@ -79,6 +79,7 @@ Installation of dependencies on Ubuntu Linux 18.04
   $ conan remote add camposs "https://conan.campar.in.tum.de/api/conan/conan-camposs"
   $ conan remote add ubitrack "https://conan.campar.in.tum.de/api/conan/conan-ubitrack"
   $ conan remote add vendor "https://conan.campar.in.tum.de/api/conan/conan-vendor"
+  $ conan profile new --detect default
  ```
 
   change c++ default for stdlib in ~/.conan/profiles/default:

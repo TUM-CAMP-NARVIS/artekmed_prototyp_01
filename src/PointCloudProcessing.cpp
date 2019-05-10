@@ -50,6 +50,29 @@ void deproject_pixel_to_point(Eigen::Vector3f& point, const Eigen::Matrix3f& int
     point(2) = depth;
 }
 
+//Maximum Threshold to consider that the point is even in this depth image, otherwise it is seen as an occluded point
+constexpr float zEpslion = 0.05f;
+///*@return true, if point can be seen in this image and is not occluded
+bool project_point_to_pixel(Eigen::Vector2f & pixel, const Eigen::Matrix3f& intrin, const Eigen::Vector3f& point, const cv::Mat* depth_image){
+	float x = point(0)/point(2);
+	float y= point(1)/point(2);
+
+	x= x*intrin(0,0)+intrin(0,2);
+	y = y*intrin(1,1)+intrin(1,2);
+	if(x < 0 || x > depth_image->cols || y < 0 || y>depth_image->rows){
+		//We are outside this image Space
+		return false;
+	}
+	float depth = depth_image->at<float>(x,y);
+	if(std::abs(depth-point(2))>zEpslion){
+		//Z coordinate does not fit into the depth value: point was occluded
+		return false;
+	}
+	pixel(0) = x;
+	pixel(1)=y;
+	return true;
+}
+
 // build pointcloud from depth/color image using image intrinsics (assume depth==color camera)
 void buildColoredPointCloud(
         const cv::Mat& depth_img_rect,
@@ -101,9 +124,9 @@ void buildColoredPointCloud(
         }
     }
     //[Michael Wechner] Temporary... seems like the best point to insert my processing tests..
-    std::vector<const cv::Mat*> depth_images = {};
-    depth_images.push_back(&depth_img_rect);
-    cloud = artekmed::pointcloud::regionGrowingResample(cloud,depth_images,args);
+    std::vector<artekmed::pointcloud::DepthImageSource> depth_images = {};
+    depth_images.emplace_back();
+    cloud = artekmed::pointcloud::regionGrowingResample(cloud,depth_images);
 }
 
 // build pointcloud from depth/color image using depth/image intrinsics and depth2color transform

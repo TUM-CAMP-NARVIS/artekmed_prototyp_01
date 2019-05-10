@@ -146,8 +146,9 @@ set(UBITRACK_HEADERS
   "${CMAKE_SOURCE_DIR}/include/artekmed/Visualization/Visualizer/ViewControl.h"
   "${CMAKE_SOURCE_DIR}/include/artekmed/Visualization/Visualizer/ViewParameters.h"
   "${CMAKE_SOURCE_DIR}/include/artekmed/Visualization/Visualizer/Visualizer.h"
+  "${CMAKE_SOURCE_DIR}/include/artekmed/PointProcessing/RegionGrowing.h"
 
-    )
+        )
 
 if(MSVC)
   set(UBITRACK_COMPILE_DEFINITIONS ${UBITRACK_COMPILE_DEFINITIONS} "BOOST_ALL_DYN_LINK")

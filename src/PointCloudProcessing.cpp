@@ -8,7 +8,7 @@
 #include <Eigen/Dense>
 
 #include "artekmed/PointCloudProcessing.h"
-
+#include "artekmed/PointProcessing/RegionGrowing.h"
 
 /* Given a point in 3D space, compute the corresponding pixel coordinates in an image with no distortion assumed */
 void project_point_to_pixel(Eigen::Vector2f& pixel, const Eigen::Matrix3f& intrin, const Eigen::Vector3f& point) {
@@ -100,6 +100,10 @@ void buildColoredPointCloud(
             }
         }
     }
+    //[Michael Wechner] Temporary... seems like the best point to insert my processing tests..
+    std::vector<const cv::Mat*> depth_images = {};
+    depth_images.push_back(&depth_img_rect);
+    cloud = artekmed::pointcloud::regionGrowingResample(cloud,depth_images,args);
 }
 
 // build pointcloud from depth/color image using depth/image intrinsics and depth2color transform

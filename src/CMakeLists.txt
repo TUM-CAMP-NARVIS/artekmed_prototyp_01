@@ -97,6 +97,8 @@ set(UBITRACK_SRCS
   "${CMAKE_CURRENT_SOURCE_DIR}/Visualization/Visualizer/VisualizerCallback.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/Visualization/Visualizer/VisualizerRender.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/Visualization/Visualizer/Visualizer.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/PointProcessing/RegionGrowing.cpp"
+
         )
 
 # All header files

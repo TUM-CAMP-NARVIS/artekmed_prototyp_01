@@ -28,5 +28,11 @@ void buildColoredPointCloud(
         open3d::PointCloud& cloud,
         float depth_scale_factor=1.0);
 
+void deproject_pixel_to_point(
+	Eigen::Vector3f& point,
+	const Eigen::Matrix3f& intrin,
+	const Eigen::Vector2f& pixel,
+	float depth);
+
 
 #endif //ARTEKMED_P1_POINTCLOUDPROCESSING_H

@@ -6,6 +6,7 @@
 
 #include <Core/Utility/Console.h>
 #include <Eigen/Dense>
+#include <IO/ClassIO/PointCloudIO.h>
 
 #include "artekmed/PointCloudProcessing.h"
 #include "artekmed/PointProcessing/RegionGrowing.h"
@@ -90,9 +91,10 @@ void buildColoredPointCloud(
                 deproject_pixel_to_point(depth_point, intr_rect_ir, depth_pixel, depth);
 
                 // store pixel location
-                pt(0) = -depth_point(0);
-                pt(1) = -depth_point(1);
-                pt(2) = -depth_point(2);
+                //FIXME: Why was this positon negated?
+                pt(0) = depth_point(0);
+                pt(1) = depth_point(1);
+                pt(2) = depth_point(2);
 
                 cv::Vec4b pixel = color_img_rect.at<cv::Vec4b>(depth_y, depth_x);
                 colors[depth_pixel_index] = Eigen::Vector3d(pixel.val[2], pixel.val[1], pixel.val[0]) / 255.;
@@ -102,12 +104,19 @@ void buildColoredPointCloud(
         }
     }
     //[Michael Wechner] Temporary... seems like the best point to insert my processing tests..
+#define REGION_GROWING
+#ifdef REGION_GROWING
     std::vector<artekmed::pointcloud::DepthImageSource> depth_images = {};
     depth_images.emplace_back(artekmed::pointcloud::DepthImageSource{
         &depth_img_rect,
         intr_rect_ir,
-        Eigen::Matrix4f::Identity()});
-    cloud = artekmed::pointcloud::regionGrowingResample(cloud,depth_images,3,100000);
+        Eigen::Matrix4f::Identity(),
+        depth_scale_factor});
+    cloud = artekmed::pointcloud::regionGrowingResample(points,depth_images,3,10000);
+    std::cout<< cloud.points_.size() << '\n';
+#endif
+    static uint32_t frame_number = 0;
+    ::open3d::WritePointCloud("data_"+std::to_string(++frame_number)+"_sor.pcd", cloud);
 }
 
 // build pointcloud from depth/color image using depth/image intrinsics and depth2color transform

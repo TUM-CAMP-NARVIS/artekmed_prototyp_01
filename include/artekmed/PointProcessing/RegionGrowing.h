@@ -47,17 +47,20 @@ namespace artekmed
 			const cv::Mat *depthImage;
 			const Eigen::Matrix3f intrinsics;
 			const Eigen::Matrix4f extrinsics;
+			const float depthScaleFactor;
 
 			DepthImageSource(const cv::Mat *img,
-											 const Eigen::Matrix3f intrinsicMat,
-											 const Eigen::Matrix4f extrinsicMat) :
-				intrinsics(std::move(intrinsicMat)),
-				extrinsics(std::move(extrinsicMat)),
-				depthImage(img) {}
+											 const Eigen::Matrix3f& intrinsicMat,
+											 const Eigen::Matrix4f& extrinsicMat,
+											 const float depthScaleFactor) :
+				intrinsics(intrinsicMat),
+				extrinsics(extrinsicMat),
+				depthImage(img),
+				depthScaleFactor(depthScaleFactor){}
 		};
 
 		open3d::PointCloud regionGrowingResample(
-			const open3d::PointCloud &inputPointCloud,
+			const std::vector<Eigen::Vector3d> &inputPointCloud,
 			const std::vector<DepthImageSource> &depthImages,
 			const int seed,
 			const size_t numSamplesTarget

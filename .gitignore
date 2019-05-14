@@ -1,3 +1,4 @@
 build/
 build_2013_64/
 cmake-build-debug/
+cmake-build-release/

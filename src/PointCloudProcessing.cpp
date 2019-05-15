@@ -10,6 +10,7 @@
 
 #include "artekmed/PointCloudProcessing.h"
 #include "artekmed/PointProcessing/RegionGrowing.h"
+#include "artekmed/PointProcessing/VoxelResampling.h"
 
 /* Given a point in 3D space, compute the corresponding pixel coordinates in an image with no distortion assumed */
 void project_point_to_pixel(Eigen::Vector2f& pixel, const Eigen::Matrix3f& intrin, const Eigen::Vector3f& point) {
@@ -104,19 +105,24 @@ void buildColoredPointCloud(
         }
     }
     //[Michael Wechner] Temporary... seems like the best point to insert my processing tests..
-#define REGION_GROWING
+#define VOXELS
+	std::vector<artekmed::DepthImageSource> depth_images = {};
+	depth_images.emplace_back(artekmed::DepthImageSource{
+		&depth_img_rect,
+		intr_rect_ir,
+		Eigen::Matrix4f::Identity(),
+		depth_scale_factor});
 #ifdef REGION_GROWING
-    std::vector<artekmed::pointcloud::DepthImageSource> depth_images = {};
-    depth_images.emplace_back(artekmed::pointcloud::DepthImageSource{
-        &depth_img_rect,
-        intr_rect_ir,
-        Eigen::Matrix4f::Identity(),
-        depth_scale_factor});
     cloud = artekmed::pointcloud::regionGrowingResample(points,depth_images,3,10000);
     std::cout<< cloud.points_.size() << '\n';
 #endif
+#ifdef VOXELS
+    open3d::PointCloud output;
+    artekmed::pointcloud::voxelResampling(output,depth_images,cloud,0.0005f,0.01f);
+    cloud = output;
+#endif
     static uint32_t frame_number = 0;
-    ::open3d::WritePointCloud("data_"+std::to_string(++frame_number)+"_sor.pcd", cloud);
+    ::open3d::WritePointCloud("data_"+std::to_string(frame_number++)+"_sor.pcd", cloud);
 }
 
 // build pointcloud from depth/color image using depth/image intrinsics and depth2color transform

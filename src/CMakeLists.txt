@@ -98,6 +98,8 @@ set(UBITRACK_SRCS
   "${CMAKE_CURRENT_SOURCE_DIR}/Visualization/Visualizer/VisualizerRender.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/Visualization/Visualizer/Visualizer.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/PointProcessing/RegionGrowing.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/PointProcessing/Common.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/PointProcessing/VoxelResampling.cpp"
 
         )
 
@@ -149,6 +151,9 @@ set(UBITRACK_HEADERS
   "${CMAKE_SOURCE_DIR}/include/artekmed/Visualization/Visualizer/ViewParameters.h"
   "${CMAKE_SOURCE_DIR}/include/artekmed/Visualization/Visualizer/Visualizer.h"
   "${CMAKE_SOURCE_DIR}/include/artekmed/PointProcessing/RegionGrowing.h"
+  "${CMAKE_SOURCE_DIR}/include/artekmed/PointProcessing/Common.h"
+  "${CMAKE_SOURCE_DIR}/include/artekmed/PointProcessing/VoxelResampling.h"
+  "${CMAKE_SOURCE_DIR}/include/artekmed/Utils/TemperatureColors.h"
 
         )
 

@@ -93,6 +93,41 @@ namespace artekmed
 		}
 	}
 
+	Eigen::Vector3f getCameraPositionFromExtrinsics(const Eigen::Matrix4f& cameraExtrinsics)
+	{
+		return {
+			-cameraExtrinsics(0,3),
+			-cameraExtrinsics(1,3),
+			-cameraExtrinsics(2,3)
+		};
+	}
+
+	Eigen::Vector3f getCameraDirectionFromExtrinsics(const Eigen::Matrix4f& cameraExtrinsics)
+	{
+		auto rotationMatrix = cameraExtrinsics.block<3, 3>(0, 0);
+		auto direction = rotationMatrix.transpose() * Eigen::Vector3f{ 0,0,1 };
+		return direction;
+	}
+
+	/*
+		Computes the Weight loosely inspired from Keller's method in Real-Time 3D Reconstruction in Dynamic Scenes using Point-based Fusion
+		We use a continious weighting instead of a discrete reject/keep and consider the offset from the image center by some degree
+	*/
+	float computeWeight(const float depth, const Eigen::Vector2i imageCoordinates, const Eigen::Vector3f & pointNormal, const Eigen::Vector3f & cameraDirection)
+	{
+		//Constants
+		constexpr float angleRejectLimit = 0.9f; //in cos(alpha)
+		constexpr float angleRejectEnvelope = 5.f;
+		constexpr float offsetEnvelope = 0.7f;
+
+		auto x_imgNDC = (imageCoordinates.x() - cameraExtrinsics(0, 2)) / cameraExtrinsics(0, 2);
+		auto y_imgNDC = (imageCoordinates.y() - cameraExtrinsics(1, 2))/ cameraExtrinsics(1, 2);
+		auto w = 1 - std::expf((std::abs(cameraDirection.dot(pointNormal)) - angleRejectLimit) * angleRejectEnvelope);
+		auto offsetFromMiddlePoint = (std::abs(x_imgNDC) + std::abs(y_imgNDC)) / 2;
+		w -= std::expf(offsetFromMiddlePoint*offsetEnvelope)-1;
+		return std::min(0, w);
+	}
+
 	template<class VectorItType>
 	void mlsNormalEstimation(
 		std::vector<Eigen::Vector3f>& inputPoints,

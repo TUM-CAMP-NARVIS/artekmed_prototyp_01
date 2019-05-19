@@ -100,6 +100,7 @@ set(UBITRACK_SRCS
   "${CMAKE_CURRENT_SOURCE_DIR}/PointProcessing/RegionGrowing.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/PointProcessing/Common.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/PointProcessing/VoxelResampling.cpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/PointProcessing/Denoising.cpp"
 
         )
 
@@ -153,6 +154,7 @@ set(UBITRACK_HEADERS
   "${CMAKE_SOURCE_DIR}/include/artekmed/PointProcessing/RegionGrowing.h"
   "${CMAKE_SOURCE_DIR}/include/artekmed/PointProcessing/Common.h"
   "${CMAKE_SOURCE_DIR}/include/artekmed/PointProcessing/VoxelResampling.h"
+  "${CMAKE_SOURCE_DIR}/include/artekmed/PointProcessing/Denoising.h"
   "${CMAKE_SOURCE_DIR}/include/artekmed/Utils/TemperatureColors.h"
 
         )

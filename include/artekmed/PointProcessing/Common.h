@@ -111,9 +111,9 @@ namespace artekmed
 
 	/*
 		Computes the Weight loosely inspired from Keller's method in Real-Time 3D Reconstruction in Dynamic Scenes using Point-based Fusion
-		We use a continious weighting instead of a discrete reject/keep and consider the offset from the image center by some degree
+		We use a continious weighting function instead of a discrete reject/keep and additionaly consider the offset from the image center
 	*/
-	float computeWeight(const float depth, const Eigen::Vector2i imageCoordinates, const Eigen::Vector3f & pointNormal, const Eigen::Vector3f & cameraDirection)
+	float cameraQualityWeight(const float depth, const Eigen::Vector2i imageCoordinates, const Eigen::Vector3f & pointNormal, const Eigen::Vector3f & cameraDirection)
 	{
 		//Constants
 		constexpr float angleRejectLimit = 0.9f; //in cos(alpha)

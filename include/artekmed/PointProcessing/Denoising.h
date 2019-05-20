@@ -74,5 +74,13 @@ namespace artekmed
 		{
 
 		}
+
+		Eigen::Vector3f projectPointToPlane(
+			const Eigen::Vector3f& toProject, 
+			const Eigen::Vector3f& planeNormal, 
+			const Eigen::Vector3f& planePoint)
+		{
+			return toProject - ((toProject - planePoint).dot(planeNormal) * planeNormal);
+		}
 	}
 }

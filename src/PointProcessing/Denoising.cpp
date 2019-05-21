@@ -1,11 +1,13 @@
 
 #include "artekmed/PointProcessing/Denoising.h"
 
+#include <iostream>
+
 namespace artekmed
 {
 	namespace pointcloud
 	{
-		Eigen::Vector3f projectPointToPlane(
+		Eigen::Vector3f projectPointTo2DPlane(
 			const Eigen::Vector3f &toProject,
 			const Eigen::Vector3f &planeNormal,
 			const Eigen::Vector3f &planePoint)
@@ -14,7 +16,8 @@ namespace artekmed
 		}
 
 
-		struct PlaneFunctionResult{
+		struct PlaneFunctionResult
+		{
 			float value;
 			Eigen::Vector2f gradient;
 			Eigen::Matrix2f hessian;
@@ -23,13 +26,39 @@ namespace artekmed
 				value(0),
 				gradient(Eigen::Vector2f::Zero()),
 				hessian(Eigen::Matrix2f::Zero())
-			{ }
+			{}
 
-			Eigen::Vector2f calculateCurvature() const
+			Eigen::Vector2f calculateHessianEV() const
 			{
 				auto solver = Eigen::EigenSolver<Eigen::Matrix2f>(hessian);
-				return {std::abs(solver.eigenvalues()(0).real()),std::abs(solver.eigenvalues()(1).real())};
+				return {solver.eigenvalues()(0).real(), solver.eigenvalues()(1).real()};
 			}
+
+			//Function from PCL, does not really work with our stuff
+			Eigen::Vector2f calculatePrincipalCurvature() const
+			{
+				/*
+				const double Z = 1 + d.z_u * d.z_u + d.z_v * d.z_v;
+				const double Zlen = std::sqrt (Z);
+				const double K = (d.z_uu * d.z_vv - d.z_uv * d.z_uv) / (Z * Z);
+				const double H = ((1.0 + d.z_v * d.z_v) * d.z_uu - 2.0 * d.z_u * d.z_v * d.z_uv +
+					(1.0 + d.z_u * d.z_u) * d.z_vv) / (2.0 * Zlen * Zlen * Zlen);
+				const double disc2 = H * H - K;
+				assert (disc2 >= 0.0);
+				const double disc = std::sqrt (disc2);
+				k[0] = H + disc;
+				k[1] = H - disc;
+*/
+				const auto Z = 1 + gradient.squaredNorm();
+				const auto K = (hessian(0, 0) * hessian(1, 1) - hessian(0, 1) * hessian(1, 0)) / (Z * Z);
+				const auto H = (1 + gradient(1) * gradient(1)) * hessian(0, 0) -
+				               2 * gradient(0) * gradient(1) * hessian(0, 1) + (1 + gradient(0) * gradient(1) * hessian(1, 1))
+				                                                               / (2 * Z * std::sqrt(Z));
+				const auto disc2 = H * H - K;
+				const auto disc = std::sqrt(disc2);
+				return {H + disc, H - disc};
+			}
+
 		};
 
 		//Returns
@@ -45,7 +74,7 @@ namespace artekmed
 			const float v)
 		{
 			int i = 0;
-			PlaneFunctionResult r={};
+			PlaneFunctionResult r = {};
 			//Precalculate the powers
 			Eigen::VectorXf uPows(degree + 1);
 			Eigen::VectorXf vPows(degree + 1);
@@ -63,23 +92,23 @@ namespace artekmed
 					r.value += uPows(ui) * vPows(vi) * coefficients(i);
 					if (ui >= 1)
 					{
-						r.gradient.x() += uPows(ui - 1) * ui *vPows(vi) * coefficients(i);
+						r.gradient.x() += uPows(ui - 1) * ui * vPows(vi) * coefficients(i);
 					}
 					if (vi >= 1)
 					{
-						r.gradient.y() += uPows(ui) *vi* vPows(vi - 1) * coefficients(i);
-						if(ui>=1)
+						r.gradient.y() += uPows(ui) * vi * vPows(vi - 1) * coefficients(i);
+						if (ui >= 1)
 						{
-							r.hessian(0,1)=r.hessian(1,0) += uPows(ui-1)*ui*vPows(vi-1)*vi*coefficients(i);
+							r.hessian(0, 1) = r.hessian(1, 0) += uPows(ui - 1) * ui * vPows(vi - 1) * vi * coefficients(i);
 						}
 					}
-					if(ui>=2)
+					if (ui >= 2)
 					{
-						r.hessian(0,0) += uPows(ui-2)*ui*(ui-1)*vPows(vi)*coefficients(i);
+						r.hessian(0, 0) += uPows(ui - 2) * ui * (ui - 1) * vPows(vi) * coefficients(i);
 					}
-					if(vi>=2)
+					if (vi >= 2)
 					{
-						r.hessian(1,1) += vPows(vi-2)*vi*(vi-1)*uPows(ui)*coefficients(i);
+						r.hessian(1, 1) += vPows(vi - 2) * vi * (vi - 1) * uPows(ui) * coefficients(i);
 					}
 					i++;
 				}
@@ -87,7 +116,15 @@ namespace artekmed
 			return r;
 		}
 
-		float distanceToPlaneFunction(
+		struct ProjectionResult
+		{
+			Eigen::Vector3f point;
+			Eigen::Vector3f normal;
+			PlaneFunctionResult planeFunctionValues;
+
+		};
+		//The function below tanked so hard in performance that i had to make this one
+		ProjectionResult projectPointToPlaneSimple(
 			const Eigen::Vector3f &point,
 			const uint8_t degree,
 			const Eigen::VectorXf &coefficients,
@@ -96,25 +133,86 @@ namespace artekmed
 			const Eigen::Vector3f &basePlaneVAxis,
 			const Eigen::Vector3f &basePlanePoint)
 		{
-			//Point in plane coordinates
-			const float point_u = (point - basePlanePoint).dot(basePlaneUAxis);
-			const float point_v = (point - basePlanePoint).dot(basePlaneVAxis);
-			const float plane_z = (point - basePlanePoint).dot(basePlaneNormal); // Distance of Point from the base Plane
-			float z = 0.f;  // Distance of point from the basePlane to the parametric surface
+			const Eigen::Vector3f diff = point-basePlanePoint;
+			const float u = basePlaneUAxis.dot(diff);
+			const float v = basePlaneVAxis.dot(diff);
 
-			uint32_t j = 0;
-			float powU=1;
-			for (int ui = 0; ui <= degree; ++ui)
+			const auto result = evalPlaneFunction(degree,coefficients,basePlaneNormal,basePlanePoint,u,v);
+			ProjectionResult r;
+			r.point = point -result.value*basePlaneNormal;
+			r.normal = (basePlaneNormal - result.gradient(0)*basePlaneUAxis-result.gradient(1)*basePlaneVAxis).normalized();
+			r.planeFunctionValues = std::move(result);
+			return r;
+		}
+
+		// projectPointToPlaneOrthagonal from PCL, just project the point to the base plane and then eval-ing the function
+		// does not yield the closest point to the polynom, not very dramatic for the points themselves, but critical for
+		// normals (first order derivatives) and second order derivatives, extreme performance tank
+		ProjectionResult projectPointToPlane(
+			const Eigen::Vector3f &point,
+			const uint8_t degree,
+			const Eigen::VectorXf &coefficients,
+			const Eigen::Vector3f &basePlaneNormal,
+			const Eigen::Vector3f &basePlaneUAxis,
+			const Eigen::Vector3f &basePlaneVAxis,
+			const Eigen::Vector3f &basePlanePoint)
+		{
+
+			ProjectionResult result;
+			result.point = point;
+			result.normal = basePlaneNormal;
+
+			//Point in plane coordinates [u,v,w(offset)]
+			const Eigen::Vector3f basePlaneCoordinates = {
+				(point - basePlanePoint).dot(basePlaneUAxis),
+				(point - basePlanePoint).dot(basePlaneVAxis),
+				(point - basePlanePoint).dot(basePlaneNormal)};
+
+			Eigen::Vector3f optimizedPlaneCoordinates = basePlaneCoordinates;
+
+			float z = 0.f;  // Distance of point from the basePlane to the parametric surface
+			auto d = evalPlaneFunction(degree, coefficients, basePlaneNormal, basePlanePoint,
+			                           basePlaneCoordinates.x(), basePlaneCoordinates.y());
+			optimizedPlaneCoordinates.z() = d.value;
+			const float originalZ = d.value;
+			const float origDist = std::abs(d.value - basePlaneCoordinates.z());
+			float newDist;
+			float error = .0f;
+			constexpr uint32_t maxIterations = 30;
+			uint32_t i = 0;
+			do
 			{
-				float powV=1;
-				for (int vi = 0; vi <= degree - ui; ++vi)
-				{
-					z += powU * powV * coefficients(j++);
-					powV *=point_v;
-				}
-				powU*=point_u;
+				Eigen::Vector2f errorVec = optimizedPlaneCoordinates.head<2>() - basePlaneCoordinates.head<2>();
+				errorVec += d.gradient * (optimizedPlaneCoordinates.z() - basePlaneCoordinates.z());
+
+				Eigen::Matrix2f J = d.hessian * (optimizedPlaneCoordinates.z() - basePlaneCoordinates.z());
+				J += Eigen::Matrix2f::Identity();
+				J(0, 0) += d.gradient(0) * d.gradient(0);
+				J(0, 1) += d.gradient(0) * d.gradient(1);
+				J(1, 0) += d.gradient(1) * d.gradient(0);
+				J(1, 1) += d.gradient(1) * d.gradient(1);
+
+				optimizedPlaneCoordinates.head<2>() -= J.inverse() * errorVec;
+				d = evalPlaneFunction(degree, coefficients, basePlaneNormal, basePlanePoint, optimizedPlaneCoordinates.x(),
+				                      optimizedPlaneCoordinates.y());
+				optimizedPlaneCoordinates.z() = d.value;
+				newDist = (optimizedPlaneCoordinates - basePlaneCoordinates).norm();
+				error = errorVec.norm();
+				//std::cout<< "Looperino\n";
+				i++;
+			} while (error > 0.00001f && newDist < origDist && i < maxIterations);
+			if (newDist > origDist)
+			{
+				//The optimization was diverging, abort and just use plane
+				optimizedPlaneCoordinates = basePlaneCoordinates;
+				optimizedPlaneCoordinates.z() = originalZ;
 			}
-			return std::abs(plane_z - z);
+			result.normal -= d.gradient.x() * basePlaneUAxis + d.gradient.y() * basePlaneVAxis;
+			result.normal.normalize();
+			result.point = basePlanePoint + optimizedPlaneCoordinates.x() * basePlaneUAxis +
+			               optimizedPlaneCoordinates.y() * basePlaneVAxis + optimizedPlaneCoordinates.z() * basePlaneNormal;
+			result.planeFunctionValues = d;
+			return result;
 		}
 
 		void mlsNormalEstimationAndSmoothing(
@@ -126,10 +224,10 @@ namespace artekmed
 			const uint8_t degree /*= 2*/,
 			const float h /*= 0.3f*/)
 		{
-			auto theta = [&h](const Eigen::Vector3f & point, const Eigen::Vector3f & origin) {
-				return std::exp(-((point-origin).squaredNorm()) / (h * h));
+			auto theta = [&h](const Eigen::Vector3f &point, const Eigen::Vector3f &origin) {
+				return std::exp(-((point - origin).squaredNorm()) / (h * h));
 			};
-			auto q = projectPointToPlane(point, normal, centroid);
+			auto q = projectPointTo2DPlane(point, normal, centroid);
 			Eigen::Vector3f u_Axis = normal.unitOrthogonal();
 			Eigen::Vector3f v_Axis = normal.cross(u_Axis);
 			float q_u = q.dot(u_Axis);
@@ -154,7 +252,7 @@ namespace artekmed
 				//Calculate UV Coordinates to the current Plane
 				const float uProjected = diffVec.dot(u_Axis);
 				const float vProjected = diffVec.dot(v_Axis);
-				theta_vec(i) = theta(neighbourPoints[i],q);
+				theta_vec(i) = theta(neighbourPoints[i], q);
 				rightSide(i) = diffVec.dot(normal);
 
 				//Get Polynomial Terms at current position
@@ -177,15 +275,12 @@ namespace artekmed
 			//right Side now holds all polynomial coefficients of our parametric plane in the form
 			// [u^0,v^0],[u^0,v^1],...,[u^0,v^degree],[u^1,v_0],....[u^n,v^(i-n)],...
 
-			const auto evalResult = evalPlaneFunction(degree, rightSide, normal, centroid, q_u, q_v);
-			point += evalResult.value * normal;
-			Eigen::Vector3f newNormal = normal;
-			newNormal -= (evalResult.gradient.x() * u_Axis + evalResult.gradient.y()* v_Axis);
-			newNormal.normalize();
-			normal = newNormal;
-
+			const auto result = projectPointToPlaneSimple(centroid,degree,rightSide,normal,u_Axis,v_Axis,centroid);
+			point = result.point;
+			normal = result.normal;
 			//We take the magnitude of the second order derivative as to give the resampling a hint on more/less samples
-			outCurvatureFactor = evalResult.calculateCurvature().norm();
+			//Why the sqrt? - values are either extremely big or extremely small so with that we bring them more together
+			outCurvatureFactor = std::sqrt(result.planeFunctionValues.calculateHessianEV().norm());
 		}
 
 		void pcaNormalEstimation(

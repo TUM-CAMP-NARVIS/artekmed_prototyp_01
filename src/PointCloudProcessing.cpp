@@ -92,7 +92,7 @@ void buildColoredPointCloud(
                 deproject_pixel_to_point(depth_point, intr_rect_ir, depth_pixel, depth);
 
                 // store pixel location
-                //FIXME: Why was this positon negated?
+                //FIXME: Was negated: can't have negative depth (i.e points behind the camera) here
                 pt(0) = depth_point(0);
                 pt(1) = depth_point(1);
                 pt(2) = depth_point(2);
@@ -112,6 +112,7 @@ void buildColoredPointCloud(
 		intr_rect_ir,
 		Eigen::Matrix4f::Identity(),
 		depth_scale_factor});
+	auto originalPointCloud = cloud;
 #ifdef REGION_GROWING
     cloud = artekmed::pointcloud::regionGrowingResample(points,depth_images,3,10000);
     std::cout<< cloud.points_.size() << '\n';
@@ -122,7 +123,8 @@ void buildColoredPointCloud(
     cloud = output;
 #endif
     static uint32_t frame_number = 0;
-    ::open3d::WritePointCloud("data_"+std::to_string(frame_number++)+"_sor.pcd", cloud);
+    ::open3d::WritePointCloud("data_"+std::to_string(frame_number)+".pcd", cloud);
+    ::open3d::WritePointCloud("data_"+std::to_string(frame_number++)+"_original.pcd", originalPointCloud);
 }
 
 // build pointcloud from depth/color image using depth/image intrinsics and depth2color transform

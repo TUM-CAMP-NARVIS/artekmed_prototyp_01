@@ -1,7 +1,6 @@
 //
 // Created by narvis on 14.05.19.
 //
-
 #ifndef ARTEKMED_P1_VOXELRESAMPLING_H
 #define ARTEKMED_P1_VOXELRESAMPLING_H
 

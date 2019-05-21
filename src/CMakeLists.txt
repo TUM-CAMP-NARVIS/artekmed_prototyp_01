@@ -100,7 +100,7 @@ set(UBITRACK_SRCS
   "${CMAKE_CURRENT_SOURCE_DIR}/PointProcessing/RegionGrowing.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/PointProcessing/Common.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/PointProcessing/VoxelResampling.cpp"
-	"${CMAKE_CURRENT_SOURCE_DIR}/PointProcessing/Denoising.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/PointProcessing/Denoising.cpp"
 
         )
 

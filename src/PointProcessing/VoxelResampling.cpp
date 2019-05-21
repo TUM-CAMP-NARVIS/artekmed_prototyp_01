@@ -1,10 +1,10 @@
-#include <Eigen/Eigenvalues>
 #include <cmath>
 #include <mutex>
 #include "artekmed/PointProcessing/VoxelResampling.h"
 
 #include "artekmed/PointCloudProcessing.h"
 #include "artekmed/Utils/TemperatureColors.h"
+#include "artekmed/PointProcessing/Denoising.h"
 
 namespace artekmed
 {
@@ -67,7 +67,7 @@ namespace artekmed
 			}
 		}
 
-		constexpr float sigma_max = 0.05f;
+		constexpr float sigma_max = 17;//0.002f;
 		constexpr uint32_t SORminValue = 4;
 
 		Eigen::Vector3f octreeNextNodePos(const Eigen::Vector3f &base, const float newHalfSize, const uint8_t index)
@@ -91,47 +91,16 @@ namespace artekmed
 			queryNeighboursCube(neighbours, sourceImages, base, halfSize);
 			if (neighbours.size() > SORminValue)
 			{
-				Eigen::MatrixXf observations = {neighbours.size(),3};
-				//Again, normal estimation using PCA
-				auto centered = observations.rowwise() - observations.colwise().mean();
-				Eigen::Vector3f centroid = {0,0,0};
-				for(int i = 0; i< observations.rows();++i)
+				Eigen::Vector3f centroid;
+				Eigen::Vector3f normal;
+				float sigma_n;
+				pcaNormalEstimation(neighbours,centroid,normal,sigma_n);
+				Eigen::Vector3f newPoint = centroid;
+				float error=sigma_n;
+				mlsNormalEstimationAndSmoothing(neighbours,newPoint,normal,centroid,error,2,halfSize);
+				if (error > sigma_max && halfSizeMin < halfSize / 2)
 				{
-					observations.row(i) = neighbours[i];
-					centroid += neighbours[i];
-				}
-				centroid /=observations.rows();
-				auto covarianceMatrix = (centered.adjoint() * centered) / float(observations.rows() - 1);
-				auto solver = Eigen::EigenSolver<Eigen::MatrixXf>(covarianceMatrix);
-				//Our PCA Eigenvalues
-				auto lambda_0 = solver.eigenvalues()(0).real();
-				auto lambda_1 = solver.eigenvalues()(1).real();
-				auto lambda_2 = solver.eigenvalues()(2).real();
-				//Our PCA Eigenvectors
-				Eigen::Vector3f v_0 = solver.eigenvectors().col(0).real().cast<float>();
-				Eigen::Vector3f v_1 = solver.eigenvectors().col(1).real().cast<float>();
-				Eigen::Vector3f v_2 = solver.eigenvectors().col(2).real().cast<float>();
-				//The Eigenvalues, eigenvectors are not sorted: sort them here from highest (v_0) to lowest(v_2)
-				if (lambda_0 < lambda_1)
-				{
-					std::swap(lambda_0, lambda_1);
-					std::swap(v_0, v_1);
-				}
-				if (lambda_1 < lambda_2)
-				{
-					std::swap(lambda_1, lambda_2);
-					std::swap(v_1, v_2);
-				}
-				if (lambda_0 < lambda_1)
-				{
-					std::swap(lambda_0, lambda_1);
-					std::swap(v_0, v_1);
-				}
-				const float sigma_n = lambda_2 / (lambda_0 + lambda_1 + lambda_2);
-
-				if (sigma_n > sigma_max && halfSizeMin < halfSize / 2)
-				{
-					//Subdivide this cube further
+					//not enough precision: Subdivide this Cube further
 					for (uint8_t i = 0; i < 8; ++i)
 					{
 						const auto nextPos = octreeNextNodePos(base, halfSize / 2, i);
@@ -140,10 +109,12 @@ namespace artekmed
 				}
 				else
 				{
+					//FIXME estimate unitl we have the correct Extrinsics
+					alignNormal(normal,centroid,{0,-2,0});
 					output.points_.emplace_back(centroid.cast<double>());
-					output.normals_.emplace_back(v_2.cast<double>());
+					output.normals_.emplace_back(normal.cast<double>());
 					const float temp = halfSizeMin/halfSize;
-					output.colors_.emplace_back(util::colorTemperature(temp));
+					output.colors_.emplace_back(normal.cast<double>());
 				}
 			}
 		}

@@ -89,7 +89,7 @@ namespace artekmed
 	)
 	{
 		const auto b = cameraWorldPos - myPos;
-		if (normal.dot(b) < 0)
+		if (normal.dot(b) > 0)
 		{
 			normal *= -1;
 		}

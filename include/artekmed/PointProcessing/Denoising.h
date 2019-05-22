@@ -8,10 +8,48 @@
 #include <Eigen/Eigenvalues>
 #include <vector>
 
+#define IN
+#define OUT
+
 namespace artekmed
 {
 	namespace pointcloud
 	{
+		/*
+			Guided Denoising Approach by Han, Jin, Wang, Jiang 2017
+		*/
+		template<typename NeighbourIterator>
+		Eigen::Vector3f guidedDenoisingLocal(const Eigen::Vector3f &sourcePoint,
+		                                     const NeighbourIterator &neighboursStart,
+		                                     const NeighbourIterator &neighboursEnd,
+		                                     const float epsilon = 0.05f)
+		{
+			Eigen::Vector3f centroid = {0, 0, 0};
+			float centroidSquaredNorm = 0;
+			float weightSum = 0.f;
+			auto point = neighboursStart;
+			size_t pointsCount = 0;
+
+			while (point != neighboursEnd)
+			{
+				centroidSquaredNorm += (*point).squaredNorm();
+				centroid += *point;
+
+				point++;
+				pointsCount++;
+			}
+
+			centroid /= weightSum;
+			centroidSquaredNorm /= weightSum;
+
+			centroid /= pointsCount;
+			centroidSquaredNorm /= pointsCount;
+
+			auto sumDiff = centroidSquaredNorm - centroid.squaredNorm();
+			auto a = sumDiff / (sumDiff + epsilon);
+			auto b = centroid - a * centroid;
+			return a * sourcePoint + b;
+		}
 
 		/*
 			Guided Denoising Approach by Han, Jin, Wang, Jiang 2017
@@ -25,7 +63,6 @@ namespace artekmed
 		                                             const WeightIterator &weightsEnd,
 		                                             const float epsilon = 0.05f)
 		{
-			constexpr bool enableWeights = true;
 
 
 			Eigen::Vector3f centroid = {0, 0, 0};
@@ -37,42 +74,25 @@ namespace artekmed
 
 			while (point != neighboursEnd && weight != weightsEnd)
 			{
-
-				//With weighting
-				if (enableWeights)
-				{
-					centroidSquaredNorm += (*point).squaredNorm() * (*weight);
-					centroid += *point * (*weight);
-				}
-				else
-				{
-					centroidSquaredNorm += (*point).squaredNorm();
-					centroid += *point;
-				}
-
+				centroidSquaredNorm += (*point).squaredNorm() * (*weight);
+				centroid += *point * (*weight);
 				weightSum += *weight;
 				point++;
 				weight++;
 				pointsCount++;
 			}
-			if (enableWeights)
-			{
-				centroid /= weightSum;
-				centroidSquaredNorm /= weightSum;
-			}
-			else
-			{
-				centroid /= pointsCount;
-				centroidSquaredNorm /= pointsCount;
-			}
+
+			centroid /= weightSum;
+			centroidSquaredNorm /= weightSum;
+
+			centroid /= pointsCount;
+			centroidSquaredNorm /= pointsCount;
+
 			auto sumDiff = centroidSquaredNorm - centroid.squaredNorm();
 			auto a = sumDiff / (sumDiff + epsilon);
 			auto b = centroid - a * centroid;
 			return a * sourcePoint + b;
 		}
-
-
-
 
 
 		//see http://www.cs.tau.ac.il/~dcor/online_papers/papers/points_set_vis01.pdf step 1 we assume is already done
@@ -92,6 +112,14 @@ namespace artekmed
 			Eigen::Vector3f &outNormal,
 			float &sigma
 		);
+
+		Eigen::Vector3f
+		leastSquaresNormalEstimation(const std::vector<Eigen::Vector3f> &neighbours, const Eigen::Vector3f &centroid);
+
+		Eigen::Vector3f
+		leastSquaresNormalEstimationWeighted(const std::vector<Eigen::Vector3f> &neighbours,
+			const std::vector<float> &weights,
+			const Eigen::Vector3f &weightedCentroid);
 	}
 }
 #endif //ARTEKMED_P1_DENOISING_H

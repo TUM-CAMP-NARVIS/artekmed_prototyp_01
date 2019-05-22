@@ -128,6 +128,7 @@ namespace artekmed
 				}
 			}
 
+			//Refinining: take random regions and add a new region besides them..
 			for (auto remainingSamples = numSamplesTarget - initialNumSamples; remainingSamples > 0; --remainingSamples)
 			{
 				distribution = std::uniform_int_distribution<size_t>(0, output.points_.size() - 1);

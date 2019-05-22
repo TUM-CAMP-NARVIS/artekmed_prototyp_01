@@ -82,10 +82,10 @@ namespace artekmed
 			uPows(0) = vPows(0) = 1;
 			for (int k = 1; k < degree + 1; ++k)
 			{
-				uPows(1) = uPows(1) * u;
-				vPows(1) = vPows(2) * v;
+				uPows(k) = uPows(k - 1) * u;
+				vPows(k) = vPows(k - 1) * v;
 			}
-			//Evaluate f, df/du and df/dv
+			//Evaluate f, df/du, df/dv and all hessians
 			for (int ui = 0; ui <= degree; ++ui)
 			{
 				for (int vi = 0; vi <= degree - ui; ++vi)
@@ -124,6 +124,7 @@ namespace artekmed
 			PlaneFunctionResult planeFunctionValues;
 
 		};
+
 		//The function below tanked so hard in performance that i had to make this one
 		ProjectionResult projectPointToPlaneSimple(
 			const Eigen::Vector3f &point,
@@ -134,21 +135,22 @@ namespace artekmed
 			const Eigen::Vector3f &basePlaneVAxis,
 			const Eigen::Vector3f &basePlanePoint)
 		{
-			const Eigen::Vector3f diff = point-basePlanePoint;
+			const Eigen::Vector3f diff = point - basePlanePoint;
 			const float u = basePlaneUAxis.dot(diff);
 			const float v = basePlaneVAxis.dot(diff);
 
-			const auto result = evalPlaneFunction(degree,coefficients,basePlaneNormal,basePlanePoint,u,v);
+			const auto result = evalPlaneFunction(degree, coefficients, basePlaneNormal, basePlanePoint, u, v);
 			ProjectionResult r;
-			r.point = point -result.value*basePlaneNormal;
-			r.normal = (basePlaneNormal - result.gradient(0)*basePlaneUAxis-result.gradient(1)*basePlaneVAxis).normalized();
+			r.point = point - result.value * basePlaneNormal;
+			r.normal = (basePlaneNormal - result.gradient(0) * basePlaneUAxis -
+			            result.gradient(1) * basePlaneVAxis).normalized();
 			r.planeFunctionValues = std::move(result);
 			return r;
 		}
 
 		// projectPointToPlaneOrthagonal from PCL, just project the point to the base plane and then eval-ing the function
 		// does not yield the closest point to the polynom, not very dramatic for the points themselves, but critical for
-		// normals (first order derivatives) and second order derivatives, extreme performance tank
+		// normals (first order derivatives) and second order derivatives, extreme performance hole
 		ProjectionResult projectPointToPlane(
 			const Eigen::Vector3f &point,
 			const uint8_t degree,
@@ -272,17 +274,20 @@ namespace artekmed
 			}
 			const Eigen::MatrixXf weightedSystemMatrix = systemMatrix.transpose() * theta_vec.asDiagonal();
 			rightSide = weightedSystemMatrix * rightSide;
+			const Eigen::MatrixXf system = weightedSystemMatrix * systemMatrix;
 			const Eigen::VectorXf coefficients =
-				(weightedSystemMatrix * systemMatrix).colPivHouseholderQr().solve(rightSide);
+				(system).colPivHouseholderQr().solve(rightSide);
+			const float residual = (system * coefficients - rightSide).norm();
 			//right Side now holds all polynomial coefficients of our parametric plane in the form
 			// [u^0,v^0],[u^0,v^1],...,[u^0,v^degree],[u^1,v_0],....[u^n,v^(i-n)],...
 
-			const auto result = projectPointToPlaneSimple(point,degree,coefficients,normal,u_Axis,v_Axis,centroid);
+			const auto result = projectPointToPlaneSimple(point, degree, coefficients, normal, u_Axis, v_Axis, centroid);
 			point = result.point;
 			normal = result.normal;
-			//We take the magnitude of the second order derivative as to give the resampling a hint on more/less samples
-			//Why the sqrt? - values are either extremely big or extremely small so with that we bring them more together
-			outCurvatureFactor = std::sqrt(result.planeFunctionValues.calculateHessianEV().norm());
+			//We take the magnitude of the eigenvalues
+			const auto curvature = result.planeFunctionValues.calculatePrincipalCurvature();
+			std::cout << curvature << '\n';
+			outCurvatureFactor = result.planeFunctionValues.calculateHessianEV().norm() + residual;
 		}
 
 		void pcaNormalEstimation(
@@ -330,6 +335,101 @@ namespace artekmed
 			//Sigma is a measure of quality for this normal estimation. The smaller sigma, the better the quality
 			sigma = lambda_2 / (lambda_0 + lambda_1 + lambda_2);
 			outNormal = v_2.normalized();
+		}
+
+		/*
+		 * Instead of PCA, fits a plane to the centroid in a least squares sense
+		 */
+		Eigen::Vector3f
+		leastSquaresNormalEstimation(const std::vector<Eigen::Vector3f> &neighbours, const Eigen::Vector3f &centroid)
+		{
+			//https://www.ilikebigbits.com/2015_03_04_plane_from_points.html
+			float xx = 0, yy = 0, zz = 0, xy = 0, yz = 0, xz = 0;
+			for (const auto &x : neighbours)
+			{
+				const auto n = x-centroid;
+				xx += n.x() * n.x();
+				yy += n.y() * n.y();
+				zz += n.z() * n.z();
+				xy += n.x() * n.y();
+				yz += n.y() * n.z();
+				xz += n.x() * n.z();
+			}
+			const float det_x = yy * zz - yz * yz;
+			const float det_y = xx * zz - xz * xz;
+			const float det_z = xx * yy - xy * xy;
+			if (det_x <= det_y && det_x <= det_z)
+			{
+				return Eigen::Vector3f(
+					det_x,
+					xz * yz - xy * zz,
+					xy * yz - xz * zz
+				).normalized();
+			}
+			else if (det_y <= det_x && det_y <= det_z)
+			{
+				return Eigen::Vector3f(
+					xz * yz - xy * zz,
+					det_y,
+					xy * xz - yz * xx
+				).normalized();
+			}
+			else
+			{
+				return Eigen::Vector3f(
+					xy * yz - xz * yy,
+					xy * xz - yz * xx,
+					det_z
+				).normalized();
+			}
+		}
+
+		Eigen::Vector3f
+		leastSquaresNormalEstimationWeighted(const std::vector<Eigen::Vector3f> &neighbours,
+		                                     const std::vector<float> &weights,
+		                                     const Eigen::Vector3f &weightedCentroid)
+		{
+			//https://www.ilikebigbits.com/2015_03_04_plane_from_points.html
+			float xx = 0, yy = 0, zz = 0, xy = 0, yz = 0, xz = 0;
+			auto it = weights.cbegin();
+			for (const auto &x : neighbours)
+			{
+				assert(it != weights.cend());
+				const auto n = (x-weightedCentroid)*(*it++);
+				xx += n.x() * n.x();
+				yy += n.y() * n.y();
+				zz += n.z() * n.z();
+				xy += n.x() * n.y();
+				yz += n.y() * n.z();
+				xz += n.x() * n.z();
+			}
+			const float det_x = yy * zz - yz * yz;
+			const float det_y = xx * zz - xz * xz;
+			const float det_z = xx * yy - xy * xy;
+			if (det_x <= det_y && det_x <= det_z)
+			{
+				return Eigen::Vector3f(
+					det_x,
+					xz * yz - xy * zz,
+					xy * yz - xz * zz
+				).normalized();
+			}
+			else if (det_y <= det_x && det_y <= det_z)
+			{
+				return Eigen::Vector3f(
+					xz * yz - xy * zz,
+					det_y,
+					xy * xz - yz * xx
+				).normalized();
+			}
+			else
+			{
+				return Eigen::Vector3f(
+					xy * yz - xz * yy,
+					xy * xz - yz * xx,
+					det_z
+				).normalized();
+			}
 		}
 	}
 }

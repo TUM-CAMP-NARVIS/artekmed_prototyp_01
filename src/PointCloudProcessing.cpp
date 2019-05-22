@@ -11,6 +11,7 @@
 #include "artekmed/PointCloudProcessing.h"
 #include "artekmed/PointProcessing/RegionGrowing.h"
 #include "artekmed/PointProcessing/VoxelResampling.h"
+#include "artekmed/PointProcessing/ClopAdapter.h"
 
 /* Given a point in 3D space, compute the corresponding pixel coordinates in an image with no distortion assumed */
 void project_point_to_pixel(Eigen::Vector2f& pixel, const Eigen::Matrix3f& intrin, const Eigen::Vector3f& point) {
@@ -105,7 +106,7 @@ void buildColoredPointCloud(
         }
     }
     //[Michael Wechner] Temporary... seems like the best point to insert my processing tests..
-#define VOXELS
+#define CLOP
 	std::vector<artekmed::DepthImageSource> depth_images = {};
 	depth_images.emplace_back(artekmed::DepthImageSource{
 		&depth_img_rect,
@@ -121,6 +122,30 @@ void buildColoredPointCloud(
     open3d::PointCloud output;
     artekmed::pointcloud::voxelResampling(output,depth_images,cloud,0.0005f,0.01f);
     cloud = output;
+#endif
+
+#ifdef CLOP
+    open3d::PointCloud output;
+    artekmed::pointcloud::ClopResamplingParameters params;
+    params.mixture.globalInitRadius = 0.09f;
+    params.mixture.useGlobalInitRadius = true;
+    params.mixture.useWeightedPotentials = true;
+    params.mixture.alpha = 2.3f;
+    params.mixture.nLevels = 4;
+
+    params.nIterations = 12;
+    params.kernelRadius = 0.1f;
+    params.doubleInitRadius = true;
+    params.interleaveRepulsion = true;
+    params.repulsionRadiusFac = 0.5f;
+    params.useSoftEta = true;
+    params.mu = 0.4f;
+    params.useDiscreteLOP = false;
+
+    params.seed = 42;
+    params.nTargetSamples = 10000;
+
+    artekmed::pointcloud::clopResampling(output,cloud,params);
 #endif
     static uint32_t frame_number = 0;
     ::open3d::WritePointCloud("data_"+std::to_string(frame_number)+".pcd", cloud);

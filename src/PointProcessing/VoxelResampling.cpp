@@ -67,7 +67,7 @@ namespace artekmed
 			}
 		}
 
-		constexpr float sigma_max = 15;//0.002f;
+		constexpr float sigma_max = 0.002;//0.002f;
 		constexpr uint32_t SORminValue = 4;
 
 		Eigen::Vector3f octreeNextNodePos(const Eigen::Vector3f &base, const float newHalfSize, const uint8_t index)
@@ -94,11 +94,20 @@ namespace artekmed
 				Eigen::Vector3f centroid;
 				Eigen::Vector3f normal;
 				float sigma_n;
+				//PCA
 				pcaNormalEstimation(neighbours,centroid,normal,sigma_n);
+
+				//MLS
 				Eigen::Vector3f newPoint = base;
 				float error=sigma_n;
-				mlsNormalEstimationAndSmoothing(neighbours,newPoint,normal,centroid,error,3,halfSize);
-				//std::cout << "Curvature: "<<error<<'\n';
+				//mlsNormalEstimationAndSmoothing(neighbours,newPoint,normal,centroid,error,3,halfSize);
+
+				//Guided Denoising
+				//newPoint = guidedDenoisingLocal(base,neighbours.cbegin(), neighbours.cend(),0.0001f);
+
+				//least squares normal
+				normal = leastSquaresNormalEstimation(neighbours,centroid);
+
 				if (error > sigma_max && halfSizeMin < halfSize / 2)
 				{
 					//not enough precision: Subdivide this Cube further

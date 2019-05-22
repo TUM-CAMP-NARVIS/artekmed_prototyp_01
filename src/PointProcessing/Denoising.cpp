@@ -2,6 +2,7 @@
 #include "artekmed/PointProcessing/Denoising.h"
 
 #include <iostream>
+#include <Eigen/Dense>
 
 namespace artekmed
 {
@@ -271,11 +272,12 @@ namespace artekmed
 			}
 			const Eigen::MatrixXf weightedSystemMatrix = systemMatrix.transpose() * theta_vec.asDiagonal();
 			rightSide = weightedSystemMatrix * rightSide;
-			(weightedSystemMatrix * systemMatrix).llt().solveInPlace(rightSide);
+			const Eigen::VectorXf coefficients =
+				(weightedSystemMatrix * systemMatrix).colPivHouseholderQr().solve(rightSide);
 			//right Side now holds all polynomial coefficients of our parametric plane in the form
 			// [u^0,v^0],[u^0,v^1],...,[u^0,v^degree],[u^1,v_0],....[u^n,v^(i-n)],...
 
-			const auto result = projectPointToPlaneSimple(centroid,degree,rightSide,normal,u_Axis,v_Axis,centroid);
+			const auto result = projectPointToPlaneSimple(point,degree,coefficients,normal,u_Axis,v_Axis,centroid);
 			point = result.point;
 			normal = result.normal;
 			//We take the magnitude of the second order derivative as to give the resampling a hint on more/less samples

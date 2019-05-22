@@ -95,7 +95,7 @@ namespace artekmed
 				Eigen::Vector3f normal;
 				float sigma_n;
 				pcaNormalEstimation(neighbours,centroid,normal,sigma_n);
-				Eigen::Vector3f newPoint = centroid;
+				Eigen::Vector3f newPoint = base;
 				float error=sigma_n;
 				mlsNormalEstimationAndSmoothing(neighbours,newPoint,normal,centroid,error,3,halfSize);
 				//std::cout << "Curvature: "<<error<<'\n';

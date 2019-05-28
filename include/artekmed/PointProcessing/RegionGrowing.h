@@ -10,9 +10,18 @@ namespace artekmed
 {
 	namespace pointcloud
 	{
-		open3d::PointCloud regionGrowingResample(
+		//Original Algorithm from the Paper, not very optimzed
+		open3d::PointCloud regionGrowingResampleA(
 			const std::vector<Eigen::Vector3d> &inputPointCloud,
 			const std::vector<DepthImageSource> &depthImages,
+			const int seed,
+			const size_t numSamplesTarget
+		);
+
+		//Tries for a relaxed, not so correct version of the region growing algorithm, with hopefully better performance
+		open3d::PointCloud regionGrowingResampleB(
+			const std::vector<Eigen::Vector3d>& inputPointCloud,
+			const std::vector<DepthImageSource>& depthImages,
 			const int seed,
 			const size_t numSamplesTarget
 		);
@@ -22,6 +31,13 @@ namespace artekmed
 												 const std::vector <DepthImageSource> &depthImages,
 												 const Eigen::Vector3f & sourcePoint,
 												 const float radius
+		);
+
+		//queries only roughly by (mis)using the image locality coupled with depth information
+		void queryNNearestNeighbours(std::vector<InputSampleCoordinate>& neighbours,
+			const std::vector <DepthImageSource>& depthImages,
+			const Eigen::Vector3f& sourcePoint,
+			const uint32_t n
 		);
 
 		void queryNeighboursSorted(

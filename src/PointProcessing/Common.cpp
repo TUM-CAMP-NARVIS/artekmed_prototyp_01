@@ -20,10 +20,10 @@ namespace artekmed{
 	}
 	//Projection from 3D to 2D.. checks for occlusion and out of image plane points
 	bool project_point_to_pixel(
-		Eigen::Vector2i &pixel,
-		const Eigen::Vector3f &point,
-		const DepthImageSource &depth_image,
-		const float radius)
+		Eigen::Vector2i& pixel,
+		const Eigen::Vector3f& point,
+		const DepthImageSource& depth_image,
+		const float radius = FLT_MAX)
 	{
 		//Can't be too close to the camera
 		if (std::abs(point(2)) < 0.0001f)

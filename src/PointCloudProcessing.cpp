@@ -115,7 +115,7 @@ void buildColoredPointCloud(
 		depth_scale_factor});
 	auto originalPointCloud = cloud;
 #ifdef REGION_GROWING
-    cloud = artekmed::pointcloud::regionGrowingResample(points,depth_images,3,10000);
+    cloud = artekmed::pointcloud::regionGrowingResampleA(points,depth_images,3,10000);
     std::cout<< cloud.points_.size() << '\n';
 #endif
 #ifdef VOXELS

@@ -81,7 +81,7 @@ namespace artekmed
 			}
 		}
 
-		open3d::PointCloud regionGrowingResample(
+		open3d::PointCloud regionGrowingResampleA(
 			const std::vector<Eigen::Vector3d> &inputPointCloud,
 			const std::vector<DepthImageSource> &depthImages,
 			const int seed,
@@ -179,6 +179,16 @@ namespace artekmed
 			return output;
 		}
 
+		open3d::PointCloud regionGrowingResampleB(
+			const std::vector<Eigen::Vector3d>& inputPointCloud,
+			const std::vector<DepthImageSource>& depthImages,
+			const int seed,
+			const size_t numSamplesTarget)
+		{
+			const auto initialNumSamples = numSamplesTarget / 4;
+
+		}
+
 
 		void queryNeighbours(std::vector<InputSampleCoordinate> &neighbourIndices,
 		                     const std::vector<DepthImageSource> &depthImages,
@@ -219,6 +229,104 @@ namespace artekmed
 				}
 				imageIndex++;
 			}
+		}
+		struct DepthMapSampleUV
+		{
+			Eigen::Vector2i uv;
+			float depth;
+			const DepthImageSource& img;
+			int currentRadius;
+		};
+
+		void addSamplesRing(std::vector<Eigen::Vector3f>& neighbours, DepthMapSampleUV & original)
+		{
+			const auto squaredRad = original.currentRadius * original.currentRadius;
+			const auto squaredRadMinusOne = (original.currentRadius - 1) * (original.currentRadius - 1);
+			//Rasterize a ring.. we floor the uv-coordantes (i.e. radius 1 will result in the 4 direct neighbours, diagnoals are in in radius 2.
+			for (int u = -original.currentRadius; u <= original.currentRadius; u++)
+			{
+				const auto from = std::floor(std::sqrt(squaredRadMinusOne - u * u)) + 1;
+				const auto to = std::ceil(std::sqrt(squaredRad - u * u));
+				for (int v = from; v <= to; ++v)
+				{
+					Eigen::Vector3f newPointA;
+					Eigen::Vector3f newPointB;
+					deproject_pixel_to_point(
+						newPointA,
+						original.img.intrinsics,
+						{ original.uv.x() + u,original.uv.y() + v },
+						original.img.depthImage->at(v, u) * original.img.depthScaleFactor);
+					deproject_pixel_to_point(
+						newPointB,
+						original.img.intrinsics,
+						{ original.uv.x() + u,original.uv.y() - v },
+						original.img.depthImage->at(v, u) * original.img.depthScaleFactor);
+					neighbours.emplace_back(std::move(newPointA));
+					neighbours.emplace_back(std::move(newPointB));
+				}
+			}
+		}
+
+		void queryNNearestNeighbours(std::vector<InputSampleCoordinate>& neighbours, 
+			const std::vector <DepthImageSource>& depthImages, 
+			const Eigen::Vector3f& sourcePoint, 
+			const uint32_t n)
+		{
+			neighbours.clear();
+			neighbours.reserve(n);
+
+			std::vector<DepthMapSampleUV> depthValueAt;
+			for (const auto& i : depthImages)
+			{
+				Eigen::Vector2i uv;
+				if (project_point_to_pixel(uv, sourcePoint, i))
+				{
+					depthValueAt.emplace_back(DepthMapSampleUV{ uv,i,i.depthImage->at<float>(uv.y(),uv.x())*i.depthScaleFactor ,i,1});
+				}
+			}
+			std::sort(depthValueAt.begin(), depthValueAt.end(), [](const DepthMapSampleUV& a, const DepthMapSampleUV& b) {
+				return a.depth < b.depth;
+			});
+			float currentIndex = 0;
+			while (neighbours.size() < n)
+			{
+				//Approximate the 3D radius of an image circle by taking the depth value of the midpoint and intrinsics
+				const float nextRadiusInCurrentImage = 
+					(depthValueAt[currentIndex].currentRadius +1.f) *
+					(std::max(depthValueAt[currentIndex].img.intrinsics(0, 0), depthValueAt[currentIndex].img.intrinsics(1, 1)))
+					/ depthValueAt[currentIndex].depth * depthValueAt[currentIndex].img.depthScaleFactor;
+				const auto nextImageIdx = (currentIndex+1) % depthValueAt.size();
+				const float nextRadiusInNextImage = 
+					depthValueAt[nextImageIdx].currentRadius *
+					(std::max(depthValueAt[nextImageIdx].img.intrinsics(0, 0), depthValueAt[nextImageIdx].img.intrinsics(1, 1)))
+					/ depthValueAt[nextImageIdx].depth * depthValueAt[nextImageIdx].img.depthScaleFactor;
+
+				const auto prevImageIdx = std::max(0, --currentIndex);
+				const float nextRadiusInPrevImage = 
+					depthValueAt[prevImageIdx].currentRadius *
+					(std::max(depthValueAt[prevImageIdx].img.intrinsics(0, 0), depthValueAt[prevImageIdx].img.intrinsics(1, 1)))
+					/ depthValueAt[prevImageIdx].depth * depthValueAt[prevImageIdx].img.depthScaleFactor;
+
+				if (nextRadiusInCurrentImage < nextRadiusInNextImage) 
+				{
+					//check if going back would be smarter
+					if (nextRadiusInPrevImage < nextRadiusInCurrentImage && currentIndex != 0)
+					{
+						currentIndex--;
+						continue;
+					}
+					
+					addSamplesRing(neighbours, depthValueAt[currentIndex]);
+					depthValueAt[currentIndex].currentRadius++;
+				}
+				else
+				{
+					addSamplesRing(neighbours,depthValueAt[nextImageIdx])
+					currentIndex = nextImageIdx;
+				}
+			}
+			//The target number of samples will be bigger with the current logic, strip them away.
+			neighbours.resize(n);
 		}
 
 		//MW: Instead of returning any points in the neighbourhood, we get them back sorted by smallest distance to the

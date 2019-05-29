@@ -4,6 +4,7 @@
 #include <iostream>
 #include <Eigen/Dense>
 
+
 namespace artekmed
 {
 	namespace pointcloud
@@ -290,6 +291,51 @@ namespace artekmed
 			outCurvatureFactor = result.planeFunctionValues.calculateHessianEV().norm() + residual;
 		}
 
+		PCAResult pcaEigenValues(
+			const std::vector<Eigen::Vector3f>& neighbours,
+			Eigen::Vector3f& outCentroid,
+			Eigen::Vector3f& outNormal)
+		{
+			PCAResult r;
+			Eigen::MatrixXf observations = { neighbours.size(), 3 };
+			outCentroid = { 0, 0, 0 };
+			for (int i = 0; i < observations.rows(); ++i)
+			{
+				observations.row(i) = neighbours[i];
+				outCentroid += neighbours[i];
+			}
+			outCentroid /= observations.rows();
+			auto centered = observations.rowwise() - observations.colwise().mean();
+			auto covarianceMatrix = (centered.adjoint() * centered) / float(observations.rows() - 1);
+			auto solver = Eigen::EigenSolver<Eigen::MatrixXf>(covarianceMatrix);
+			//Our PCA Eigenvalues
+			r.lambda0 solver.eigenvalues()(0).real();
+			r.lambda1 = solver.eigenvalues()(1).real();
+			r.lambda2 = solver.eigenvalues()(2).real();
+			//Our PCA Eigenvectors
+			r.v0 = solver.eigenvectors().col(0).real().cast<float>();
+			r.v1 = solver.eigenvectors().col(1).real().cast<float>();
+			r.v2 = solver.eigenvectors().col(2).real().cast<float>();
+			//The Eigenvalues, eigenvectors are not sorted: sort them here from highest (v_0) to lowest(v_2)
+			if (r.lambda0 < r.lambda1)
+			{
+				std::swap(r.lambda0, r.lambda1);
+				std::swap(r.v0, r.v1);
+			}
+			if (r.lambda1 < r.lambda2)
+			{
+				std::swap(r.lambda1, r.lambda2);
+				std::swap(r.v1, r.v2);
+			}
+			if (r.lambda0 < r.lambda1)
+			{
+				std::swap(r.lambda0, r.lambda1);
+				std::swap(r.v0, r.v1);
+			}
+			outNormal = r.v2.normalized();
+			return r;
+		}
+
 		void pcaNormalEstimation(
 			const std::vector<Eigen::Vector3f> &neighbours,
 			Eigen::Vector3f &outCentroid,
@@ -297,44 +343,10 @@ namespace artekmed
 			float &sigma
 		)
 		{
-			Eigen::MatrixXf observations = {neighbours.size(), 3};
-			outCentroid = {0, 0, 0};
-			for (int i = 0; i < observations.rows(); ++i)
-			{
-				observations.row(i) = neighbours[i];
-				outCentroid += neighbours[i];
-			}
-			auto centered = observations.rowwise() - observations.colwise().mean();
-			outCentroid /= observations.rows();
-			auto covarianceMatrix = (centered.adjoint() * centered) / float(observations.rows() - 1);
-			auto solver = Eigen::EigenSolver<Eigen::MatrixXf>(covarianceMatrix);
-			//Our PCA Eigenvalues
-			auto lambda_0 = solver.eigenvalues()(0).real();
-			auto lambda_1 = solver.eigenvalues()(1).real();
-			auto lambda_2 = solver.eigenvalues()(2).real();
-			//Our PCA Eigenvectors
-			Eigen::Vector3f v_0 = solver.eigenvectors().col(0).real().cast<float>();
-			Eigen::Vector3f v_1 = solver.eigenvectors().col(1).real().cast<float>();
-			Eigen::Vector3f v_2 = solver.eigenvectors().col(2).real().cast<float>();
-			//The Eigenvalues, eigenvectors are not sorted: sort them here from highest (v_0) to lowest(v_2)
-			if (lambda_0 < lambda_1)
-			{
-				std::swap(lambda_0, lambda_1);
-				std::swap(v_0, v_1);
-			}
-			if (lambda_1 < lambda_2)
-			{
-				std::swap(lambda_1, lambda_2);
-				std::swap(v_1, v_2);
-			}
-			if (lambda_0 < lambda_1)
-			{
-				std::swap(lambda_0, lambda_1);
-				std::swap(v_0, v_1);
-			}
+			const auto result = pcaEigenValues(neighbours, outCentroid, outNormal);
 			//Sigma is a measure of quality for this normal estimation. The smaller sigma, the better the quality
-			sigma = lambda_2 / (lambda_0 + lambda_1 + lambda_2);
-			outNormal = v_2.normalized();
+			sigma = getSigma(result);
+
 		}
 
 		/*
@@ -430,6 +442,16 @@ namespace artekmed
 					det_z
 				).normalized();
 			}
+		}
+		float errorOfPlane(const std::vector<Eigen::Vector3f>& neighbours, const Eigen::Vector3f& planePoint, const Eigen::Vector3f normal)
+		{
+			float errorSum = 0;
+			for (const auto& n : neighbours)
+			{
+				errorSum += (n - planePoint).dot(normal);
+			}
+			errorSum /= neighbours.size();
+			return errorSum;
 		}
 	}
 }

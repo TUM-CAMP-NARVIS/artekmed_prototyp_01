@@ -106,6 +106,21 @@ namespace artekmed
 			const uint8_t degree = 2,
 			const float h = 0.3f);
 
+		struct PCAResult {
+			float lambda0, lambda1, lambda2;
+			Eigen::Vector3f v0, v1, v2;
+		};
+
+		float& getSigma(const  PCAResult result)
+		{
+			return r.lambda2 / (r.lambda0 + r.lambda1 + r.lambda2);
+		}
+
+		PCAResult pcaEigenValues(
+			const std::vector<Eigen::Vector3f>& neighbours,
+			Eigen::Vector3f& outCentroid,
+			Eigen::Vector3f& outNormal)
+
 		void pcaNormalEstimation(
 			const std::vector<Eigen::Vector3f> &neighbours,
 			Eigen::Vector3f &outCentroid,
@@ -120,6 +135,8 @@ namespace artekmed
 		leastSquaresNormalEstimationWeighted(const std::vector<Eigen::Vector3f> &neighbours,
 			const std::vector<float> &weights,
 			const Eigen::Vector3f &weightedCentroid);
+
+		float errorOfPlane(const std::vector<Eigen::Vector3f>& neighbours, const Eigen::Vector3f& planePoint, const Eigen::Vector3f normal);
 	}
 }
 #endif //ARTEKMED_P1_DENOISING_H

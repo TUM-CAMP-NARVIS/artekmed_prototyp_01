@@ -3,6 +3,7 @@
 #include <Eigen/Eigenvalues>
 #include "artekmed/PointProcessing/RegionGrowing.h"
 #include "artekmed/PointCloudProcessing.h"
+#include "artekmed/PointProcessing/Denoising.h"
 
 namespace artekmed
 {
@@ -179,14 +180,69 @@ namespace artekmed
 			return output;
 		}
 
+		void subdivideRegion(
+			const std::vector<Eigen::Vector3f> & neighbours, 
+			open3d::PointCloud &output, 
+			const float sigma_max,
+			const uint32_t minRegionSize)
+		{
+			Eigen::Vector3f centroid;
+			Eigen::Vector3f normal;
+			const auto pca = pcaEigenValues(neighbours, centroid, nomal;);
+			if (getSigma(pca) > sigma_max && minRegionSize < neighbours.size())
+			{
+				//Subdivide along centroid and v0
+				std::vector<Eigen::Vector3f> planeFront;
+				std::vector<Eigen::Vector3f> planeBack;
+				for (const auto& n : neighbours)
+				{
+					if (normal.dot(n - centroid) >= 0)
+					{
+						planeFront.push_back(n);
+					}
+					else
+					{
+						planeBack.push_back(n);
+					}
+				}
+				subdivideRegion(a, output, sigma_max);
+				subdivideRegion(b, output, sigma_max);
+			}
+			else {
+				output.points_.push_back(centroid);
+				output.normals_.push_back(normal);
+			}
+		}
+
 		open3d::PointCloud regionGrowingResampleB(
 			const std::vector<Eigen::Vector3d>& inputPointCloud,
 			const std::vector<DepthImageSource>& depthImages,
 			const int seed,
 			const size_t numSamplesTarget)
 		{
-			const auto initialNumSamples = numSamplesTarget / 4;
+			constexpr float neighbourhoodRadius = 0.02f;
+			constexpr int maxRegionSize = 1500;
+			constexpr int minRegionSize = 100;
+			constexpr float sigma_max = 0.15f;
+			constexpr int SORminValue = 20;
 
+			const auto initialNumSamples = numSamplesTarget / 4;
+			const auto doGrowRegionFunc = [&](const Eigen::Vector3f & origin) {
+
+			};
+			std::default_random_engine generator(seed);
+			std::uniform_int_distribution<size_t> distribution(0, inputPointCloud.size() - 1);
+
+			open3d::PointCloud output;
+
+			for (uint32_t i = 0; i < initialNumSamples; ++i)
+			{
+				const auto randomIndex = distribution(generator);
+				const auto basePoint = inputPointCloud[randomIndex];
+				const std::vector<InputSampleCoordinate> neighbours;
+				queryNNearestNeighbours(neighbours, depthImages, basePoint, maxRegionSize);
+				subdivideRegion(neighbours, output,sigma_max, minRegionSize);
+			}
 		}
 
 
@@ -267,7 +323,7 @@ namespace artekmed
 			}
 		}
 
-		void queryNNearestNeighbours(std::vector<InputSampleCoordinate>& neighbours, 
+		void queryNNearestNeighbours(std::vector<Eigen::Vector3f>& neighbours, 
 			const std::vector <DepthImageSource>& depthImages, 
 			const Eigen::Vector3f& sourcePoint, 
 			const uint32_t n)

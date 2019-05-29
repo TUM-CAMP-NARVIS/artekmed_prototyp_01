@@ -227,9 +227,6 @@ namespace artekmed
 			constexpr int SORminValue = 20;
 
 			const auto initialNumSamples = numSamplesTarget / 4;
-			const auto doGrowRegionFunc = [&](const Eigen::Vector3f & origin) {
-
-			};
 			std::default_random_engine generator(seed);
 			std::uniform_int_distribution<size_t> distribution(0, inputPointCloud.size() - 1);
 

@@ -226,13 +226,12 @@ namespace artekmed
 			constexpr float sigma_max = 0.15f;
 			constexpr int SORminValue = 20;
 
-			const auto initialNumSamples = numSamplesTarget / 4;
 			std::default_random_engine generator(seed);
 			std::uniform_int_distribution<size_t> distribution(0, inputPointCloud.size() - 1);
 
 			open3d::PointCloud output;
 
-			for (uint32_t i = 0; i < initialNumSamples; ++i)
+			while (output.points_.size() < numSamplesTarget)
 			{
 				const auto randomIndex = distribution(generator);
 				const auto basePoint = inputPointCloud[randomIndex];
@@ -240,6 +239,7 @@ namespace artekmed
 				queryNNearestNeighbours(neighbours, depthImages, basePoint, maxRegionSize);
 				subdivideRegion(neighbours, output,sigma_max, minRegionSize);
 			}
+			return output;
 		}
 
 

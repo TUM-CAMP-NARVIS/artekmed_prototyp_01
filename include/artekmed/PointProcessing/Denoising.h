@@ -111,15 +111,12 @@ namespace artekmed
 			Eigen::Vector3f v0, v1, v2;
 		};
 
-		float& getSigma(const  PCAResult result)
-		{
-			return r.lambda2 / (r.lambda0 + r.lambda1 + r.lambda2);
-		}
+		float getSigma(const  PCAResult & r);
 
 		PCAResult pcaEigenValues(
 			const std::vector<Eigen::Vector3f>& neighbours,
 			Eigen::Vector3f& outCentroid,
-			Eigen::Vector3f& outNormal)
+			Eigen::Vector3f& outNormal);
 
 		void pcaNormalEstimation(
 			const std::vector<Eigen::Vector3f> &neighbours,

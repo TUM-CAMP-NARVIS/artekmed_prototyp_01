@@ -34,10 +34,10 @@ namespace artekmed
 		);
 
 		//queries only roughly by (mis)using the image locality coupled with depth information
-		void queryNNearestNeighbours(std::vector<InputSampleCoordinate>& neighbours,
-			const std::vector <DepthImageSource>& depthImages,
-			const Eigen::Vector3f& sourcePoint,
-			const uint32_t n
+		void queryNNearestNeighbours(std::vector<Eigen::Vector3f> &neighbours,
+		                             const std::vector<DepthImageSource> &depthImages,
+		                             const Eigen::Vector3f &sourcePoint,
+		                             const uint32_t n
 		);
 
 		void queryNeighboursSorted(

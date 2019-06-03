@@ -106,7 +106,7 @@ void buildColoredPointCloud(
         }
     }
     //[Michael Wechner] Temporary... seems like the best point to insert my processing tests..
-#define CLOP
+#define REGION_GROWING
 	std::vector<artekmed::DepthImageSource> depth_images = {};
 	depth_images.emplace_back(artekmed::DepthImageSource{
 		&depth_img_rect,
@@ -115,7 +115,7 @@ void buildColoredPointCloud(
 		depth_scale_factor});
 	auto originalPointCloud = cloud;
 #ifdef REGION_GROWING
-    cloud = artekmed::pointcloud::regionGrowingResampleA(points,depth_images,3,10000);
+    cloud = artekmed::pointcloud::regionGrowingResampleB(points,depth_images,3,10000);
     std::cout<< cloud.points_.size() << '\n';
 #endif
 #ifdef VOXELS

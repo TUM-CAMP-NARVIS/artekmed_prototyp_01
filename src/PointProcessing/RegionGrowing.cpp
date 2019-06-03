@@ -188,7 +188,7 @@ namespace artekmed
 		{
 			Eigen::Vector3f centroid;
 			Eigen::Vector3f normal;
-			const auto pca = pcaEigenValues(neighbours, centroid, nomal;);
+			const auto pca = pcaEigenValues(neighbours, centroid, normal);
 			if (getSigma(pca) > sigma_max && minRegionSize < neighbours.size())
 			{
 				//Subdivide along centroid and v0
@@ -205,12 +205,12 @@ namespace artekmed
 						planeBack.push_back(n);
 					}
 				}
-				subdivideRegion(a, output, sigma_max);
-				subdivideRegion(b, output, sigma_max);
+				subdivideRegion(planeFront, output, sigma_max,minRegionSize);
+				subdivideRegion(planeBack, output, sigma_max,minRegionSize);
 			}
 			else {
-				output.points_.push_back(centroid);
-				output.normals_.push_back(normal);
+				output.points_.emplace_back(centroid.cast<double>());
+				output.normals_.emplace_back(normal.cast<double>());
 			}
 		}
 
@@ -234,8 +234,8 @@ namespace artekmed
 			while (output.points_.size() < numSamplesTarget)
 			{
 				const auto randomIndex = distribution(generator);
-				const auto basePoint = inputPointCloud[randomIndex];
-				const std::vector<InputSampleCoordinate> neighbours;
+				const auto basePoint = inputPointCloud[randomIndex].cast<float>();
+				std::vector<Eigen::Vector3f> neighbours;
 				queryNNearestNeighbours(neighbours, depthImages, basePoint, maxRegionSize);
 				subdivideRegion(neighbours, output,sigma_max, minRegionSize);
 			}
@@ -287,78 +287,111 @@ namespace artekmed
 		{
 			Eigen::Vector2i uv;
 			float depth;
-			const DepthImageSource& img;
+			const DepthImageSource* img;
 			int currentRadius;
+
 		};
 
-		void addSamplesRing(std::vector<Eigen::Vector3f>& neighbours, DepthMapSampleUV & original)
+		void addSamplesRing(std::vector<Eigen::Vector3f>& neighbours, DepthMapSampleUV & origin)
 		{
-			const auto squaredRad = original.currentRadius * original.currentRadius;
-			const auto squaredRadMinusOne = (original.currentRadius - 1) * (original.currentRadius - 1);
-			//Rasterize a ring.. we floor the uv-coordantes (i.e. radius 1 will result in the 4 direct neighbours, diagnoals are in in radius 2.
-			for (int u = -original.currentRadius; u <= original.currentRadius; u++)
+			if(origin.currentRadius==0)
 			{
-				const auto from = std::floor(std::sqrt(squaredRadMinusOne - u * u)) + 1;
-				const auto to = std::ceil(std::sqrt(squaredRad - u * u));
-				for (int v = from; v <= to; ++v)
+				Eigen::Vector3f newPoint;
+				const float dval = origin.img->depthImage->at<float>(origin.uv.y(),origin.uv.x());
+				deproject_pixel_to_point(newPoint,
+					origin.img->intrinsics,
+					origin.uv.cast<float>(),
+					dval*origin.img->depthScaleFactor);
+				neighbours.emplace_back(newPoint);
+			}
+			else
+			{
+				const auto squaredRad = origin.currentRadius * origin.currentRadius;
+				const auto squaredRadMinusOne = (origin.currentRadius - 1) * (origin.currentRadius - 1);
+				//Rasterize a ring.. we floor the uv-coordantes (i.e. radius 1 will result in the 4 direct neighbours,
+				// diagnoals are in in radius 2.
+				for (int u = -origin.currentRadius; u <= origin.currentRadius; u++)
 				{
-					Eigen::Vector3f newPointA;
-					Eigen::Vector3f newPointB;
-					deproject_pixel_to_point(
-						newPointA,
-						original.img.intrinsics,
-						{ original.uv.x() + u,original.uv.y() + v },
-						original.img.depthImage->at(v, u) * original.img.depthScaleFactor);
-					deproject_pixel_to_point(
-						newPointB,
-						original.img.intrinsics,
-						{ original.uv.x() + u,original.uv.y() - v },
-						original.img.depthImage->at(v, u) * original.img.depthScaleFactor);
-					neighbours.emplace_back(std::move(newPointA));
-					neighbours.emplace_back(std::move(newPointB));
+					int from;
+					if(squaredRadMinusOne >= u * u)
+					{
+						from = std::floor(std::sqrt(squaredRadMinusOne - u * u)) + 1;
+					}
+					else
+					{
+						from = 0;
+					}
+					const auto to = std::ceil(std::sqrt(squaredRad - u * u));
+					for (int v = from; v <= to; ++v)
+					{
+						Eigen::Vector3f newPointA;
+						deproject_pixel_to_point(
+							newPointA,
+							origin.img->intrinsics,
+							{origin.uv.x() + u, origin.uv.y() + v},
+							origin.img->depthImage->at<float>(v, u) * origin.img->depthScaleFactor);
+						neighbours.emplace_back(std::move(newPointA));
+						if(v !=0)
+						{
+							Eigen::Vector3f newPointB;
+							deproject_pixel_to_point(
+								newPointB,
+								origin.img->intrinsics,
+								{origin.uv.x() + u, origin.uv.y() - v},
+								origin.img->depthImage->at<float>(v, u) * origin.img->depthScaleFactor);
+							neighbours.emplace_back(std::move(newPointB));
+						}
+					}
 				}
 			}
 		}
 
-		void queryNNearestNeighbours(std::vector<Eigen::Vector3f>& neighbours, 
-			const std::vector <DepthImageSource>& depthImages, 
-			const Eigen::Vector3f& sourcePoint, 
-			const uint32_t n)
+		void queryNNearestNeighbours(std::vector<Eigen::Vector3f> &neighbours,
+		                             const std::vector<DepthImageSource> &depthImages,
+		                             const Eigen::Vector3f &sourcePoint,
+		                             const uint32_t n)
 		{
 			neighbours.clear();
 			neighbours.reserve(n);
 
 			std::vector<DepthMapSampleUV> depthValueAt;
-			for (const auto& i : depthImages)
+			for (auto& i : depthImages)
 			{
 				Eigen::Vector2i uv;
 				if (project_point_to_pixel(uv, sourcePoint, i))
 				{
-					depthValueAt.emplace_back(DepthMapSampleUV{ uv,i,i.depthImage->at<float>(uv.y(),uv.x())*i.depthScaleFactor ,i,1});
+					depthValueAt.emplace_back(DepthMapSampleUV{
+						uv,i.depthImage->at<float>(uv.y(),uv.x())*i.depthScaleFactor ,&i,0});
 				}
 			}
 			std::sort(depthValueAt.begin(), depthValueAt.end(), [](const DepthMapSampleUV& a, const DepthMapSampleUV& b) {
 				return a.depth < b.depth;
 			});
-			float currentIndex = 0;
+			int currentIndex = 0;
+			if(depthValueAt.size()==0)
+			{
+				return;
+			}
+			addSamplesRing(neighbours,depthValueAt[currentIndex]);
+			depthValueAt[currentIndex].currentRadius++;
 			while (neighbours.size() < n)
 			{
 				//Approximate the 3D radius of an image circle by taking the depth value of the midpoint and intrinsics
 				const float nextRadiusInCurrentImage = 
 					(depthValueAt[currentIndex].currentRadius +1.f) *
-					(std::max(depthValueAt[currentIndex].img.intrinsics(0, 0), depthValueAt[currentIndex].img.intrinsics(1, 1)))
-					/ depthValueAt[currentIndex].depth * depthValueAt[currentIndex].img.depthScaleFactor;
+					(std::max(depthValueAt[currentIndex].img->intrinsics(0, 0), depthValueAt[currentIndex].img->intrinsics(1, 1)))
+					/ depthValueAt[currentIndex].depth * depthValueAt[currentIndex].img->depthScaleFactor;
 				const auto nextImageIdx = (currentIndex+1) % depthValueAt.size();
 				const float nextRadiusInNextImage = 
 					depthValueAt[nextImageIdx].currentRadius *
-					(std::max(depthValueAt[nextImageIdx].img.intrinsics(0, 0), depthValueAt[nextImageIdx].img.intrinsics(1, 1)))
-					/ depthValueAt[nextImageIdx].depth * depthValueAt[nextImageIdx].img.depthScaleFactor;
+					(std::max(depthValueAt[nextImageIdx].img->intrinsics(0, 0), depthValueAt[nextImageIdx].img->intrinsics(1, 1)))
+					/ depthValueAt[nextImageIdx].depth * depthValueAt[nextImageIdx].img->depthScaleFactor;
 
 				const auto prevImageIdx = std::max(0, --currentIndex);
 				const float nextRadiusInPrevImage = 
 					depthValueAt[prevImageIdx].currentRadius *
-					(std::max(depthValueAt[prevImageIdx].img.intrinsics(0, 0), depthValueAt[prevImageIdx].img.intrinsics(1, 1)))
-					/ depthValueAt[prevImageIdx].depth * depthValueAt[prevImageIdx].img.depthScaleFactor;
+					(std::max(depthValueAt[prevImageIdx].img->intrinsics(0, 0), depthValueAt[prevImageIdx].img->intrinsics(1, 1)))
+					/ depthValueAt[prevImageIdx].depth * depthValueAt[prevImageIdx].img->depthScaleFactor;
 
 				if (nextRadiusInCurrentImage < nextRadiusInNextImage) 
 				{
@@ -368,13 +401,13 @@ namespace artekmed
 						currentIndex--;
 						continue;
 					}
-					
 					addSamplesRing(neighbours, depthValueAt[currentIndex]);
 					depthValueAt[currentIndex].currentRadius++;
 				}
 				else
 				{
-					addSamplesRing(neighbours,depthValueAt[nextImageIdx])
+					addSamplesRing(neighbours,depthValueAt[nextImageIdx]);
+					depthValueAt[nextImageIdx].currentRadius++;
 					currentIndex = nextImageIdx;
 				}
 			}

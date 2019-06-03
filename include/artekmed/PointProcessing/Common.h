@@ -58,9 +58,9 @@ namespace artekmed
 	struct DepthImageSource
 	{
 		const cv::Mat *depthImage;
-		const Eigen::Matrix3f intrinsics;
-		const Eigen::Matrix4f extrinsics;
-		const float depthScaleFactor;
+		Eigen::Matrix3f intrinsics;
+		Eigen::Matrix4f extrinsics;
+		float depthScaleFactor;
 
 		DepthImageSource(const cv::Mat *img,
 		                 const Eigen::Matrix3f &intrinsicMat,
@@ -72,13 +72,20 @@ namespace artekmed
 			depthScaleFactor(depthScaleFactor)
 		{}
 	};
+	/*
+	void swap(DepthImageSource& a, DepthImageSource&b){
+		std::swap(a.depthImage,b.depthImage);
+		std::swap(a.intrinsics,b.intrinsics);
+		std::swap(a.extrinsics,b.extrinsics);
+		std::swap(a.depthScaleFactor,b.depthScaleFactor);
+	}*/
 
 	///*@return true, if point can be seen in this image and is not occluded
 	bool project_point_to_pixel(
 		Eigen::Vector2i &pixel,
 		const Eigen::Vector3f &point,
 		const DepthImageSource &depth_image,
-		const float radius);
+		const float radius = FLT_MAX);
 
 	// Most normal estimations return the correct direction, but the normal can be flipped (i.e. does not point outside)
 	// By knowing that cameras are always outside the object , we can find the correct direction.

@@ -309,7 +309,7 @@ namespace artekmed
 			auto covarianceMatrix = (centered.adjoint() * centered) / float(observations.rows() - 1);
 			auto solver = Eigen::EigenSolver<Eigen::MatrixXf>(covarianceMatrix);
 			//Our PCA Eigenvalues
-			r.lambda0 solver.eigenvalues()(0).real();
+			r.lambda0 = solver.eigenvalues()(0).real();
 			r.lambda1 = solver.eigenvalues()(1).real();
 			r.lambda2 = solver.eigenvalues()(2).real();
 			//Our PCA Eigenvectors
@@ -452,6 +452,11 @@ namespace artekmed
 			}
 			errorSum /= neighbours.size();
 			return errorSum;
+		}
+
+		float getSigma(const  PCAResult & r)
+		{
+			return r.lambda2 / (r.lambda0 + r.lambda1 + r.lambda2);
 		}
 	}
 }

@@ -299,14 +299,14 @@ namespace artekmed
 			PCAResult r;
 			Eigen::MatrixXf observations = { neighbours.size(), 3 };
 			outCentroid = { 0, 0, 0 };
-			for (int i = 0; i < observations.rows(); ++i)
+			for (int i = 0; i < neighbours.size(); ++i)
 			{
-				observations.row(i) = neighbours[i];
+				observations.row(i) =Eigen::Map<Eigen::RowVector3f>((float*)neighbours[i].data(), 3);
 				outCentroid += neighbours[i];
 			}
 			outCentroid /= observations.rows();
-			auto centered = observations.rowwise() - observations.colwise().mean();
-			auto covarianceMatrix = (centered.adjoint() * centered) / float(observations.rows() - 1);
+			Eigen::MatrixXf centered = observations.rowwise() - observations.colwise().mean();
+			Eigen::MatrixXf covarianceMatrix = (centered.adjoint() * centered) / float(observations.rows() - 1);
 			auto solver = Eigen::EigenSolver<Eigen::MatrixXf>(covarianceMatrix);
 			//Our PCA Eigenvalues
 			r.lambda0 = solver.eigenvalues()(0).real();

@@ -1,5 +1,6 @@
 #include <random>
 #include <unordered_map>
+#include <limits>
 #include <Eigen/Eigenvalues>
 #include "artekmed/PointProcessing/RegionGrowing.h"
 #include "artekmed/PointCloudProcessing.h"
@@ -184,12 +185,18 @@ namespace artekmed
 			const std::vector<Eigen::Vector3f> & neighbours, 
 			open3d::PointCloud &output, 
 			const float sigma_max,
-			const uint32_t minRegionSize)
+			const uint32_t minRegionSize,
+			const uint32_t sorMinValue,
+			const uint32_t depth =0)
 		{
+			if(sorMinValue>= neighbours.size()){
+				return;
+			}
+			constexpr uint32_t maxDepth = 10;
 			Eigen::Vector3f centroid;
 			Eigen::Vector3f normal;
 			const auto pca = pcaEigenValues(neighbours, centroid, normal);
-			if (getSigma(pca) > sigma_max && minRegionSize < neighbours.size())
+			if (getSigma(pca) > sigma_max && minRegionSize < neighbours.size() && depth<maxDepth)
 			{
 				//Subdivide along centroid and v0
 				std::vector<Eigen::Vector3f> planeFront;
@@ -205,8 +212,8 @@ namespace artekmed
 						planeBack.push_back(n);
 					}
 				}
-				subdivideRegion(planeFront, output, sigma_max,minRegionSize);
-				subdivideRegion(planeBack, output, sigma_max,minRegionSize);
+				subdivideRegion(planeFront, output, sigma_max,minRegionSize,depth+1);
+				subdivideRegion(planeBack, output, sigma_max,minRegionSize,depth+1);
 			}
 			else {
 				output.points_.emplace_back(centroid.cast<double>());
@@ -221,10 +228,10 @@ namespace artekmed
 			const size_t numSamplesTarget)
 		{
 			constexpr float neighbourhoodRadius = 0.02f;
-			constexpr int maxRegionSize = 1500;
-			constexpr int minRegionSize = 100;
+			constexpr int maxRegionSize = 50;
+			constexpr int minRegionSize = 10;
 			constexpr float sigma_max = 0.15f;
-			constexpr int SORminValue = 20;
+			constexpr uint32_t SORminValue = 5;
 
 			std::default_random_engine generator(seed);
 			std::uniform_int_distribution<size_t> distribution(0, inputPointCloud.size() - 1);
@@ -237,7 +244,7 @@ namespace artekmed
 				const auto basePoint = inputPointCloud[randomIndex].cast<float>();
 				std::vector<Eigen::Vector3f> neighbours;
 				queryNNearestNeighbours(neighbours, depthImages, basePoint, maxRegionSize);
-				subdivideRegion(neighbours, output,sigma_max, minRegionSize);
+					subdivideRegion(neighbours, output, sigma_max, minRegionSize,SORminValue);
 			}
 			return output;
 		}
@@ -292,17 +299,44 @@ namespace artekmed
 
 		};
 
+
+		bool safe_deproject_pixel_to_point(
+			Eigen::Vector3f& outPoint,
+			const Eigen::Vector2f & uv,
+			const DepthImageSource & img
+			)
+		{
+			if(uv.x() < 0 || uv.x() >= img.depthImage->rows || uv.y() < 0|| uv.y() >=img.depthImage->cols)
+			{
+				return false;
+			}
+			const float depth = img.depthImage->at<float>(uv.y(),uv.y())*img.depthScaleFactor;
+			if(depth < 0.0001 || std::isnan(depth)|| std::isinf(depth))
+			{
+				return false;
+			}
+			deproject_pixel_to_point(
+				outPoint,
+				img.intrinsics,
+				uv,
+				depth
+				);
+			if(std::isnan(outPoint.x()))
+			{
+				std::cout << "Error\n";
+			}
+			return true;
+		}
+
 		void addSamplesRing(std::vector<Eigen::Vector3f>& neighbours, DepthMapSampleUV & origin)
 		{
 			if(origin.currentRadius==0)
 			{
 				Eigen::Vector3f newPoint;
-				const float dval = origin.img->depthImage->at<float>(origin.uv.y(),origin.uv.x());
-				deproject_pixel_to_point(newPoint,
-					origin.img->intrinsics,
-					origin.uv.cast<float>(),
-					dval*origin.img->depthScaleFactor);
-				neighbours.emplace_back(newPoint);
+				if(safe_deproject_pixel_to_point(newPoint,origin.uv.cast<float>(),*origin.img))
+				{
+					neighbours.emplace_back(newPoint);
+				}
 			}
 			else
 			{
@@ -324,22 +358,27 @@ namespace artekmed
 					const auto to = std::ceil(std::sqrt(squaredRad - u * u));
 					for (int v = from; v <= to; ++v)
 					{
-						Eigen::Vector3f newPointA;
-						deproject_pixel_to_point(
-							newPointA,
-							origin.img->intrinsics,
-							{origin.uv.x() + u, origin.uv.y() + v},
-							origin.img->depthImage->at<float>(v, u) * origin.img->depthScaleFactor);
-						neighbours.emplace_back(std::move(newPointA));
-						if(v !=0)
+						const auto utex = origin.uv.x()+u;
+						const auto vtex1 = origin.uv.y()+v;
+						const auto vtex2 = origin.uv.y()-v;
+						if(utex >=0 && utex < origin.img->depthImage->rows)
 						{
-							Eigen::Vector3f newPointB;
-							deproject_pixel_to_point(
-								newPointB,
-								origin.img->intrinsics,
-								{origin.uv.x() + u, origin.uv.y() - v},
-								origin.img->depthImage->at<float>(v, u) * origin.img->depthScaleFactor);
-							neighbours.emplace_back(std::move(newPointB));
+							if (vtex1 >= 0 && vtex1 <= origin.img->depthImage->cols)
+							{
+								Eigen::Vector3f newPointA;
+								if(safe_deproject_pixel_to_point(newPointA,{utex,vtex1},*origin.img))
+								{
+									neighbours.emplace_back(std::move(newPointA));
+								}
+							}
+							if (v != 0 && vtex2>=0 && vtex2<=origin.img->depthImage->cols)
+							{
+								Eigen::Vector3f newPointB;
+								if(safe_deproject_pixel_to_point(newPointB,{utex,vtex2},*origin.img))
+								{
+									neighbours.emplace_back(std::move(newPointB));
+								}
+							}
 						}
 					}
 				}
@@ -387,16 +426,16 @@ namespace artekmed
 					(std::max(depthValueAt[nextImageIdx].img->intrinsics(0, 0), depthValueAt[nextImageIdx].img->intrinsics(1, 1)))
 					/ depthValueAt[nextImageIdx].depth * depthValueAt[nextImageIdx].img->depthScaleFactor;
 
-				const auto prevImageIdx = std::max(0, --currentIndex);
+				const auto prevImageIdx = std::max(0, currentIndex-1);
 				const float nextRadiusInPrevImage = 
 					depthValueAt[prevImageIdx].currentRadius *
 					(std::max(depthValueAt[prevImageIdx].img->intrinsics(0, 0), depthValueAt[prevImageIdx].img->intrinsics(1, 1)))
 					/ depthValueAt[prevImageIdx].depth * depthValueAt[prevImageIdx].img->depthScaleFactor;
 
-				if (nextRadiusInCurrentImage < nextRadiusInNextImage) 
+				if (nextRadiusInCurrentImage < nextRadiusInNextImage || nextImageIdx == currentIndex)
 				{
 					//check if going back would be smarter
-					if (nextRadiusInPrevImage < nextRadiusInCurrentImage && currentIndex != 0)
+					if (nextRadiusInPrevImage < nextRadiusInCurrentImage && currentIndex != 0 && prevImageIdx != currentIndex)
 					{
 						currentIndex--;
 						continue;

@@ -203,7 +203,7 @@ namespace artekmed
 				std::vector<Eigen::Vector3f> planeBack;
 				for (const auto& n : neighbours)
 				{
-					if (normal.dot(n - centroid) >= 0)
+					if (pca.v0.dot(n - centroid) >= 0)
 					{
 						planeFront.push_back(n);
 					}
@@ -241,7 +241,7 @@ namespace artekmed
 			while (output.points_.size() < numSamplesTarget)
 			{
 				const auto randomIndex = distribution(generator);
-				const auto basePoint = inputPointCloud[randomIndex].cast<float>();
+				const Eigen::Vector3f basePoint = inputPointCloud[randomIndex].cast<float>();
 				std::vector<Eigen::Vector3f> neighbours;
 				queryNNearestNeighbours(neighbours, depthImages, basePoint, maxRegionSize);
 					subdivideRegion(neighbours, output, sigma_max, minRegionSize,SORminValue);
@@ -310,7 +310,8 @@ namespace artekmed
 			{
 				return false;
 			}
-			const float depth = img.depthImage->at<float>(uv.y(),uv.y())*img.depthScaleFactor;
+			float depth = img.depthImage->at<float>(uv.y(),uv.x());
+			depth *= img.depthScaleFactor;
 			if(depth < 0.0001 || std::isnan(depth)|| std::isinf(depth))
 			{
 				return false;
@@ -368,6 +369,12 @@ namespace artekmed
 								Eigen::Vector3f newPointA;
 								if(safe_deproject_pixel_to_point(newPointA,{utex,vtex1},*origin.img))
 								{
+									Eigen::Vector3f originalPoint;
+									deproject_pixel_to_point(originalPoint,origin.img->intrinsics, origin.uv.cast<float>(),origin.depth);
+									if((newPointA-originalPoint).norm() >0.6)
+									{
+										std::cout << "We fail\n";
+									}
 									neighbours.emplace_back(std::move(newPointA));
 								}
 							}
@@ -384,6 +391,8 @@ namespace artekmed
 				}
 			}
 		}
+
+
 
 		void queryNNearestNeighbours(std::vector<Eigen::Vector3f> &neighbours,
 		                             const std::vector<DepthImageSource> &depthImages,
@@ -403,14 +412,14 @@ namespace artekmed
 						uv,i.depthImage->at<float>(uv.y(),uv.x())*i.depthScaleFactor ,&i,0});
 				}
 			}
-			std::sort(depthValueAt.begin(), depthValueAt.end(), [](const DepthMapSampleUV& a, const DepthMapSampleUV& b) {
-				return a.depth < b.depth;
-			});
-			int currentIndex = 0;
 			if(depthValueAt.size()==0)
 			{
 				return;
 			}
+			std::sort(depthValueAt.begin(), depthValueAt.end(), [](const DepthMapSampleUV& a, const DepthMapSampleUV& b) {
+				return a.depth < b.depth;
+			});
+			int currentIndex = 0;
 			addSamplesRing(neighbours,depthValueAt[currentIndex]);
 			depthValueAt[currentIndex].currentRadius++;
 			while (neighbours.size() < n)

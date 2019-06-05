@@ -41,15 +41,14 @@ namespace artekmed{
 			return false;
 		}
 		float depth = depth_image.depthImage->at<float>((int) y, (int) x) * depth_image.depthScaleFactor;
-		const auto zEpslion = radius * std::max(depth_image.intrinsics(0, 0), depth_image.intrinsics(1, 1)) / depth *
-		                      depth_image.depthScaleFactor;
+		const auto zEpslion = radius * std::max(depth_image.intrinsics(0, 0), depth_image.intrinsics(1, 1)) / depth * depth_image.depthScaleFactor;
 		if (std::abs(depth - point(2)) > zEpslion)
 		{
 			//Z coordinate does not fit into the depth value: point was occluded
 			return false;
 		}
-		pixel(0) = (int) x;
-		pixel(1) = (int) y;
+		pixel(0) = std::round(x);
+		pixel(1) = std::round(y);
 		return true;
 	}
 

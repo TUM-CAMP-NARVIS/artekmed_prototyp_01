@@ -106,7 +106,7 @@ void buildColoredPointCloud(
         }
     }
     //[Michael Wechner] Temporary... seems like the best point to insert my processing tests..
-#define VOXELS
+#define REGION_GROWING
 	std::vector<artekmed::DepthImageSource> depth_images = {};
 	depth_images.emplace_back(artekmed::DepthImageSource{
 		&depth_img_rect,

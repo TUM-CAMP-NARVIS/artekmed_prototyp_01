@@ -216,8 +216,10 @@ namespace artekmed
 				subdivideRegion(planeBack, output, sigma_max,minRegionSize,depth+1);
 			}
 			else {
+				std::cout<< neighbours.size() << '\n';
 				output.points_.emplace_back(centroid.cast<double>());
 				output.normals_.emplace_back(normal.cast<double>());
+				output.colors_.emplace_back(normal.cast<double>());
 			}
 		}
 
@@ -227,10 +229,10 @@ namespace artekmed
 			const int seed,
 			const size_t numSamplesTarget)
 		{
-			constexpr float neighbourhoodRadius = 0.02f;
-			constexpr int maxRegionSize = 50;
-			constexpr int minRegionSize = 10;
-			constexpr float sigma_max = 0.15f;
+			constexpr float neighbourhoodRadius =0.2f;
+			constexpr int maxRegionSize = 1500;
+			constexpr int minRegionSize = 50;
+			constexpr float sigma_max = 0.05f;
 			constexpr uint32_t SORminValue = 5;
 
 			std::default_random_engine generator(seed);
@@ -243,7 +245,7 @@ namespace artekmed
 				const auto randomIndex = distribution(generator);
 				const Eigen::Vector3f basePoint = inputPointCloud[randomIndex].cast<float>();
 				std::vector<Eigen::Vector3f> neighbours;
-				queryNNearestNeighbours(neighbours, depthImages, basePoint, maxRegionSize);
+				queryNNearestNeighbours(neighbours, depthImages, basePoint,neighbourhoodRadius, maxRegionSize);
 					subdivideRegion(neighbours, output, sigma_max, minRegionSize,SORminValue);
 			}
 			return output;
@@ -306,13 +308,13 @@ namespace artekmed
 			const DepthImageSource & img
 			)
 		{
-			if(uv.x() < 0 || uv.x() >= img.depthImage->rows || uv.y() < 0|| uv.y() >=img.depthImage->cols)
+			if(uv.x() < 0 || uv.x() >= img.depthImage->cols || uv.y() < 0|| uv.y() >=img.depthImage->rows)
 			{
 				return false;
 			}
 			float depth = img.depthImage->at<float>(uv.y(),uv.x());
 			depth *= img.depthScaleFactor;
-			if(depth < 0.0001 || std::isnan(depth)|| std::isinf(depth))
+			if(std::abs(depth) < 0.000001 || std::isnan(depth)|| std::isinf(depth))
 			{
 				return false;
 			}
@@ -322,10 +324,6 @@ namespace artekmed
 				uv,
 				depth
 				);
-			if(std::isnan(outPoint.x()))
-			{
-				std::cout << "Error\n";
-			}
 			return true;
 		}
 
@@ -345,7 +343,7 @@ namespace artekmed
 				const auto squaredRadMinusOne = (origin.currentRadius - 1) * (origin.currentRadius - 1);
 				//Rasterize a ring.. we floor the uv-coordantes (i.e. radius 1 will result in the 4 direct neighbours,
 				// diagnoals are in in radius 2.
-				for (int u = -origin.currentRadius; u <= origin.currentRadius; u++)
+				for (int u = -origin.currentRadius; u <= origin.currentRadius; ++u)
 				{
 					int from;
 					if(squaredRadMinusOne >= u * u)
@@ -362,19 +360,17 @@ namespace artekmed
 						const auto utex = origin.uv.x()+u;
 						const auto vtex1 = origin.uv.y()+v;
 						const auto vtex2 = origin.uv.y()-v;
-						if(utex >=0 && utex < origin.img->depthImage->rows)
+						if(utex >=0 && utex < origin.img->depthImage->cols)
 						{
-							if (vtex1 >= 0 && vtex1 <= origin.img->depthImage->cols)
+							if (vtex1 >= 0 && vtex1 < origin.img->depthImage->rows)
 							{
+
 								Eigen::Vector3f newPointA;
 								if(safe_deproject_pixel_to_point(newPointA,{utex,vtex1},*origin.img))
 								{
 									Eigen::Vector3f originalPoint;
 									deproject_pixel_to_point(originalPoint,origin.img->intrinsics, origin.uv.cast<float>(),origin.depth);
-									if((newPointA-originalPoint).norm() >0.6)
-									{
-										std::cout << "We fail\n";
-									}
+
 									neighbours.emplace_back(std::move(newPointA));
 								}
 							}
@@ -397,6 +393,7 @@ namespace artekmed
 		void queryNNearestNeighbours(std::vector<Eigen::Vector3f> &neighbours,
 		                             const std::vector<DepthImageSource> &depthImages,
 		                             const Eigen::Vector3f &sourcePoint,
+		                             const float maxRadius,
 		                             const uint32_t n)
 		{
 			neighbours.clear();
@@ -426,19 +423,16 @@ namespace artekmed
 			{
 				//Approximate the 3D radius of an image circle by taking the depth value of the midpoint and intrinsics
 				const float nextRadiusInCurrentImage = 
-					(depthValueAt[currentIndex].currentRadius +1.f) *
-					(std::max(depthValueAt[currentIndex].img->intrinsics(0, 0), depthValueAt[currentIndex].img->intrinsics(1, 1)))
+					(depthValueAt[currentIndex].currentRadius +1.f)
 					/ depthValueAt[currentIndex].depth * depthValueAt[currentIndex].img->depthScaleFactor;
 				const auto nextImageIdx = (currentIndex+1) % depthValueAt.size();
 				const float nextRadiusInNextImage = 
-					depthValueAt[nextImageIdx].currentRadius *
-					(std::max(depthValueAt[nextImageIdx].img->intrinsics(0, 0), depthValueAt[nextImageIdx].img->intrinsics(1, 1)))
+					depthValueAt[nextImageIdx].currentRadius
 					/ depthValueAt[nextImageIdx].depth * depthValueAt[nextImageIdx].img->depthScaleFactor;
 
 				const auto prevImageIdx = std::max(0, currentIndex-1);
 				const float nextRadiusInPrevImage = 
-					depthValueAt[prevImageIdx].currentRadius *
-					(std::max(depthValueAt[prevImageIdx].img->intrinsics(0, 0), depthValueAt[prevImageIdx].img->intrinsics(1, 1)))
+					depthValueAt[prevImageIdx].currentRadius
 					/ depthValueAt[prevImageIdx].depth * depthValueAt[prevImageIdx].img->depthScaleFactor;
 
 				if (nextRadiusInCurrentImage < nextRadiusInNextImage || nextImageIdx == currentIndex)
@@ -457,6 +451,9 @@ namespace artekmed
 					addSamplesRing(neighbours,depthValueAt[nextImageIdx]);
 					depthValueAt[nextImageIdx].currentRadius++;
 					currentIndex = nextImageIdx;
+				}
+				if(nextRadiusInCurrentImage >=maxRadius){
+					break;
 				}
 			}
 			//The target number of samples will be bigger with the current logic, strip them away.

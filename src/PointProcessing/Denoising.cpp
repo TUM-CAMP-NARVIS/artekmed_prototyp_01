@@ -52,7 +52,7 @@ namespace artekmed
 				k[1] = H - disc;
 */
 				const auto Z = 1 + gradient.squaredNorm();
-				const auto K = (hessian(0, 0) * hessian(1, 1) - hessian(0, 1) * hessian(1, 0)) / (Z * Z);
+				const auto K = (hessian(0, 0) * hessian(1, 1) - hessian(0, 1) * hessian(0,1)) / (Z * Z);
 				const auto H = (1 + gradient(1) * gradient(1)) * hessian(0, 0) -
 				               2 * gradient(0) * gradient(1) * hessian(0, 1) + (1 + gradient(0) * gradient(1) * hessian(1, 1))
 				                                                               / (2 * Z * std::sqrt(Z));

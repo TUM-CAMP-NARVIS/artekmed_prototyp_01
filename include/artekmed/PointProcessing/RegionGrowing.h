@@ -37,6 +37,7 @@ namespace artekmed
 		void queryNNearestNeighbours(std::vector<Eigen::Vector3f> &neighbours,
 		                             const std::vector<DepthImageSource> &depthImages,
 		                             const Eigen::Vector3f &sourcePoint,
+		                             const float maxNeighbourhoodRadius,
 		                             const uint32_t n
 		);
 
